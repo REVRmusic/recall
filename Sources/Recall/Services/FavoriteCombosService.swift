@@ -132,7 +132,8 @@ public class FavoriteCombosService: ObservableObject {
     private func matches(trackA: SavedTrackData, trackB: Track) -> Bool {
         let normA = Self.normalize(trackA.title)
         let normB = Self.normalize(trackB.displayTitle)
-        if !normA.isEmpty && !normB.isEmpty && normA == normB {
+        let normBRaw = Self.normalize(trackB.title)
+        if !normA.isEmpty && (!normB.isEmpty && normA == normB || !normBRaw.isEmpty && normA == normBRaw) {
             return true
         }
         if !trackA.fileName.isEmpty && !trackB.fileName.isEmpty &&

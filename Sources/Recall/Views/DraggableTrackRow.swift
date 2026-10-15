@@ -79,6 +79,7 @@ public struct DraggableTrackRow: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
+            .help(track.fullTooltip)
             
             Spacer(minLength: 4)
             
@@ -235,7 +236,7 @@ public struct DraggableTrackRow: View {
                 NSCursor.pop()
             }
         }
-        .help("Glisser vers Deck 1 ou Deck 2 dans Serato DJ Pro")
+        .help(track.fullTooltip)
         // Support du glisser natif direct sur l'intégralité de la card
         .onDrag {
             guard let path = track.filePath, FileManager.default.fileExists(atPath: path) else {

@@ -105,6 +105,7 @@ public struct ManualSearchSheetView: View {
                                             .foregroundColor(.white.opacity(isPlayed ? 0.35 : 0.55))
                                             .lineLimit(1)
                                     }
+                                    .help(track.fullTooltip)
                                     
                                     Spacer()
                                     

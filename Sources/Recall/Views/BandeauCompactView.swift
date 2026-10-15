@@ -64,6 +64,7 @@ public struct BandeauCompactView: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                     }
+                    .help(match.fullTooltip)
                     
                     HStack(spacing: 4) {
                         if !match.displayArtist.isEmpty && match.displayArtist != "Artiste inconnu" {

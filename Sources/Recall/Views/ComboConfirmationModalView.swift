@@ -203,6 +203,7 @@ public struct ComboConfirmationModalView: View {
                     .foregroundColor(.white.opacity(0.55))
                     .lineLimit(1)
             }
+            .help(track.fullTooltip)
             
             Spacer(minLength: 4)
             

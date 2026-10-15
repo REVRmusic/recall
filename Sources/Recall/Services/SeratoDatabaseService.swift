@@ -257,6 +257,10 @@ public func fetchActiveDecks() -> ActiveDecksState {
         var seenTitles = Set<String>()
         let refTitleKey = normalizeTitle(referenceTrack.displayTitle)
         seenTitles.insert(refTitleKey)
+        let refRawKey = normalizeTitle(referenceTrack.title)
+        if !refRawKey.isEmpty {
+            seenTitles.insert(refRawKey)
+        }
         
         let secondsLookback = Int64(daysLookback) * 86400
         let minStartTimeUnix = Int64(Date().timeIntervalSince1970) - secondsLookback
@@ -343,6 +347,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
         let safeFileName = escapeSql(referenceTrack.fileName)
         let assetId = referenceTrack.assetId ?? -1
         let safeTitle = escapeSql(referenceTrack.displayTitle)
+        let safeRawTitle = escapeSql(referenceTrack.title)
         
         let sql = """
         WITH target_plays AS (
@@ -351,7 +356,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
             WHERE (
                 (asset_id > 0 AND asset_id = \(assetId))
                 OR (file_name != '' AND file_name = '\(safeFileName)')
-                OR (name != '' AND name = '\(safeTitle)')
+                OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
             )
             AND start_time >= \(minStartTime)
         ),
@@ -480,6 +485,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
         let safeFileName = escapeSql(referenceTrack.fileName)
         let assetId = referenceTrack.assetId ?? -1
         let safeTitle = escapeSql(referenceTrack.displayTitle)
+        let safeRawTitle = escapeSql(referenceTrack.title)
         
         let sql = """
         WITH target_plays AS (
@@ -488,7 +494,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
             WHERE (
                 (asset_id > 0 AND asset_id = \(assetId))
                 OR (file_name != '' AND file_name = '\(safeFileName)')
-                OR (name != '' AND name = '\(safeTitle)')
+                OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
             )
             AND start_time >= \(minStartTime)
         ),

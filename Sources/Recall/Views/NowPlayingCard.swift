@@ -104,6 +104,7 @@ public struct NowPlayingCard: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                     }
+                    .help(track.fullTooltip)
                     
                     Spacer(minLength: 8)
                     
