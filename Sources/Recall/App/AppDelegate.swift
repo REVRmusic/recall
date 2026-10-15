@@ -5,8 +5,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         
-        // Délai de survol prolongé (1.8s) pour ne pas gêner la navigation
-        let tooltipDelayMs = 1800
+        // Délai de survol optimisé (0.9s) évitant les déclenchements intempestifs tout en restant réactif
+        let tooltipDelayMs = 900
         UserDefaults.standard.register(defaults: [
             "NSInitialToolTipDelay": tooltipDelayMs,
             "NSReshowToolTipDelay": tooltipDelayMs,

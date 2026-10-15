@@ -79,6 +79,8 @@ public struct DraggableTrackRow: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
+            .contentShape(Rectangle())
+            .help(track.fullTooltip)
             
             Spacer(minLength: 4)
             

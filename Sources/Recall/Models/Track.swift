@@ -225,7 +225,7 @@ public struct Track: Identifiable, Hashable {
         let t = displayTitle
         let a = displayArtist
         if !a.isEmpty && a != "Artiste inconnu" {
-            return "\(t)\nArtiste : \(a)"
+            return "\(t)\n\(a)"
         } else {
             return t
         }
