@@ -266,18 +266,18 @@ public struct BandeauCompactView: View {
     }
 }
 
-/// Mini affichage de l'icône petit cerveau mignon pour le bandeau
+/// Mini affichage de l'icône vinyle pour le bandeau
 private struct AppIconMiniView: View {
     private var appIcon: NSImage? {
+        if let icon = NSImage(named: NSImage.applicationIconName) {
+            return icon
+        }
         if let path = Bundle.main.path(forResource: "AppIcon", ofType: "png"),
            let icon = NSImage(contentsOfFile: path) {
             return icon
         }
         if let path = Bundle.main.path(forResource: "AppIcon", ofType: "icns"),
            let icon = NSImage(contentsOfFile: path) {
-            return icon
-        }
-        if let icon = NSImage(named: NSImage.applicationIconName) {
             return icon
         }
         return NSApp.applicationIconImage
@@ -293,21 +293,9 @@ private struct AppIconMiniView: View {
                     .frame(width: 22, height: 22)
                     .clipShape(RoundedRectangle(cornerRadius: 5))
             } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "#FF758C"), Color(hex: "#C471ED")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 22, height: 22)
-                    
-                    Image(systemName: "brain")
-                        .font(.system(size: 11, weight: .heavy))
-                        .foregroundColor(.white)
-                }
+                Circle()
+                    .fill(Color.accentCyan)
+                    .frame(width: 22, height: 22)
             }
         }
     }
