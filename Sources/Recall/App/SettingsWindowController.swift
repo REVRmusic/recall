@@ -2,13 +2,67 @@ import Foundation
 import AppKit
 import SwiftUI
 
+/// Vue de fond d'écran obscurci (dimming backdrop) avec effet de flou et assombrissement profond.
+private class SettingsDimmingBackdropView: NSVisualEffectView {
+    var onClick: (() -> Void)?
+    private var tintLayer: CALayer?
+    
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setupEffect()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupEffect()
+    }
+    
+    private func setupEffect() {
+        material = .fullScreenUI
+        blendingMode = .behindWindow
+        state = .active
+        wantsLayer = true
+        
+        let tint = CALayer()
+        // Assombrissement profond pour un contraste élevé et lisible
+        tint.backgroundColor = NSColor.black.withAlphaComponent(0.65).cgColor
+        tint.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        tint.frame = bounds
+        layer?.addSublayer(tint)
+        self.tintLayer = tint
+    }
+    
+    override func layout() {
+        super.layout()
+        tintLayer?.frame = bounds
+    }
+    
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        NSColor.black.withAlphaComponent(0.65).setFill()
+        dirtyRect.fill(using: .sourceOver)
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        onClick?()
+    }
+}
+
+/// Sous-classe de NSPanel pour gérer l'échappement (Escape) et la fermeture propre
+private class SettingsPanel: NSPanel {
+    override func cancelOperation(_ sender: Any?) {
+        SettingsWindowController.shared.closeWindow()
+    }
+}
+
 /// Contrôleur dédié à la fenêtre indépendante des paramètres de Recall,
-/// s'ouvrant au centre exact de l'écran pour permettre d'observer les modifications
-/// en direct sur l'interface principale de Recall.
+/// s'ouvrant au centre exact de l'écran avec un arrière-plan obscurci sur l'ensemble de l'écran.
 public class SettingsWindowController: NSWindowController, NSWindowDelegate, ObservableObject {
     public static let shared = SettingsWindowController()
     
     @Published public var isVisible: Bool = false
+    
+    private var dimmingWindow: NSWindow?
     
     private let defaultWidth: CGFloat = 380
     private let defaultHeight: CGFloat = 560
@@ -16,7 +70,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
     private let minHeight: CGFloat = 440
     
     public init() {
-        let panel = NSPanel(
+        let panel = SettingsPanel(
             contentRect: NSRect(x: 0, y: 0, width: defaultWidth, height: defaultHeight),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
@@ -35,11 +89,13 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         panel.isMovableByWindowBackground = true
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
-        panel.level = .floating
+        // Niveau au-dessus du fond obscurci
+        panel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 2)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
+        panel.isReleasedWhenClosed = false
         
         // Supprime les boutons macOS standard pour utiliser le design de fermeture personnalisé
         panel.standardWindowButton(.closeButton)?.isHidden = true
@@ -56,17 +112,62 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.autoresizingMask = [.width, .height]
         panel.contentView = hostingView
+        
+        setupDimmingWindow()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    /// Ouvre les paramètres au milieu de l'écran de l'ordinateur
+    private func setupDimmingWindow() {
+        let dimWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        dimWindow.isOpaque = false
+        dimWindow.backgroundColor = NSColor(white: 0.0, alpha: 0.65)
+        dimWindow.hasShadow = false
+        dimWindow.ignoresMouseEvents = false
+        // Niveau au-dessus des fenêtres flottantes standard (Recall principal à .floating)
+        dimWindow.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 1)
+        dimWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        dimWindow.isReleasedWhenClosed = false
+        
+        let backdropView = SettingsDimmingBackdropView(frame: dimWindow.contentLayoutRect)
+        backdropView.autoresizingMask = [.width, .height]
+        backdropView.onClick = { [weak self] in
+            self?.closeWindow()
+        }
+        dimWindow.contentView = backdropView
+        
+        self.dimmingWindow = dimWindow
+    }
+    
+    /// Ouvre les paramètres au milieu de l'écran avec un fond obscurci sur l'ensemble de l'écran
     public func show() {
         guard let panel = window else { return }
         
-        // Si la fenêtre n'est pas déjà affichée, la positionner au centre géométrique de l'écran
+        // 1. Calcul du cadre recouvrant tous les écrans connectés
+        var totalScreenFrame = NSScreen.screens.first?.frame ?? NSRect(x: 0, y: 0, width: 2560, height: 1440)
+        for screen in NSScreen.screens.dropFirst() {
+            totalScreenFrame = totalScreenFrame.union(screen.frame)
+        }
+        
+        // 2. Affichage et animation du fond obscurci
+        if let dim = dimmingWindow {
+            dim.setFrame(totalScreenFrame, display: true)
+            dim.alphaValue = 0
+            dim.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.2
+                dim.animator().alphaValue = 1.0
+            }
+        }
+        
+        // 3. Positionnement au centre de l'écran principal
         if !panel.isVisible {
             if let screen = NSScreen.main {
                 let screenFrame = screen.visibleFrame
@@ -80,8 +181,9 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             }
         }
         
+        // 4. Affichage de la fenêtre des paramètres au-dessus du fond obscurci
         panel.orderFrontRegardless()
-        panel.makeKey()
+        panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         
         DispatchQueue.main.async {
@@ -89,9 +191,19 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         }
     }
     
-    /// Ferme la fenêtre des paramètres
+    /// Ferme la fenêtre des paramètres et retire l'arrière-plan obscurci
     public func closeWindow() {
         window?.orderOut(nil)
+        
+        if let dim = dimmingWindow, dim.isVisible {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.18
+                dim.animator().alphaValue = 0.0
+            }, completionHandler: {
+                dim.orderOut(nil)
+            })
+        }
+        
         DispatchQueue.main.async {
             self.isVisible = false
         }
@@ -107,6 +219,9 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
     }
     
     public func windowWillClose(_ notification: Notification) {
+        if let dim = dimmingWindow, dim.isVisible {
+            dim.orderOut(nil)
+        }
         DispatchQueue.main.async {
             self.isVisible = false
         }

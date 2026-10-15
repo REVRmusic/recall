@@ -9,16 +9,17 @@ const translations = {
     "nav-features": "Fonctionnalités",
     "nav-demo": "Démonstration",
     "nav-compatibility": "Compatibilité",
-    "nav-problem": "Pourquoi Recall ?",
+    "nav-problem": "Pourquoi Recall&nbsp;?",
     "nav-download": "Télécharger",
     "nav-faq": "FAQ",
     "nav-legal": "Mentions Légales",
     "nav-cta-download": "Télécharger v1.0",
     
     // Hero
+    "hero-pill-badge": "NOUVEAU",
     "hero-pill-text": "Compagnon DJ Indépendant & 100 % Hors-Ligne",
-    "hero-title-part1": "Ne perdez plus jamais le fil de",
-    "hero-title-part2": "vos meilleurs mixes.",
+    "hero-title-part1": "Ne perdez plus jamais le fil",
+    "hero-title-part2": "de vos meilleurs mixes.",
     "hero-subtitle": "Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées et vos enchaînements harmoniques Camelot en plein set.",
     "hero-btn-mac": "Télécharger pour macOS",
     "hero-btn-win": "Télécharger pour Windows",
@@ -28,16 +29,22 @@ const translations = {
     "trust-safe": "Lecture seule (Zéro risque de crash)",
     "trust-free": "Gratuit & Open-Source",
     
-    // Showcase
-    "showcase-tab-main": "Vue Principale (Serato)",
-    "showcase-tab-rekordbox": "Vue Détection Rekordbox",
-    "showcase-tab-compact": "Bandeau Compact (78px)",
-    "showcase-tab-settings": "Réglages & Détection",
+    // Showcase Mockups
+    "showcase-tab-main": "Mockup Serato DJ Pro",
+    "showcase-tab-compact": "Mode Bandeau (78px)",
+    "showcase-tab-rekordbox": "Détection Rekordbox",
+    "showcase-tab-settings": "Réglages & Fond Obscurci",
+    "showcase-tab-standalone": "Widget Flottant HD",
     "showcase-status": "Surveillance active (1.5s)",
+    "caption-serato": "Mockup en conditions réelles : Recall détecte le morceau sur Deck 1 et affiche en direct vos routines éprouvées et clés compatibles sans ralentir votre mix.",
+    "caption-compact": "Mode Bandeau Compact (78 px) : ancré au pixel près en bas à droite de l'écran pour laisser 98 % d'espace visuel à vos platines et formes d'ondes.",
+    "caption-rekordbox": "Compatibilité Pioneer DJ Rekordbox : analyse instantanée de votre export XML et bascule dynamique automatique.",
+    "caption-settings": "Panneau des Réglages : ouverture au centre de l'écran avec fond obscurci profond sur l'ensemble de l'affichage pour un confort visuel maximal.",
+    "caption-standalone": "Fenêtre Principale HD : affichage ultra-lisible des clés musicales ou Camelot, tolérance BPM, favoris et glisser-déposer vers les decks.",
     
     // Problem Section
     "problem-tag": "Le Dilemme du DJ en Club",
-    "problem-title": "Pourquoi vos meilleurs mixes tombent dans l'oubli ?",
+    "problem-title": "Pourquoi vos meilleurs mixes tombent dans l'oubli&nbsp;?",
     "problem-subtitle": "Pendant un set de 3 heures à 128 BPM, le cerveau d'un DJ est saturé. Recall veille sur vos platines pour ranimer vos plus belles inspirations sans vous déranger.",
     "p1-title": "Le trou de mémoire à 30 secondes de la fin",
     "p1-desc": "La fin du morceau approche. Vous cherchez fébrilement dans 10 000 titres un enchaînement magique que vous avez déjà fait par le passé, mais le titre exact vous échappe.",
@@ -102,9 +109,21 @@ const translations = {
     "table-col-spotify": "Algorithmes Streaming",
     "table-col-notes": "Notes papier / Bacs fixes",
     "row1-name": "Basé sur VOS routines passées réelles",
+    "row1-val-recall": "✅ OUI (Historique local)",
+    "row1-val-spotify": "❌ Non (Générique)",
+    "row1-val-notes": "🟡 Partiel (Mémoire humaine)",
     "row2-name": "Fonctionne sans Internet (Club / Sous-sol)",
+    "row2-val-recall": "✅ 100 % Hors-ligne",
+    "row2-val-spotify": "❌ Impossible sans réseau",
+    "row2-val-notes": "✅ Oui",
     "row3-name": "Harmonie Camelot en temps réel",
+    "row3-val-recall": "✅ Automatique & Trié",
+    "row3-val-spotify": "❌ Non",
+    "row3-val-notes": "❌ Calcul mental manuel",
     "row4-name": "Glisser-déposer vers le logiciel DJ",
+    "row4-val-recall": "✅ Direct dans Decks",
+    "row4-val-spotify": "❌ Non",
+    "row4-val-notes": "❌ Non",
     "row5-name": "Consommation RAM & CPU",
     "row5-recall": "< 25 Mo / 0 % CPU",
     "row5-spotify": "> 400 Mo + Connexion",
@@ -151,6 +170,15 @@ const translations = {
     "legal-col3-title": "Protection de la Vie Privée (100% Offline)",
     "legal-col3-text": "Recall ne collecte <strong>aucune donnée personnelle</strong>, ne dispose d'aucun traceur publicitaire et n'utilise aucun serveur distant. Votre collection musicale, vos historiques et vos réglages demeurent exclusivement stockés en local sur votre ordinateur.",
     
+    "legal-highlight": "<strong>Engagement Open Source & Transparence :</strong> Le code source complet de Recall pour macOS et Windows est auditable publiquement sur notre dépôt GitHub. Vous pouvez vérifier par vous-même l'absence totale d'appels réseau, de cookies, ou de télémétrie cachée.",
+
+    // General & Meta
+    "lang-label": "Langue :",
+    "page-title": "Recall — Le Copilote Intelligent Hors-Ligne pour DJs Serato & Rekordbox",
+    "page-desc": "Recall est le compagnon DJ open-source 100% hors-ligne pour macOS et Windows. Rallumez vos meilleures transitions historiques, mixez harmoniquement en roue Camelot et glissez vos morceaux directement dans Serato DJ Pro ou Pioneer DJ Rekordbox.",
+    "sim-key-relative": "Relatif",
+    "sim-key-boost": "Boost",
+    
     // Footer
     "footer-desc": "Compagnon intelligent hors-ligne pour Serato DJ Pro & Pioneer DJ Rekordbox.",
     "footer-rights": "Tous droits réservés. Développé avec passion pour les DJs.",
@@ -169,9 +197,10 @@ const translations = {
     "nav-cta-download": "Download v1.0",
     
     // Hero
+    "hero-pill-badge": "NEW",
     "hero-pill-text": "Independent & 100% Offline DJ Companion",
-    "hero-title-part1": "Never lose track of",
-    "hero-title-part2": "your best mixes again.",
+    "hero-title-part1": "Never lose track",
+    "hero-title-part2": "of your best mixes.",
     "hero-subtitle": "The smart DJ copilot that mines your Serato & Rekordbox history to instantly recommend proven routines and Camelot harmonic transitions in live sets.",
     "hero-btn-mac": "Download for macOS",
     "hero-btn-win": "Download for Windows",
@@ -181,12 +210,18 @@ const translations = {
     "trust-safe": "Read-Only (Zero crash risk)",
     "trust-free": "Free & Open-Source",
     
-    // Showcase
-    "showcase-tab-main": "Main View (Serato)",
+    // Showcase Mockups
+    "showcase-tab-main": "Serato DJ Pro Mockup",
+    "showcase-tab-compact": "78px Compact Dock",
     "showcase-tab-rekordbox": "Rekordbox Detection",
-    "showcase-tab-compact": "Compact Bar (78px)",
-    "showcase-tab-settings": "Settings & Auto-Detect",
+    "showcase-tab-settings": "Settings & Screen Dim",
+    "showcase-tab-standalone": "Floating HD Widget",
     "showcase-status": "Active monitoring (1.5s)",
+    "caption-serato": "Real-world mockup: Recall tracks current Deck 1 playback in Serato DJ Pro and instantly displays your verified routines and Camelot harmonic matches.",
+    "caption-compact": "Ultra-slim 78px compact bar: docked to the bottom right of your screen, preserving 98% of display real estate for decks and waveforms.",
+    "caption-rekordbox": "Pioneer DJ Rekordbox integration: instant XML collection analysis and seamless auto-detection when Rekordbox launches.",
+    "caption-settings": "Settings Panel: centered modal with full-screen dark blur dimming to adjust BPM tolerances and key display formats without distraction.",
+    "caption-standalone": "Standalone HD Widget: clear Camelot or musical keys, BPM pitch delta, favorite routine saving button, and direct drag-and-drop.",
     
     // Problem Section
     "problem-tag": "The Club DJ Dilemma",
@@ -255,9 +290,21 @@ const translations = {
     "table-col-spotify": "Streaming Algorithms",
     "table-col-notes": "Paper Notes / Fixed Crates",
     "row1-name": "Trained on YOUR actual past routines",
+    "row1-val-recall": "✅ YES (Local History)",
+    "row1-val-spotify": "❌ No (Generic)",
+    "row1-val-notes": "🟡 Partial (Human Memory)",
     "row2-name": "Works with zero Internet (Club / Basement)",
+    "row2-val-recall": "✅ 100% Offline",
+    "row2-val-spotify": "❌ Requires Internet",
+    "row2-val-notes": "✅ Yes",
     "row3-name": "Real-time Camelot harmonic wheel matches",
+    "row3-val-recall": "✅ Automatic & Ranked",
+    "row3-val-spotify": "❌ No",
+    "row3-val-notes": "❌ Manual mental calculation",
     "row4-name": "Direct drag & drop into DJ decks",
+    "row4-val-recall": "✅ Direct into Decks",
+    "row4-val-spotify": "❌ No",
+    "row4-val-notes": "❌ No",
     "row5-name": "RAM & CPU footprint",
     "row5-recall": "< 25 MB / 0% CPU",
     "row5-spotify": "> 400 MB + Internet",
@@ -303,6 +350,15 @@ const translations = {
     "legal-col2-text": "<strong>Serato Limited:</strong> <em>Serato</em>, <em>Serato DJ</em>, <em>Serato DJ Pro</em> are registered trademarks of Serato Limited.<br><strong>AlphaTheta Corporation:</strong> <em>Rekordbox</em>, <em>Pioneer DJ</em> are registered trademarks of AlphaTheta Corporation.<br>Recall is an independent third-party companion. Recall is not affiliated, sponsored, endorsed, or certified by Serato Limited or AlphaTheta Corporation. All trademark mentions are purely descriptive (<em>Nominative Fair Use</em>).",
     "legal-col3-title": "Privacy & 100% Offline Commitment",
     "legal-col3-text": "Recall collects <strong>zero personal data</strong>, includes no tracking cookies or telemetry, and connects to no external remote servers. Your music library, gig history, and user settings stay strictly local on your computer.",
+    
+    "legal-highlight": "<strong>Open-Source Transparency Commitment:</strong> The complete source code of Recall for macOS and Windows is publicly auditable on our GitHub repository. You can verify for yourself the complete absence of network calls, cookies, or telemetry.",
+
+    // General & Meta
+    "lang-label": "Language:",
+    "page-title": "Recall — Smart Offline DJ Memory Copilot for Serato & Rekordbox",
+    "page-desc": "Recall is an independent 100% offline open-source DJ companion for macOS and Windows. Spark your best historical routines, mix harmonically on the Camelot wheel, and drag & drop tracks directly into Serato DJ Pro or Rekordbox.",
+    "sim-key-relative": "Relative",
+    "sim-key-boost": "Boost",
     
     // Footer
     "footer-desc": "Smart offline memory copilot for Serato DJ Pro & Pioneer DJ Rekordbox.",
@@ -374,12 +430,41 @@ const presetTracks = [
   }
 ];
 
-// --- State Management ---
-let currentLang = localStorage.getItem("recall_lang") || "fr";
+// --- State & Device Language Detection ---
+function getInitialLanguage() {
+  // 1. Check if user previously made an explicit choice
+  const saved = localStorage.getItem("recall_lang");
+  if (saved === "fr" || saved === "en") {
+    return saved;
+  }
+
+  // 2. Check browser / device languages list
+  const navLangs = (navigator.languages && navigator.languages.length)
+    ? navigator.languages
+    : [navigator.language || navigator.userLanguage || ""];
+
+  for (const l of navLangs) {
+    if (!l) continue;
+    const clean = l.toLowerCase();
+    if (clean.startsWith("fr")) return "fr";
+    if (clean.startsWith("en")) return "en";
+  }
+
+  // 3. Fallback based on primary navigator language
+  const primary = (navigator.language || navigator.userLanguage || "").toLowerCase();
+  if (primary.startsWith("fr")) return "fr";
+
+  // Default to English for international visitors
+  return "en";
+}
+
+let currentLang = getInitialLanguage();
+let updateSimulationFn = null;
 
 // --- DOM Initializer ---
 document.addEventListener("DOMContentLoaded", () => {
   initLanguage();
+  initMobileMenu();
   initNavbarScroll();
   initShowcaseTabs();
   initSimulator();
@@ -389,42 +474,108 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- Language Switching ---
 function initLanguage() {
   setLanguage(currentLang);
-  
+
+  // Desktop buttons
   const frBtn = document.getElementById("lang-fr");
   const enBtn = document.getElementById("lang-en");
-  
-  if (frBtn && enBtn) {
-    frBtn.addEventListener("click", () => setLanguage("fr"));
-    enBtn.addEventListener("click", () => setLanguage("en"));
-  }
+  if (frBtn) frBtn.addEventListener("click", () => setLanguage("fr"));
+  if (enBtn) enBtn.addEventListener("click", () => setLanguage("en"));
+
+  // Mobile buttons
+  const frMob = document.getElementById("lang-fr-mobile");
+  const enMob = document.getElementById("lang-en-mobile");
+  if (frMob) frMob.addEventListener("click", () => setLanguage("fr"));
+  if (enMob) enMob.addEventListener("click", () => setLanguage("en"));
 }
 
 function setLanguage(lang) {
-  currentLang = lang;
-  localStorage.setItem("recall_lang", lang);
-  
-  const dict = translations[lang] || translations["fr"];
-  
+  currentLang = (lang === "en") ? "en" : "fr";
+  localStorage.setItem("recall_lang", currentLang);
+
+  const dict = translations[currentLang] || translations["fr"];
+
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
     if (dict[key]) {
       el.innerHTML = dict[key];
     }
   });
-  
-  // Update button active state
+
+  // Update page title and description
+  if (dict["page-title"]) {
+    document.title = dict["page-title"];
+  }
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc && dict["page-desc"]) {
+    metaDesc.setAttribute("content", dict["page-desc"]);
+  }
+
+  // Update button active state on desktop and mobile
   document.querySelectorAll(".lang-btn").forEach(btn => btn.classList.remove("active"));
-  const activeBtn = document.getElementById(`lang-${lang}`);
-  if (activeBtn) activeBtn.classList.add("active");
-  
-  document.documentElement.lang = lang;
+  const activeDesktopBtn = document.getElementById(`lang-${currentLang}`);
+  if (activeDesktopBtn) activeDesktopBtn.classList.add("active");
+  const activeMobileBtn = document.getElementById(`lang-${currentLang}-mobile`);
+  if (activeMobileBtn) activeMobileBtn.classList.add("active");
+
+  document.documentElement.lang = currentLang;
+
+  // Refresh simulator labels
+  if (typeof updateSimulationFn === "function") {
+    updateSimulationFn();
+  }
+}
+
+// --- Mobile Navigation Menu Drawer ---
+function initMobileMenu() {
+  const toggleBtn = document.getElementById("mobile-menu-toggle");
+  const closeBtn = document.getElementById("mobile-nav-close");
+  const drawer = document.getElementById("mobile-nav-drawer");
+  const backdrop = document.getElementById("mobile-nav-backdrop");
+  const mobileLinks = document.querySelectorAll(".mobile-nav-link, .mobile-cta");
+
+  if (!toggleBtn || !drawer || !backdrop) return;
+
+  function openMenu() {
+    drawer.classList.add("open");
+    backdrop.classList.add("open");
+    toggleBtn.classList.add("active");
+    toggleBtn.setAttribute("aria-expanded", "true");
+    drawer.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMenu() {
+    drawer.classList.remove("open");
+    backdrop.classList.remove("open");
+    toggleBtn.classList.remove("active");
+    toggleBtn.setAttribute("aria-expanded", "false");
+    drawer.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    if (drawer.classList.contains("open")) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeMenu);
+  backdrop.addEventListener("click", closeMenu);
+
+  mobileLinks.forEach(link => {
+    link.addEventListener("click", () => {
+      closeMenu();
+    });
+  });
 }
 
 // --- Navbar Blur on Scroll ---
 function initNavbarScroll() {
   const navbar = document.querySelector(".navbar");
   if (!navbar) return;
-  
+
   window.addEventListener("scroll", () => {
     if (window.scrollY > 25) {
       navbar.classList.add("scrolled");
@@ -438,14 +589,14 @@ function initNavbarScroll() {
 function initShowcaseTabs() {
   const tabs = document.querySelectorAll(".showcase-tab");
   const views = document.querySelectorAll(".screenshot-view");
-  
+
   tabs.forEach(tab => {
     tab.addEventListener("click", () => {
       const target = tab.getAttribute("data-target");
-      
+
       tabs.forEach(t => t.classList.remove("active"));
       views.forEach(v => v.classList.remove("active"));
-      
+
       tab.classList.add("active");
       const activeView = document.getElementById(`view-${target}`);
       if (activeView) activeView.classList.add("active");
@@ -458,9 +609,9 @@ function initSimulator() {
   const trackSelect = document.getElementById("sim-track-select");
   const bpmSlider = document.getElementById("sim-bpm-slider");
   const bpmVal = document.getElementById("sim-bpm-display");
-  
+
   if (!trackSelect || !bpmSlider) return;
-  
+
   // Populate options
   trackSelect.innerHTML = "";
   presetTracks.forEach(track => {
@@ -469,50 +620,50 @@ function initSimulator() {
     opt.textContent = `${track.artist} — ${track.title} (${track.key} / ${track.bpm} BPM)`;
     trackSelect.appendChild(opt);
   });
-  
+
   function updateSimulation() {
     const selectedId = trackSelect.value;
     const track = presetTracks.find(t => t.id === selectedId) || presetTracks[0];
     const currentBpm = parseInt(bpmSlider.value, 10);
     bpmVal.textContent = `${currentBpm} BPM`;
-    
+
     // Update Now Playing Card
     const titleEl = document.getElementById("sim-np-title");
     const artistEl = document.getElementById("sim-np-artist");
     const keyEl = document.getElementById("sim-np-key");
     const bpmEl = document.getElementById("sim-np-bpm");
-    
+
     if (titleEl) titleEl.textContent = track.title;
     if (artistEl) artistEl.textContent = track.artist;
     if (keyEl) keyEl.textContent = track.key;
     if (bpmEl) bpmEl.textContent = `${currentBpm} BPM`;
-    
+
     // Update Suggestions List
     const listEl = document.getElementById("sim-suggestions-list");
     if (!listEl) return;
-    
+
     listEl.innerHTML = "";
     track.matches.forEach(m => {
       const row = document.createElement("div");
       row.className = "sim-row";
-      
+
       const bpmDiffNum = m.bpm - currentBpm;
       const bpmDiffStr = (bpmDiffNum >= 0 ? `+${bpmDiffNum}` : `${bpmDiffNum}`);
-      
+
       let keyClass = "perfect";
       let keyLabel = m.key;
       if (m.keyType === "relative") {
         keyClass = "relative";
-        keyLabel = `${m.key} Relatif`;
+        keyLabel = `${m.key} ${currentLang === "en" ? "Relative" : "Relatif"}`;
       } else if (m.keyType === "boost") {
         keyClass = "boost";
         keyLabel = `${m.key} Boost`;
       }
-      
+
       row.innerHTML = `
         <div class="sim-row-left">
           <span class="sim-row-rank">${m.rank}</span>
-          <div>
+          <div class="sim-row-info">
             <div class="sim-row-title">${m.title}</div>
             <div class="sim-row-artist">${m.artist}</div>
           </div>
@@ -527,7 +678,9 @@ function initSimulator() {
       listEl.appendChild(row);
     });
   }
-  
+
+  updateSimulationFn = updateSimulation;
+
   trackSelect.addEventListener("change", () => {
     const track = presetTracks.find(t => t.id === trackSelect.value);
     if (track) {
@@ -535,9 +688,9 @@ function initSimulator() {
     }
     updateSimulation();
   });
-  
+
   bpmSlider.addEventListener("input", updateSimulation);
-  
+
   // Initial run
   bpmSlider.value = presetTracks[0].bpm;
   updateSimulation();
@@ -546,23 +699,23 @@ function initSimulator() {
 // --- FAQ Accordions ---
 function initFAQ() {
   const items = document.querySelectorAll(".faq-item");
-  
+
   items.forEach(item => {
     const question = item.querySelector(".faq-question");
     const answer = item.querySelector(".faq-answer");
-    
+
     if (!question || !answer) return;
-    
+
     question.addEventListener("click", () => {
       const isActive = item.classList.contains("active");
-      
+
       // Close all
       items.forEach(i => {
         i.classList.remove("active");
         const a = i.querySelector(".faq-answer");
         if (a) a.style.maxHeight = null;
       });
-      
+
       // Toggle clicked
       if (!isActive) {
         item.classList.add("active");

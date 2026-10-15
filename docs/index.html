@@ -68,7 +68,7 @@
         <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
         <li><a href="#demo" class="nav-link" data-i18n="nav-demo">Démonstration</a></li>
         <li><a href="#compatibility" class="nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
-        <li><a href="#problem" class="nav-link" data-i18n="nav-problem">Pourquoi Recall ?</a></li>
+        <li><a href="#problem" class="nav-link" data-i18n="nav-problem">Pourquoi Recall&nbsp;?</a></li>
         <li><a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a></li>
         <li><a href="#mentions-legales" class="nav-link" data-i18n="nav-legal">Mentions Légales</a></li>
       </ul>
@@ -92,6 +92,13 @@
         <a href="#download" class="btn-nav-download" data-i18n="nav-cta-download">
           Télécharger v1.0
         </a>
+
+        <!-- Mobile Menu Toggle -->
+        <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Menu" aria-expanded="false">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
       </div>
     </div>
   </header>
@@ -102,13 +109,13 @@
   <section class="hero">
     <div class="container">
       <div class="hero-pill">
-        <span class="hero-pill-badge">NOUVEAU</span>
+        <span class="hero-pill-badge" data-i18n="hero-pill-badge">NOUVEAU</span>
         <span data-i18n="hero-pill-text">Compagnon DJ Indépendant & 100 % Hors-Ligne</span>
       </div>
 
       <h1 class="hero-title">
-        <span data-i18n="hero-title-part1">Ne perdez plus jamais le fil de</span><br>
-        <span class="hero-title-highlight" data-i18n="hero-title-part2">vos meilleurs mixes.</span>
+        <span data-i18n="hero-title-part1">Ne perdez plus jamais le fil</span><br>
+        <span class="hero-title-highlight" data-i18n="hero-title-part2">de vos meilleurs mixes.</span>
       </h1>
 
       <p class="hero-subtitle" data-i18n="hero-subtitle">
@@ -124,8 +131,8 @@
         </a>
 
         <a href="#download" class="btn-secondary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+          <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor">
+            <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
           </svg>
           <span data-i18n="hero-btn-win">Télécharger pour Windows</span>
         </a>
@@ -159,23 +166,27 @@
       </div>
 
       <!-- ====================================================================
-           Interactive App Showcase
+           App Interactive Showcase Mockups
            ==================================================================== -->
       <div class="showcase-wrapper">
         <div class="showcase-glow"></div>
         <div class="showcase-frame">
           <div class="showcase-header">
-            <div class="window-dots">
-              <span class="window-dot red"></span>
-              <span class="window-dot yellow"></span>
-              <span class="window-dot green"></span>
+            <div class="showcase-header-left">
+              <div class="window-dots">
+                <span class="window-dot red"></span>
+                <span class="window-dot yellow"></span>
+                <span class="window-dot green"></span>
+              </div>
+              <span class="showcase-window-title">Serato DJ Pro & Pioneer Rekordbox + Recall</span>
             </div>
 
             <div class="showcase-tabs">
-              <button class="showcase-tab active" data-target="main" data-i18n="showcase-tab-main">Vue Principale (Serato)</button>
-              <button class="showcase-tab" data-target="rekordbox" data-i18n="showcase-tab-rekordbox">Vue Détection Rekordbox</button>
-              <button class="showcase-tab" data-target="compact" data-i18n="showcase-tab-compact">Bandeau Compact (78px)</button>
-              <button class="showcase-tab" data-target="settings" data-i18n="showcase-tab-settings">Réglages & Détection</button>
+              <button class="showcase-tab active" data-target="serato" data-i18n="showcase-tab-main">Mockup Serato DJ Pro</button>
+              <button class="showcase-tab" data-target="compact" data-i18n="showcase-tab-compact">Mode Bandeau (78px)</button>
+              <button class="showcase-tab" data-target="rekordbox" data-i18n="showcase-tab-rekordbox">Détection Rekordbox</button>
+              <button class="showcase-tab" data-target="settings" data-i18n="showcase-tab-settings">Réglages & Fond Obscurci</button>
+              <button class="showcase-tab" data-target="standalone" data-i18n="showcase-tab-standalone">Widget Flottant HD</button>
             </div>
 
             <div class="showcase-status">
@@ -185,24 +196,59 @@
           </div>
 
           <div class="showcase-body">
-            <!-- View 1: Main Serato -->
-            <div id="view-main" class="screenshot-view active">
-              <img src="assets/images/recall-main.png" alt="Interface Recall - Suggestions en direct Serato" class="screenshot-img">
+            <!-- View 1: Main Serato Live DJ Mockup -->
+            <div id="view-serato" class="screenshot-view active">
+              <div class="screenshot-img-wrap">
+                <img src="assets/images/recall-serato-dj-mockup.png" alt="Mockup en conditions réelles : Recall flottant en bas à droite sur Serato DJ Pro" class="screenshot-img">
+              </div>
+              <div class="screenshot-caption">
+                <span class="screenshot-caption-icon">🎛️</span>
+                <span data-i18n="caption-serato">Mockup en conditions réelles : Recall détecte le morceau sur Deck 1 et affiche en direct vos routines éprouvées et clés compatibles sans ralentir votre mix.</span>
+              </div>
             </div>
 
-            <!-- View 2: Rekordbox Detection -->
-            <div id="view-rekordbox" class="screenshot-view">
-              <img src="assets/images/recall-rekordbox.png" alt="Interface Recall - Détection automatique Pioneer DJ Rekordbox" class="screenshot-img">
-            </div>
-
-            <!-- View 3: Compact Bar -->
+            <!-- View 2: Compact Bar in Serato -->
             <div id="view-compact" class="screenshot-view">
-              <img src="assets/images/recall-compact.png" alt="Interface Recall - Mode Bandeau Compact 78px" class="screenshot-img">
+              <div class="screenshot-img-wrap">
+                <img src="assets/images/recall-compact-serato.png" alt="Mockup Recall en mode Bandeau Ultra-Fin 78px intégré dans Serato" class="screenshot-img">
+              </div>
+              <div class="screenshot-caption">
+                <span class="screenshot-caption-icon">📐</span>
+                <span data-i18n="caption-compact">Mode Bandeau Compact (78 px) : ancré au pixel près en bas à droite de l'écran pour laisser 98 % d'espace visuel à vos platines et formes d'ondes.</span>
+              </div>
             </div>
 
-            <!-- View 4: Settings -->
+            <!-- View 3: Rekordbox Detection -->
+            <div id="view-rekordbox" class="screenshot-view">
+              <div class="screenshot-img-wrap standalone">
+                <img src="assets/images/recall-rekordbox.png" alt="Interface Recall - Détection automatique Pioneer DJ Rekordbox" class="screenshot-img">
+              </div>
+              <div class="screenshot-caption">
+                <span class="screenshot-caption-icon">⚡</span>
+                <span data-i18n="caption-rekordbox">Compatibilité Pioneer DJ Rekordbox : analyse instantanée de votre export XML et bascule dynamique automatique.</span>
+              </div>
+            </div>
+
+            <!-- View 4: Settings with Dimmed Screen -->
             <div id="view-settings" class="screenshot-view">
-              <img src="assets/images/recall-settings.png" alt="Interface Recall - Modale de configuration et filtres" class="screenshot-img">
+              <div class="screenshot-img-wrap">
+                <img src="assets/images/recall-settings-backdrop.png" alt="Modale des paramètres Recall avec fond d'écran obscurci sur l'ensemble de l'écran" class="screenshot-img">
+              </div>
+              <div class="screenshot-caption">
+                <span class="screenshot-caption-icon">🪟</span>
+                <span data-i18n="caption-settings">Panneau des Réglages : ouverture au centre de l'écran avec fond obscurci profond sur l'ensemble de l'affichage pour un confort visuel maximal.</span>
+              </div>
+            </div>
+
+            <!-- View 5: Standalone HD Floating Window -->
+            <div id="view-standalone" class="screenshot-view">
+              <div class="screenshot-img-wrap standalone">
+                <img src="assets/images/recall-main.png" alt="Fenêtre Recall - Mode normal détaillé avec suggestions, historique et boutons" class="screenshot-img">
+              </div>
+              <div class="screenshot-caption">
+                <span class="screenshot-caption-icon">✨</span>
+                <span data-i18n="caption-standalone">Fenêtre Principale HD : affichage ultra-lisible des clés musicales ou Camelot, tolérance BPM, favoris et glisser-déposer vers les decks.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -485,27 +531,27 @@
           <tbody>
             <tr>
               <td data-i18n="row1-name">Basé sur VOS routines passées réelles</td>
-              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ OUI (Historique local)</td>
-              <td>❌ Non (Générique)</td>
-              <td>🟡 Partiel (Mémoire humaine)</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;" data-i18n="row1-val-recall">✅ OUI (Historique local)</td>
+              <td data-i18n="row1-val-spotify">❌ Non (Générique)</td>
+              <td data-i18n="row1-val-notes">🟡 Partiel (Mémoire humaine)</td>
             </tr>
             <tr>
               <td data-i18n="row2-name">Fonctionne sans Internet (Club / Sous-sol)</td>
-              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ 100 % Hors-ligne</td>
-              <td>❌ Impossible sans réseau</td>
-              <td>✅ Oui</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;" data-i18n="row2-val-recall">✅ 100 % Hors-ligne</td>
+              <td data-i18n="row2-val-spotify">❌ Impossible sans réseau</td>
+              <td data-i18n="row2-val-notes">✅ Oui</td>
             </tr>
             <tr>
               <td data-i18n="row3-name">Harmonie Camelot en temps réel</td>
-              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ Automatique & Trié</td>
-              <td>❌ Non</td>
-              <td>❌ Calcul mental manuel</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;" data-i18n="row3-val-recall">✅ Automatique & Trié</td>
+              <td data-i18n="row3-val-spotify">❌ Non</td>
+              <td data-i18n="row3-val-notes">❌ Calcul mental manuel</td>
             </tr>
             <tr>
               <td data-i18n="row4-name">Glisser-déposer vers le logiciel DJ</td>
-              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ Direct dans Decks</td>
-              <td>❌ Non</td>
-              <td>❌ Non</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;" data-i18n="row4-val-recall">✅ Direct dans Decks</td>
+              <td data-i18n="row4-val-spotify">❌ Non</td>
+              <td data-i18n="row4-val-notes">❌ Non</td>
             </tr>
             <tr>
               <td data-i18n="row5-name">Consommation RAM & CPU</td>
@@ -536,7 +582,11 @@
         <!-- macOS Download Card -->
         <div class="download-card primary">
           <div>
-            <div class="os-icon">🍎</div>
+            <div class="os-icon-badge mac">
+              <svg width="44" height="44" viewBox="0 0 170 170" fill="currentColor" aria-hidden="true">
+                <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.6-7.77-11.72-14.19-6.07-9.5-10.83-20.2-14.28-32.09-3.45-11.89-5.18-23.01-5.18-33.36 0-14.07 3.56-25.96 10.67-35.68 7.12-9.72 16.15-14.67 27.1-14.85 4.88 0 10.15 1.25 15.82 3.75 5.66 2.5 9.77 3.82 12.32 3.96 1.83-.14 6.13-1.57 12.89-4.28 6.77-2.72 12.4-3.87 16.9-3.47 12.5.64 22.42 5.37 29.74 14.18-10.97 6.64-16.32 15.68-16.06 27.12.26 8.92 3.69 16.3 10.3 22.14 6.61 5.84 14.42 9.25 23.42 10.23-2.13 6.39-4.57 12.47-7.34 18.26zM119.22 31.84c0-7.18 2.58-13.78 7.74-19.79 5.16-6.02 11.45-9.84 18.87-11.47.13 1.09.2 2.06.2 2.92 0 7.07-2.73 13.75-8.2 20.03-5.46 6.29-12 10.23-19.61 11.82-.41-1.22-1-2.4-1.77-3.51z"/>
+              </svg>
+            </div>
             <h3 class="download-title" data-i18n="dl-mac-title">macOS</h3>
             <p class="download-specs" data-i18n="dl-mac-specs">
               macOS 12.0+ Monterey, Ventura, Sonoma, Sequoia (Universal Apple Silicon M1-M4 & Intel)
@@ -559,7 +609,11 @@
         <!-- Windows Download Card -->
         <div class="download-card">
           <div>
-            <div class="os-icon">🪟</div>
+            <div class="os-icon-badge win">
+              <svg width="44" height="44" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true">
+                <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+              </svg>
+            </div>
             <h3 class="download-title" data-i18n="dl-win-title">Windows</h3>
             <p class="download-specs" data-i18n="dl-win-specs">
               Windows 10 & 11 (64-bit x64, .NET 8 WPF)
@@ -728,7 +782,7 @@
           </div>
         </div>
 
-        <div class="legal-highlight-box">
+        <div class="legal-highlight-box" data-i18n="legal-highlight">
           <strong>Engagement Open Source & Transparence :</strong> Le code source complet de Recall pour macOS et Windows est auditable publiquement sur notre dépôt GitHub. Vous pouvez vérifier par vous-même l'absence totale d'appels réseau, de cookies, ou de télémétrie cachée.
         </div>
       </div>
@@ -769,6 +823,46 @@
       </div>
     </div>
   </footer>
+
+  <!-- Mobile Navigation Drawer -->
+  <div id="mobile-nav-drawer" class="mobile-nav-drawer" aria-hidden="true">
+    <div class="mobile-nav-header">
+      <div class="brand">
+        <div class="brand-icon-wrapper">
+          <img src="assets/images/app-icon.png" alt="Recall Logo" class="brand-icon">
+        </div>
+        <span class="brand-text">Recall <span class="brand-dot"></span></span>
+      </div>
+      <button id="mobile-nav-close" class="mobile-nav-close" aria-label="Fermer le menu">&times;</button>
+    </div>
+
+    <ul class="mobile-nav-links">
+      <li><a href="#features" class="mobile-nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
+      <li><a href="#demo" class="mobile-nav-link" data-i18n="nav-demo">Démonstration</a></li>
+      <li><a href="#compatibility" class="mobile-nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
+      <li><a href="#problem" class="mobile-nav-link" data-i18n="nav-problem">Pourquoi Recall&nbsp;?</a></li>
+      <li><a href="#faq" class="mobile-nav-link" data-i18n="nav-faq">FAQ</a></li>
+      <li><a href="#mentions-legales" class="mobile-nav-link" data-i18n="nav-legal">Mentions Légales</a></li>
+    </ul>
+
+    <div class="mobile-nav-footer">
+      <div class="mobile-lang-row">
+        <span class="mobile-lang-label" data-i18n="lang-label">Langue :</span>
+        <div class="lang-switch">
+          <button id="lang-fr-mobile" class="lang-btn active" title="Français">FR</button>
+          <button id="lang-en-mobile" class="lang-btn" title="English">EN</button>
+        </div>
+      </div>
+      <a href="#download" class="btn-nav-download mobile-cta" data-i18n="nav-cta-download">Télécharger v1.0</a>
+      <a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" class="btn-github mobile-github">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </div>
+  <div id="mobile-nav-backdrop" class="mobile-nav-backdrop" aria-hidden="true"></div>
 
   <!-- Scripts -->
   <script src="assets/js/main.js"></script>
