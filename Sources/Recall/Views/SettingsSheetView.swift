@@ -217,24 +217,11 @@ public struct SettingsSheetView: View {
                                     }
                             }
                             
-                            Button {
+                            SettingActionButton(
+                                icon: "arrow.down.right.and.arrow.up.left",
+                                title: "Recentrer en bas à droite de l'écran"
+                            ) {
                                 FloatingWindowController.shared.positionAtBottomRight()
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Image(systemName: "arrow.down.right.and.arrow.up.left")
-                                        .font(.system(size: 9, weight: .bold))
-                                    Text("Recentrer en bas à droite de l'écran")
-                                        .font(.system(size: 10.5, weight: .semibold))
-                                }
-                                .foregroundColor(Color.accentCyan)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .background(Color.accentCyan.opacity(0.12))
-                                .cornerRadius(5)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .stroke(Color.accentCyan.opacity(0.3), lineWidth: 0.8)
-                                )
                             }
                         }
                     }
@@ -535,24 +522,11 @@ public struct SettingsSheetView: View {
                             }
                             .padding(.top, 2)
                             
-                            Button {
+                            SettingActionButton(
+                                icon: "arrow.counterclockwise",
+                                title: "Démarrer une nouvelle session (Reset)"
+                            ) {
                                 sessionService.resetSession()
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Image(systemName: "arrow.counterclockwise")
-                                        .font(.system(size: 9, weight: .bold))
-                                    Text("Démarrer une nouvelle session (Reset)")
-                                        .font(.system(size: 10.5, weight: .semibold))
-                                }
-                                .foregroundColor(Color.accentCyan)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .background(Color.accentCyan.opacity(0.12))
-                                .cornerRadius(5)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .stroke(Color.accentCyan.opacity(0.3), lineWidth: 0.8)
-                                )
                             }
                         }
                     }
@@ -750,5 +724,39 @@ struct CustomSlider: View {
             )
         }
         .frame(height: 18)
+    }
+}
+
+// MARK: - Bouton d'action standardisé pour les cartes de réglages (sans chrome macOS)
+
+struct SettingActionButton: View {
+    let icon: String
+    let title: String
+    var color: Color = Color.accentCyan
+    let action: () -> Void
+    
+    @State private var isHovered: Bool = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 9, weight: .bold))
+                Text(title)
+                    .font(.system(size: 10.5, weight: .semibold))
+            }
+            .foregroundColor(color)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(isHovered ? color.opacity(0.20) : color.opacity(0.12))
+            .cornerRadius(5)
+            .overlay(
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(isHovered ? color.opacity(0.55) : color.opacity(0.30), lineWidth: 0.8)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
     }
 }
