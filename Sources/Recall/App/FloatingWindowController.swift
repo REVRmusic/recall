@@ -10,6 +10,24 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     private let bandeauHeight: CGFloat = 54
     private let minWidth: CGFloat = 250
     private let minHeight: CGFloat = 260
+    public static let maxWidth: CGFloat = 480
+    public static let maxHeight: CGFloat = 720
+    
+    private var hasPositionedOnLaunch: Bool = false
+    
+    public var effectiveMaxWidth: CGFloat {
+        if let screen = window?.screen ?? NSScreen.main {
+            return min(Self.maxWidth, screen.visibleFrame.width)
+        }
+        return Self.maxWidth
+    }
+    
+    public var effectiveMaxHeight: CGFloat {
+        if let screen = window?.screen ?? NSScreen.main {
+            return min(Self.maxHeight, screen.visibleFrame.height)
+        }
+        return Self.maxHeight
+    }
     
     public init() {
         let panel = NSPanel(
@@ -22,7 +40,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         super.init(window: panel)
         
         panel.minSize = NSSize(width: minWidth, height: minHeight)
-        panel.maxSize = NSSize(width: 800, height: 1400)
+        panel.maxSize = NSSize(width: effectiveMaxWidth, height: effectiveMaxHeight)
         
         panel.delegate = self
         panel.title = "Recall"
@@ -60,7 +78,9 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func show() {
-        positionAtBottomRight()
+        if !hasPositionedOnLaunch {
+            positionAtBottomRight()
+        }
         window?.orderFrontRegardless()
     }
     
@@ -69,13 +89,17 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func positionAtBottomRight() {
-        guard let window = self.window, let screen = NSScreen.main else { return }
+        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
         let targetHeight = UserSettings.shared.isCompactMode ? bandeauHeight : defaultHeight
-        let widthToUse = window.frame.size.width >= minWidth ? window.frame.size.width : defaultWidth
-        let x = visibleFrame.maxX - widthToUse - 20
-        let y = visibleFrame.minY + 20
+        let widthToUse = (window.frame.size.width >= minWidth && window.frame.size.width <= effectiveMaxWidth) ?
+            window.frame.size.width : defaultWidth
+        
+        // Exactement collé au bord inférieur bas et droit de l'ordinateur
+        let x = visibleFrame.maxX - widthToUse
+        let y = visibleFrame.minY
         window.setFrame(NSRect(x: x, y: y, width: widthToUse, height: targetHeight), display: true)
+        hasPositionedOnLaunch = true
     }
     
     public func updateAlwaysOnTop(_ enabled: Bool) {
@@ -84,18 +108,31 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func toggleCompactMode(_ compact: Bool) {
-        guard let window = self.window, let screen = NSScreen.main else { return }
+        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
         var currentFrame = window.frame
         let targetHeight = compact ? bandeauHeight : defaultHeight
         
         window.minSize = NSSize(width: minWidth, height: compact ? bandeauHeight : minHeight)
-        window.maxSize = NSSize(width: 800, height: compact ? bandeauHeight : 1400)
+        window.maxSize = NSSize(width: effectiveMaxWidth, height: compact ? bandeauHeight : effectiveMaxHeight)
         
         let visibleFrame = screen.visibleFrame
         if currentFrame.size.width < minWidth {
             currentFrame.size.width = minWidth
+        } else if currentFrame.size.width > effectiveMaxWidth {
+            currentFrame.size.width = effectiveMaxWidth
         }
+        
+        // Si la fenêtre était collée tout en bas ou à droite, conserver ce calage
+        let wasAtBottom = abs(currentFrame.origin.y - visibleFrame.minY) < 10
+        let wasAtRight = abs(currentFrame.maxX - visibleFrame.maxX) < 10
+        
         currentFrame.size.height = targetHeight
+        if wasAtBottom {
+            currentFrame.origin.y = visibleFrame.minY
+        }
+        if wasAtRight {
+            currentFrame.origin.x = visibleFrame.maxX - currentFrame.size.width
+        }
         
         // Empêcher tout débordement hors de l'écran
         if currentFrame.maxX > visibleFrame.maxX {
@@ -108,7 +145,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
             currentFrame.origin.y = visibleFrame.maxY - targetHeight
         }
         if currentFrame.minY < visibleFrame.minY {
-            currentFrame.origin.y = visibleFrame.minY + 20
+            currentFrame.origin.y = visibleFrame.minY
         }
         
         window.setFrame(currentFrame, display: true, animate: true)
