@@ -109,9 +109,9 @@
                     </StackPanel>
 
                     <!-- Boutons En-tête Droite -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                        <Button x:Name="BtnCollapse" Content="→ Réduire" Style="{StaticResource ActionButtonStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact" />
-                        <Button x:Name="BtnSettings" Content="⚙" Style="{StaticResource ActionButtonStyle}" Click="BtnSettings_Click" ToolTip="Paramètres et conformité" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnCollapse" Content="→ Réduire" Style="{StaticResource ActionButtonStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact" Margin="0,0,4,0"/>
+                        <Button x:Name="BtnSettings" Content="⚙" Style="{StaticResource ActionButtonStyle}" Click="BtnSettings_Click" ToolTip="Paramètres et conformité" Margin="0,0,4,0"/>
                         <Button x:Name="BtnClose" Content="✕" Style="{StaticResource ActionButtonStyle}" Click="BtnClose_Click" ToolTip="Fermer Recall" />
                     </StackPanel>
                 </Grid>
@@ -176,9 +176,9 @@
 
                 <!-- 3. Barre de Filtres Compacte -->
                 <Grid Grid.Row="2" Margin="10,0,10,6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <CheckBox x:Name="ChkFilterBpm" Content="BPM ±8%" Style="{StaticResource FilterChipStyle}" Click="FilterChanged"/>
-                        <CheckBox x:Name="ChkFilterHarmonie" Content="Harmonie" Style="{StaticResource FilterChipStyle}" Click="FilterChanged"/>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox x:Name="ChkFilterBpm" Content="BPM ±8%" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
+                        <CheckBox x:Name="ChkFilterHarmonie" Content="Harmonie" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
                         <CheckBox x:Name="ChkFilterFavs" Content="Favs" Style="{StaticResource FilterChipStyle}" Click="FilterChanged"/>
                     </StackPanel>
 
@@ -210,8 +210,8 @@
                                     </StackPanel>
 
                                     <!-- Key & BPM -->
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                                        <Border CornerRadius="4" BorderThickness="1" BorderBrush="#55FFFFFF" Padding="4,1" Background="#222834">
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border CornerRadius="4" BorderThickness="1" BorderBrush="#55FFFFFF" Padding="4,1" Background="#222834" Margin="0,0,4,0">
                                             <TextBlock Text="{Binding DisplayKey}" FontSize="9" FontWeight="Bold" Foreground="{Binding KeyColorHex}"/>
                                         </Border>
                                         <TextBlock Text="{Binding DisplayBpm}" FontSize="9.5" FontWeight="SemiBold" Foreground="#E5E7EB" VerticalAlignment="Center"/>
@@ -249,8 +249,8 @@
                 </StackPanel>
 
                 <!-- Actions Déplier & Fermer -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-                    <Button x:Name="BtnExpand" Content="← Déplier" Style="{StaticResource ActionButtonStyle}" Click="BtnExpand_Click" ToolTip="Déplier la fenêtre Recall"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnExpand" Content="← Déplier" Style="{StaticResource ActionButtonStyle}" Click="BtnExpand_Click" ToolTip="Déplier la fenêtre Recall" Margin="0,0,4,0"/>
                     <Button Content="✕" Style="{StaticResource ActionButtonStyle}" Click="BtnClose_Click"/>
                 </StackPanel>
             </Grid>

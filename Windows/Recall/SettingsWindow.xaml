@@ -31,8 +31,8 @@
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <!-- Logiciel DJ -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Logiciel DJ &amp; Source de données" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                        <StackPanel>
+                            <TextBlock Text="Logiciel DJ &amp; Source de données" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
                             <Grid>
                                 <TextBlock Text="Mode de détection" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="CmbDjSoftware" HorizontalAlignment="Right" Width="180" Background="#12151A" Foreground="#E5E7EB">
@@ -78,10 +78,10 @@
 
                     <!-- Historique & Algorithme -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="Routines &amp; Historique de mix" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                        <StackPanel>
+                            <TextBlock Text="Routines &amp; Historique de mix" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,10"/>
 
-                            <Grid>
+                            <Grid Margin="0,0,0,8">
                                 <TextBlock Text="Profondeur d'historique" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="CmbLookback" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
                                     <ComboBoxItem Content="30 jours" Tag="30"/>
@@ -92,7 +92,7 @@
                                 </ComboBox>
                             </Grid>
 
-                            <Grid>
+                            <Grid Margin="0,0,0,8">
                                 <TextBlock Text="Tolérance BPM (filtre)" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="CmbBpmTol" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
                                     <ComboBoxItem Content="± 4 %" Tag="4.0"/>
@@ -115,18 +115,26 @@
 
                     <!-- Options d'affichage -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Affichage &amp; Comportement" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
-                            <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Foreground="#E5E7EB" FontSize="10"/>
-                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Foreground="#E5E7EB" FontSize="10"/>
+                        <StackPanel>
+                            <TextBlock Text="Affichage &amp; Comportement" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Foreground="#E5E7EB" FontSize="10" Margin="0,0,0,6"/>
+                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Foreground="#E5E7EB" FontSize="10" Margin="0,0,0,8"/>
+                            <Grid Margin="0,2,0,0">
+                                <TextBlock Text="Format des clés" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbKeyDisplayMode" HorizontalAlignment="Right" Width="140" Background="#12151A" Foreground="#E5E7EB">
+                                    <ComboBoxItem Content="Camelot (9A)" Tag="0" IsSelected="True"/>
+                                    <ComboBoxItem Content="Musicale (Em)" Tag="1"/>
+                                    <ComboBoxItem Content="Combiné" Tag="2"/>
+                                </ComboBox>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
                     <!-- Mentions Légales & Confidentialité -->
                     <Border Background="#151820" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="⚖ Mentions Légales &amp; Confidentialité" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF"/>
-                            <TextBlock Text="Recall fonctionne à 100% hors-ligne en lecture seule. Aucune donnée ne quitte votre PC." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
+                        <StackPanel>
+                            <TextBlock Text="⚖ Mentions Légales &amp; Confidentialité" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                            <TextBlock Text="Recall fonctionne à 100% hors-ligne en lecture seule. Aucune donnée ne quitte votre PC." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,0,0,4"/>
                             <TextBlock Text="Serato DJ Pro est une marque déposée de Serato Limited. Rekordbox est une marque déposée d'AlphaTheta Corporation (Pioneer DJ). Recall est un compagnon indépendant développé par REVR, sans affiliation avec Serato Limited ou AlphaTheta Corporation." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
@@ -134,8 +142,8 @@
             </ScrollViewer>
 
             <!-- Footer Actions -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0" Spacing="8">
-                <Button Content="Réinitialiser" Padding="10,5" Background="Transparent" Foreground="#9CA3AF" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnReset_Click"/>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <Button Content="Réinitialiser" Padding="10,5" Background="Transparent" Foreground="#9CA3AF" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnReset_Click" Margin="0,0,8,0"/>
                 <Button Content="Enregistrer" Padding="14,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSave_Click"/>
             </StackPanel>
         </Grid>

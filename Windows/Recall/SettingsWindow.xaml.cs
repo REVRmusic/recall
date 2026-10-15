@@ -76,6 +76,16 @@ namespace Recall
                     break;
                 }
             }
+
+            // Key display mode
+            foreach (ComboBoxItem item in CmbKeyDisplayMode.Items)
+            {
+                if (int.TryParse(item.Tag?.ToString(), out int kMode) && kMode == _settings.KeyDisplayMode)
+                {
+                    CmbKeyDisplayMode.SelectedItem = item;
+                    break;
+                }
+            }
         }
 
         private void BtnBrowseRbXml_Click(object sender, RoutedEventArgs e)
@@ -145,6 +155,11 @@ namespace Recall
                 _settings.MaxSuggestions = maxS;
             }
 
+            if (CmbKeyDisplayMode.SelectedItem is ComboBoxItem itemKey && int.TryParse(itemKey.Tag?.ToString(), out int kdm))
+            {
+                _settings.KeyDisplayMode = kdm;
+            }
+
             _settings.Save();
             DialogResult = true;
             Close();
@@ -160,6 +175,7 @@ namespace Recall
             _settings.MaxSuggestions = 30;
             _settings.AlwaysOnTop = true;
             _settings.HidePlayedTracks = false;
+            _settings.KeyDisplayMode = 0;
             LoadSettings();
         }
 
