@@ -425,7 +425,7 @@ public struct SettingsSheetView: View {
                                     
                                     let presetNames: [String: String] = [
                                         "#0FA2FF": "Bleu Platine",
-                                        "#00D2D3": "Cyan Mixify",
+                                        "#00D2D3": "Cyan Électrique",
                                         "#AC63FE": "Violet Néon",
                                         "#2ECC71": "Vert Émeraude",
                                         "#FF9F43": "Orange DJ",
@@ -439,7 +439,7 @@ public struct SettingsSheetView: View {
                                 
                                 let presetColors: [(hex: String, name: String)] = [
                                     ("#0FA2FF", "Bleu Platine"),
-                                    ("#00D2D3", "Cyan Mixify"),
+                                    ("#00D2D3", "Cyan Électrique"),
                                     ("#AC63FE", "Violet Néon"),
                                     ("#2ECC71", "Vert Émeraude"),
                                     ("#FF9F43", "Orange DJ"),
