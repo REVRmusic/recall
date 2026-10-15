@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recall — Le Copilote Intelligent Hors-Ligne pour DJs Serato & Rekordbox</title>
+  <meta name="description" content="Recall est le compagnon DJ open-source 100% hors-ligne pour macOS et Windows. Rallumez vos meilleures transitions historiques, mixez harmoniquement en roue Camelot et glissez vos morceaux directement dans Serato DJ Pro ou Pioneer DJ Rekordbox.">
+  <meta name="keywords" content="Recall, DJ, Serato DJ Pro, Pioneer DJ, Rekordbox, Camelot Wheel, Harmonic Mixing, Transitions DJ, Routine Mining, macOS, Windows, Open Source, 100% Hors-ligne">
+  
+  <!-- Open Graph / Facebook / Discord -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://revrmusic.github.io/recall/">
+  <meta property="og:title" content="Recall — Le Copilote Intelligent Hors-Ligne pour DJs Serato & Rekordbox">
+  <meta property="og:description" content="Rallumez vos meilleures transitions historiques en plein set sans latence ni connexion Internet.">
+  <meta property="og:image" content="assets/images/recall-main.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Recall — Compagnon DJ Indépendant Serato & Rekordbox">
+  <meta name="twitter:description" content="Mining de routines historiques & mixage harmonique Camelot en direct. 100% hors-ligne.">
+  <meta name="twitter:image" content="assets/images/recall-main.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/app-icon.png">
+  <link rel="apple-touch-icon" href="assets/images/app-icon.png">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <!-- Schema.org SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Recall",
+    "operatingSystem": "macOS 12.0+, Windows 10/11",
+    "applicationCategory": "MultimediaApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "description": "Smart offline DJ memory companion and Camelot harmonic transition assistant for Serato DJ Pro and Pioneer DJ Rekordbox."
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ========================================================================
+       Navigation Bar
+       ======================================================================== -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="brand">
+        <div class="brand-icon-wrapper">
+          <img src="assets/images/app-icon.png" alt="Recall Logo" class="brand-icon">
+        </div>
+        <span class="brand-text">Recall <span class="brand-dot"></span></span>
+        <span class="brand-badge">v1.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
+        <li><a href="#demo" class="nav-link" data-i18n="nav-demo">Démonstration</a></li>
+        <li><a href="#compatibility" class="nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
+        <li><a href="#problem" class="nav-link" data-i18n="nav-problem">Pourquoi Recall ?</a></li>
+        <li><a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a></li>
+        <li><a href="#mentions-legales" class="nav-link" data-i18n="nav-legal">Mentions Légales</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Language Switcher -->
+        <div class="lang-switch">
+          <button id="lang-fr" class="lang-btn active" title="Français">FR</button>
+          <button id="lang-en" class="lang-btn" title="English">EN</button>
+        </div>
+
+        <!-- GitHub Link -->
+        <a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" class="btn-github" title="Voir sur GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+
+        <!-- Download CTA -->
+        <a href="#download" class="btn-nav-download" data-i18n="nav-cta-download">
+          Télécharger v1.0
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Hero Section
+       ======================================================================== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-pill">
+        <span class="hero-pill-badge">NOUVEAU</span>
+        <span data-i18n="hero-pill-text">Compagnon DJ Indépendant & 100 % Hors-Ligne</span>
+      </div>
+
+      <h1 class="hero-title">
+        <span data-i18n="hero-title-part1">Ne perdez plus jamais le fil de</span><br>
+        <span class="hero-title-highlight" data-i18n="hero-title-part2">vos meilleurs mixes.</span>
+      </h1>
+
+      <p class="hero-subtitle" data-i18n="hero-subtitle">
+        Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées et vos enchaînements harmoniques Camelot en plein set.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#download" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.74 1 .08 2.03-.49 2.65-1.24z"/>
+          </svg>
+          <span data-i18n="hero-btn-mac">Télécharger pour macOS</span>
+        </a>
+
+        <a href="#download" class="btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+          </svg>
+          <span data-i18n="hero-btn-win">Télécharger pour Windows</span>
+        </a>
+
+        <a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span data-i18n="hero-btn-github">Code source GitHub</span>
+        </a>
+      </div>
+
+      <!-- Trust Badges Row -->
+      <div class="hero-badges-row">
+        <div class="trust-badge">
+          <span class="trust-badge-icon">🛡️</span>
+          <span data-i18n="trust-offline">100 % Hors-ligne (Zéro Wi-Fi)</span>
+        </div>
+        <div class="trust-badge">
+          <span class="trust-badge-icon">⚡️</span>
+          <span data-i18n="trust-cpu">0 % CPU au repos (< 25 Mo RAM)</span>
+        </div>
+        <div class="trust-badge">
+          <span class="trust-badge-icon">🔒</span>
+          <span data-i18n="trust-safe">Lecture seule (Zéro risque de crash)</span>
+        </div>
+        <div class="trust-badge">
+          <span class="trust-badge-icon">🆓</span>
+          <span data-i18n="trust-free">Gratuit & Open-Source</span>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           Interactive App Showcase
+           ==================================================================== -->
+      <div class="showcase-wrapper">
+        <div class="showcase-glow"></div>
+        <div class="showcase-frame">
+          <div class="showcase-header">
+            <div class="window-dots">
+              <span class="window-dot red"></span>
+              <span class="window-dot yellow"></span>
+              <span class="window-dot green"></span>
+            </div>
+
+            <div class="showcase-tabs">
+              <button class="showcase-tab active" data-target="main" data-i18n="showcase-tab-main">Vue Principale (Serato)</button>
+              <button class="showcase-tab" data-target="rekordbox" data-i18n="showcase-tab-rekordbox">Vue Détection Rekordbox</button>
+              <button class="showcase-tab" data-target="compact" data-i18n="showcase-tab-compact">Bandeau Compact (78px)</button>
+              <button class="showcase-tab" data-target="settings" data-i18n="showcase-tab-settings">Réglages & Détection</button>
+            </div>
+
+            <div class="showcase-status">
+              <span class="status-indicator"></span>
+              <span data-i18n="showcase-status">Surveillance active (1.5s)</span>
+            </div>
+          </div>
+
+          <div class="showcase-body">
+            <!-- View 1: Main Serato -->
+            <div id="view-main" class="screenshot-view active">
+              <img src="assets/images/recall-main.png" alt="Interface Recall - Suggestions en direct Serato" class="screenshot-img">
+            </div>
+
+            <!-- View 2: Rekordbox Detection -->
+            <div id="view-rekordbox" class="screenshot-view">
+              <img src="assets/images/recall-rekordbox.png" alt="Interface Recall - Détection automatique Pioneer DJ Rekordbox" class="screenshot-img">
+            </div>
+
+            <!-- View 3: Compact Bar -->
+            <div id="view-compact" class="screenshot-view">
+              <img src="assets/images/recall-compact.png" alt="Interface Recall - Mode Bandeau Compact 78px" class="screenshot-img">
+            </div>
+
+            <!-- View 4: Settings -->
+            <div id="view-settings" class="screenshot-view">
+              <img src="assets/images/recall-settings.png" alt="Interface Recall - Modale de configuration et filtres" class="screenshot-img">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Problem & Solution
+       ======================================================================== -->
+  <section id="problem" class="section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="problem-tag">Le Dilemme du DJ en Club</span>
+        <h2 class="section-title" data-i18n="problem-title">Pourquoi vos meilleurs mixes tombent dans l'oubli ?</h2>
+        <p class="section-subtitle" data-i18n="problem-subtitle">
+          Pendant un set de 3 heures à 128 BPM, le cerveau d'un DJ est saturé. Recall veille sur vos platines pour ranimer vos plus belles inspirations sans vous déranger.
+        </p>
+      </div>
+
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-icon-box red">⏳</div>
+          <h3 class="problem-card-title" data-i18n="p1-title">Le trou de mémoire à 30 secondes de la fin</h3>
+          <p class="problem-card-desc" data-i18n="p1-desc">
+            La fin du morceau approche. Vous cherchez fébrilement dans 10 000 titres un enchaînement magique que vous avez déjà fait par le passé, mais le titre exact vous échappe.
+          </p>
+        </div>
+
+        <div class="problem-card">
+          <div class="problem-icon-box cyan">🗄️</div>
+          <h3 class="problem-card-title" data-i18n="p2-title">Des gig logs et playlists sous-exploités</h3>
+          <p class="problem-card-desc" data-i18n="p2-desc">
+            Vos logiciels DJ stockent des milliers d'heures d'historiques dans des bases de données dormantes. Personne ne les analyse pour vous faire profiter de votre propre expérience.
+          </p>
+        </div>
+
+        <div class="problem-card">
+          <div class="problem-icon-box magenta">📡</div>
+          <h3 class="problem-card-title" data-i18n="p3-title">Le piège des algorithmes en ligne</h3>
+          <p class="problem-card-desc" data-i18n="p3-desc">
+            Les recommandations de streaming génériques ne connaissent ni votre style de mix, ni votre public, et tombent en panne au moindre trou de réseau en sous-sol.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Interactive Simulator
+       ======================================================================== -->
+  <section id="demo" class="section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="sim-tag">Simulateur Interactif</span>
+        <h2 class="section-title" data-i18n="sim-title">Testez la logique de recommandation Recall</h2>
+        <p class="section-subtitle" data-i18n="sim-subtitle">
+          Sélectionnez un titre ou choisissez une clé Camelot et un BPM pour voir comment Recall combine instantanément vos routines historiques et la compatibilité harmonique.
+        </p>
+      </div>
+
+      <div class="simulator-box">
+        <div class="sim-controls">
+          <div class="sim-control-group">
+            <label for="sim-track-select" data-i18n="sim-label-track">1. Choisissez un titre en cours de lecture :</label>
+            <select id="sim-track-select" class="sim-select"></select>
+          </div>
+
+          <div class="sim-control-group">
+            <label for="sim-bpm-slider">
+              <span data-i18n="sim-label-bpm">2. Tempo en direct (BPM) :</span>
+              <span id="sim-bpm-display" class="sim-bpm-val">107 BPM</span>
+            </label>
+            <input type="range" id="sim-bpm-slider" class="sim-slider" min="80" max="150" value="107" step="1">
+          </div>
+        </div>
+
+        <div class="sim-live-results">
+          <!-- Left: Current Track -->
+          <div>
+            <div class="now-playing-sim-card">
+              <div class="sim-badge-live" data-i18n="sim-now-playing-badge">Platine Active (En cours)</div>
+              <h4 id="sim-np-title" class="sim-track-title">Wannabe (MAATT SHATTA REMIX)</h4>
+              <p id="sim-np-artist" class="sim-track-artist">Spice Girls</p>
+
+              <div class="sim-meta-row">
+                <span id="sim-np-key" class="key-pill">1B</span>
+                <span id="sim-np-bpm" class="bpm-pill">107 BPM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Suggestions List -->
+          <div>
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;" data-i18n="sim-suggestions-badge">
+              Suggestions calculées (Top Routines & Clés)
+            </div>
+            <div id="sim-suggestions-list" class="suggestions-sim-list">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Bento Features Grid
+       ======================================================================== -->
+  <section id="features" class="section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="features-tag">Fonctionnalités Clés</span>
+        <h2 class="section-title" data-i18n="features-title">Conçu par et pour les DJs exigeants</h2>
+        <p class="section-subtitle" data-i18n="features-subtitle">
+          Chaque détail de Recall a été pensé pour s'intégrer discrètement dans votre workflow sans jamais accaparer votre écran.
+        </p>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Feature 1: Routine Mining (Col 8) -->
+        <div class="bento-card col-8">
+          <div>
+            <span class="bento-icon">🔥</span>
+            <h3 class="bento-title" data-i18n="f1-title">Mining Intelligent de vos Routines</h3>
+            <p class="bento-desc" data-i18n="f1-desc">
+              Recall fouille vos sessions passées (Serato `master.sqlite` et Rekordbox XML) pour détecter vos paires de morceaux les plus jouées. Les flammes 🔥 7x vous indiquent immédiatement vos transitions éprouvées.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f1-badge">20 000+ transitions détectées</span>
+        </div>
+
+        <!-- Feature 2: Camelot Wheel (Col 4) -->
+        <div class="bento-card col-4">
+          <div>
+            <span class="bento-icon">🎡</span>
+            <h3 class="bento-title" data-i18n="f2-title">Harmonie Camelot Wheel</h3>
+            <p class="bento-desc" data-i18n="f2-desc">
+              Chaque suggestion affiche sa clé Camelot exacte, ses clés voisines (+1/-1 heure), ses relatifs majeurs/mineurs ou ses boosts d'énergie (+2 heures) pour un mix sans fausse note.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f2-badge">Compatible Clés Musicales & Open Key</span>
+        </div>
+
+        <!-- Feature 3: Drag & Drop (Col 4) -->
+        <div class="bento-card col-4">
+          <div>
+            <span class="bento-icon">🎯</span>
+            <h3 class="bento-title" data-i18n="f3-title">Glisser-Déposer Direct (Drag & Drop)</h3>
+            <p class="bento-desc" data-i18n="f3-desc">
+              Attrapez un titre depuis Recall et glissez-le directement sur la platine 1, 2 ou dans vos bacs de Serato et Rekordbox. Zéro manipulation fastidieuse.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f3-badge">Natif macOS & Windows</span>
+        </div>
+
+        <!-- Feature 4: Compact Bar (Col 4) -->
+        <div class="bento-card col-4">
+          <div>
+            <span class="bento-icon">📏</span>
+            <h3 class="bento-title" data-i18n="f4-title">Bandeau Compact Ultra-Fin (78 px)</h3>
+            <p class="bento-desc" data-i18n="f4-desc">
+              Passez en un clic en mode bandeau minimaliste docké en bas à droite de votre écran. Vos formes d'ondes Serato restent 100 % visibles.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f4-badge">Fenêtre toujours au premier plan</span>
+        </div>
+
+        <!-- Feature 5: Auto-Detection (Col 4) -->
+        <div class="bento-card col-4">
+          <div>
+            <span class="bento-icon">⚡️</span>
+            <h3 class="bento-title" data-i18n="f5-title">Détection Automatique (0,1 ms)</h3>
+            <p class="bento-desc" data-i18n="f5-desc">
+              Recall détecte automatiquement si Serato DJ Pro ou Rekordbox est lancé et bascule sans effort. Aucune surcharge processeur.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f5-badge">Zéro impact sur la latence audio</span>
+        </div>
+
+        <!-- Feature 6: 100% Offline (Col 12) -->
+        <div class="bento-card col-12" style="background: linear-gradient(135deg, rgba(20, 25, 35, 0.9), rgba(10, 14, 22, 0.9));">
+          <div>
+            <span class="bento-icon">🛡️</span>
+            <h3 class="bento-title" data-i18n="f6-title">100 % Hors-Ligne & Respect Absolu de la Vie Privée</h3>
+            <p class="bento-desc" data-i18n="f6-desc">
+              Aucun compte requis, aucune télémétrie, aucune connexion Internet. Recall lit uniquement vos historiques locaux sans jamais modifier vos fichiers audio ni vos métadonnées.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f6-badge">100 % Local & Sandboxé</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Compatibility & Specs
+       ======================================================================== -->
+  <section id="compatibility" class="section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="compat-tag">Écosystème</span>
+        <h2 class="section-title" data-i18n="compat-title">Compatibilité Logicielle & Matérielle</h2>
+        <p class="section-subtitle" data-i18n="compat-subtitle">
+          Développé en Swift natif pour macOS et en C# / .NET 8 moderne pour Windows.
+        </p>
+      </div>
+
+      <div class="compat-grid">
+        <!-- Serato Card -->
+        <div class="compat-card">
+          <div class="compat-header">
+            <div class="compat-icon-wrap" style="color: var(--serato-blue);">🎚️</div>
+            <div>
+              <h3 class="compat-software-title" data-i18n="compat-serato-title">Serato DJ Pro</h3>
+              <span class="compat-software-ver" data-i18n="compat-serato-ver">v2.5, v3.0, v3.1, v3.2+</span>
+            </div>
+          </div>
+          <ul class="compat-list">
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-serato-1">Lecture temps réel du deck actif via base SQLite (WAL)</span>
+            </li>
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-serato-2">Détection automatique des changements de platine (< 1s)</span>
+            </li>
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-serato-3">Drag & Drop natif vers les platines et crates</span>
+            </li>
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-serato-4">Accès 100 % en lecture seule sans modifier Serato</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Rekordbox Card -->
+        <div class="compat-card">
+          <div class="compat-header">
+            <div class="compat-icon-wrap" style="color: var(--rekordbox-cyan);">🎧</div>
+            <div>
+              <h3 class="compat-software-title" data-i18n="compat-rekordbox-title">Pioneer DJ Rekordbox</h3>
+              <span class="compat-software-ver" data-i18n="compat-rekordbox-ver">v6.x & v7.x</span>
+            </div>
+          </div>
+          <ul class="compat-list">
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-rekordbox-1">Lecture haute performance du pont Rekordbox XML</span>
+            </li>
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-rekordbox-2">Analyse de 15 000+ morceaux et playlists en 0,45 s</span>
+            </li>
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-rekordbox-3">Recherche sub-milliseconde et suggestions harmoniques</span>
+            </li>
+            <li class="compat-item">
+              <span class="compat-item-icon">✓</span>
+              <span data-i18n="compat-rekordbox-4">Drag & Drop direct vers les decks Rekordbox</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="table-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th data-i18n="table-col-feature">Fonctionnalité</th>
+              <th class="highlight-col" data-i18n="table-col-recall">Recall Copilot</th>
+              <th data-i18n="table-col-spotify">Algorithmes Streaming</th>
+              <th data-i18n="table-col-notes">Notes papier / Bacs fixes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-i18n="row1-name">Basé sur VOS routines passées réelles</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ OUI (Historique local)</td>
+              <td>❌ Non (Générique)</td>
+              <td>🟡 Partiel (Mémoire humaine)</td>
+            </tr>
+            <tr>
+              <td data-i18n="row2-name">Fonctionne sans Internet (Club / Sous-sol)</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ 100 % Hors-ligne</td>
+              <td>❌ Impossible sans réseau</td>
+              <td>✅ Oui</td>
+            </tr>
+            <tr>
+              <td data-i18n="row3-name">Harmonie Camelot en temps réel</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ Automatique & Trié</td>
+              <td>❌ Non</td>
+              <td>❌ Calcul mental manuel</td>
+            </tr>
+            <tr>
+              <td data-i18n="row4-name">Glisser-déposer vers le logiciel DJ</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;">✅ Direct dans Decks</td>
+              <td>❌ Non</td>
+              <td>❌ Non</td>
+            </tr>
+            <tr>
+              <td data-i18n="row5-name">Consommation RAM & CPU</td>
+              <td class="highlight-col" style="color: var(--cyan-primary); font-weight: 700;" data-i18n="row5-recall">< 25 Mo / 0 % CPU</td>
+              <td data-i18n="row5-spotify">> 400 Mo + Connexion</td>
+              <td data-i18n="row5-notes">0 Mo (mais statique)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Downloads
+       ======================================================================== -->
+  <section id="download" class="download-section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="dl-tag">Téléchargement Gratuit</span>
+        <h2 class="section-title" data-i18n="dl-title">Installez Recall sur votre machine de mix</h2>
+        <p class="section-subtitle" data-i18n="dl-subtitle">
+          Téléchargez la version officielle 1.0.0 pour macOS ou Windows. Aucun compte requis, installez et mixez.
+        </p>
+      </div>
+
+      <div class="download-grid">
+        <!-- macOS Download Card -->
+        <div class="download-card primary">
+          <div>
+            <div class="os-icon">🍎</div>
+            <h3 class="download-title" data-i18n="dl-mac-title">macOS</h3>
+            <p class="download-specs" data-i18n="dl-mac-specs">
+              macOS 12.0+ Monterey, Ventura, Sonoma, Sequoia (Universal Apple Silicon M1-M4 & Intel)
+            </p>
+          </div>
+
+          <div>
+            <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-btn primary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              <span data-i18n="dl-mac-btn">Télécharger Recall.dmg</span>
+            </a>
+            <div class="download-subtext">
+              <span data-i18n="dl-mac-zip">Télécharger au format .zip</span> &bull; 64-bit Universal Binary
+            </div>
+          </div>
+        </div>
+
+        <!-- Windows Download Card -->
+        <div class="download-card">
+          <div>
+            <div class="os-icon">🪟</div>
+            <h3 class="download-title" data-i18n="dl-win-title">Windows</h3>
+            <p class="download-specs" data-i18n="dl-win-specs">
+              Windows 10 & 11 (64-bit x64, .NET 8 WPF)
+            </p>
+          </div>
+
+          <div>
+            <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-btn secondary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              <span data-i18n="dl-win-btn">Télécharger Recall-Windows.zip</span>
+            </a>
+            <div class="download-subtext" data-i18n="dl-win-exe">
+              Exécutable autonome prêt à l'emploi
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-dim); font-size: 0.9rem;">
+        <span data-i18n="dl-github-note">Consultez également les releases officielles et le code source sur </span>
+        <a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" style="color: var(--cyan-primary); text-decoration: underline;">GitHub</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Frequently Asked Questions (FAQ)
+       ======================================================================== -->
+  <section id="faq" class="section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="faq-tag">Questions Fréquentes</span>
+        <h2 class="section-title" data-i18n="faq-title">Tout ce que vous devez savoir avant de mixer avec Recall</h2>
+      </div>
+
+      <div class="faq-list">
+        <!-- Q1 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q1">Est-ce que Recall risque de faire planter mon logiciel DJ en plein set ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a1">
+              Absolument aucun risque. Recall fonctionne dans un processus système totalement distinct et indépendant. Il accède aux bases de données Serato et Rekordbox en mode strictement **lecture seule** (<code>read-only</code>), sans jamais verrouiller ni altérer les fichiers en cours d'utilisation.
+            </div>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q2">Recall modifie-t-il mes fichiers audio, tags ID3 ou crates ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a2">
+              Non, jamais. Recall ne modifie pas un seul octet de vos MP3, FLAC, WAV, ni vos fichiers de configuration. Vos métadonnées musicales restent intouchées.
+            </div>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q3">Ai-je besoin d'une connexion Internet en soirée ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a3">
+              Non ! Recall est conçu pour la réalité des clubs, festivals et caves sans réseau. L'application est 100 % autonome et hors-ligne. Aucun port réseau n'est ouvert.
+            </div>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q4">Comment fonctionne la détection automatique entre Serato et Rekordbox ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a4">
+              Recall inspecte la liste des processus applicatifs en cours d'exécution toutes les 1,5 secondes. Cette vérification consomme moins de 0,1 milliseconde de CPU. Si Rekordbox est lancé, Recall bascule sur Rekordbox. Si Serato est lancé, il surveille le deck Serato. Vous pouvez aussi forcer un logiciel manuellement dans les réglages.
+            </div>
+          </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q5">Comment importer ma collection Rekordbox dans Recall ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a5">
+              Dans Rekordbox, faites simplement un clic droit sur votre Collection &gt; 'Exporter la collection au format XML'. Recall détecte automatiquement le fichier dans vos Documents. Vous pouvez également sélectionner manuellement votre fichier XML dans la modale des paramètres de Recall.
+            </div>
+          </div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q6">Est-ce gratuit ? Y a-t-il un abonnement ou des fonctionnalités bridées ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a6">
+              Recall est un projet open-source entièrement gratuit sous licence MIT, développé par REVR pour la communauté DJ. Toutes les fonctionnalités sont disponibles sans aucune restriction.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Legal Notice & Privacy (Mentions Légales)
+       ======================================================================== -->
+  <section id="mentions-legales" class="legal-section">
+    <div class="container">
+      <div class="section-header-center" style="margin-bottom: 30px;">
+        <span class="section-tag" data-i18n="legal-tag">Transparence & Conformité</span>
+        <h2 class="section-title" style="font-size: 2.2rem;" data-i18n="legal-title">Mentions Légales & Marques Déposées</h2>
+        <p class="section-subtitle" data-i18n="legal-subtitle">
+          Déclaration d'indépendance, propriété intellectuelle et respect absolu de la vie privée.
+        </p>
+      </div>
+
+      <div class="legal-box">
+        <div class="legal-grid">
+          <!-- Col 1: Éditeur & Hébergement -->
+          <div>
+            <h4 class="legal-col-title">
+              <span>🏛️</span> <span data-i18n="legal-col1-title">Éditeur & Hébergement</span>
+            </h4>
+            <div class="legal-text" data-i18n="legal-col1-text">
+              Le logiciel Recall et ce site web sont édités en tant que projet open-source indépendant développé par <strong>REVR</strong> pour la communauté DJ. Code source sous licence libre MIT.<br>
+              <strong>Hébergement :</strong> GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr St, San Francisco, CA 94107, USA).
+            </div>
+          </div>
+
+          <!-- Col 2: Clause de non-affiliation -->
+          <div>
+            <h4 class="legal-col-title">
+              <span>⚖️</span> <span data-i18n="legal-col2-title">Clause de Non-Affiliation (Fair Use)</span>
+            </h4>
+            <div class="legal-text" data-i18n="legal-col2-text">
+              <strong>Serato Limited :</strong> <em>Serato</em>, <em>Serato DJ</em>, <em>Serato DJ Pro</em> sont des marques déposées de Serato Limited.<br>
+              <strong>AlphaTheta Corporation :</strong> <em>Rekordbox</em>, <em>Pioneer DJ</em> sont des marques déposées d'AlphaTheta Corporation.<br>
+              Recall est un utilitaire tiers indépendant. Recall n'est en aucun cas affilié, sponsorisé, approuvé ou certifié par Serato Limited ou AlphaTheta Corporation. L'usage de ces noms est fait à titre strictement descriptif (<em>Nominative Fair Use</em>).
+            </div>
+          </div>
+
+          <!-- Col 3: Respect de la vie privée & 100% Hors-ligne -->
+          <div>
+            <h4 class="legal-col-title">
+              <span>🔒</span> <span data-i18n="legal-col3-title">Protection de la Vie Privée (100% Offline)</span>
+            </h4>
+            <div class="legal-text" data-i18n="legal-col3-text">
+              Recall ne collecte <strong>aucune donnée personnelle</strong>, ne dispose d'aucun traceur publicitaire et n'utilise aucun serveur distant. Votre collection musicale, vos historiques et vos réglages demeurent exclusivement stockés en local sur votre ordinateur.
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-highlight-box">
+          <strong>Engagement Open Source & Transparence :</strong> Le code source complet de Recall pour macOS et Windows est auditable publiquement sur notre dépôt GitHub. Vous pouvez vérifier par vous-même l'absence totale d'appels réseau, de cookies, ou de télémétrie cachée.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Footer
+       ======================================================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="brand-icon-wrapper" style="width: 32px; height: 32px;">
+            <img src="assets/images/app-icon.png" alt="Recall Logo" class="brand-icon">
+          </div>
+          <span class="brand-text" style="font-size: 1.2rem;">Recall <span class="brand-dot"></span></span>
+        </div>
+
+        <ul class="footer-links">
+          <li><a href="#features" data-i18n="nav-features">Fonctionnalités</a></li>
+          <li><a href="#demo" data-i18n="nav-demo">Démonstration</a></li>
+          <li><a href="#compatibility" data-i18n="nav-compatibility">Compatibilité</a></li>
+          <li><a href="#download" data-i18n="nav-download">Télécharger</a></li>
+          <li><a href="#faq" data-i18n="nav-faq">FAQ</a></li>
+          <li><a href="#mentions-legales" data-i18n="nav-legal">Mentions Légales</a></li>
+          <li><a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" data-i18n="footer-github-link">Dépôt GitHub</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          © 2026 REVR. <span data-i18n="footer-rights">Tous droits réservés. Développé avec passion pour les DJs.</span>
+        </div>
+        <div style="color: var(--text-dim);" data-i18n="footer-desc">
+          Compagnon intelligent hors-ligne pour Serato DJ Pro & Pioneer DJ Rekordbox.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
