@@ -97,7 +97,7 @@ public struct SettingsSheetView: View {
                             HStack(spacing: 4) {
                                 quickDayButton(days: 90, label: "3 mois")
                                 quickDayButton(days: 180, label: "6 mois")
-                                quickDayButton(days: 360, label: "1 an (360j)")
+                                quickDayButton(days: 360, label: "1 an")
                                 quickDayButton(days: 720, label: "2 ans")
                             }
                         }
@@ -362,13 +362,25 @@ public struct SettingsSheetView: View {
                                     
                                     Spacer()
                                     
-                                    Text("\(settings.playedMinDurationSeconds) sec")
-                                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                                        .foregroundColor(Color.accentCyan)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 1.5)
-                                        .background(Color.accentCyan.opacity(0.2))
-                                        .cornerRadius(4)
+                                    HStack(spacing: 4) {
+                                        if settings.playedMinDurationSeconds == 25 {
+                                            Text("Défaut")
+                                                .font(.system(size: 8, weight: .bold))
+                                                .foregroundColor(Color.accentCyan.opacity(0.85))
+                                                .padding(.horizontal, 4)
+                                                .padding(.vertical, 1.5)
+                                                .background(Color.accentCyan.opacity(0.15))
+                                                .cornerRadius(3)
+                                        }
+                                        
+                                        Text("\(settings.playedMinDurationSeconds) sec")
+                                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                                            .foregroundColor(Color.accentCyan)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 1.5)
+                                            .background(Color.accentCyan.opacity(0.2))
+                                            .cornerRadius(4)
+                                    }
                                 }
                                 
                                 CustomSlider(
@@ -386,12 +398,12 @@ public struct SettingsSheetView: View {
                                 HStack(spacing: 4) {
                                     quickSecondButton(seconds: 10, label: "10s")
                                     quickSecondButton(seconds: 15, label: "15s")
-                                    quickSecondButton(seconds: 25, label: "25s (défaut)")
+                                    quickSecondButton(seconds: 25, label: "25s", isDefault: true)
                                     quickSecondButton(seconds: 45, label: "45s")
-                                    quickSecondButton(seconds: 60, label: "1 min")
+                                    quickSecondButton(seconds: 60, label: "60s")
                                 }
                                 
-                                Text("Un morceau doit tourner au moins \(settings.playedMinDurationSeconds)s pour être mémorisé. Les pré-écoutes au casque plus courtes sont ignorées.")
+                                Text("Un morceau doit tourner au moins \(settings.playedMinDurationSeconds)s pour être mémorisé (25s par défaut). Les pré-écoutes au casque plus courtes sont ignorées.")
                                     .font(.system(size: 9))
                                     .foregroundColor(.white.opacity(0.50))
                                     .fixedSize(horizontal: false, vertical: true)
@@ -661,10 +673,10 @@ public struct SettingsSheetView: View {
             settings.historyDaysLookback = days
         } label: {
             Text(label)
-                .font(.system(size: 9.5, weight: isSelected ? .bold : .semibold))
-                .padding(.horizontal, 5)
-                .padding(.vertical, 3)
+                .font(.system(size: 9.5, weight: isSelected ? .bold : .semibold, design: .rounded))
+                .lineLimit(1)
                 .frame(maxWidth: .infinity)
+                .frame(height: 22)
                 .background(isSelected ? Color.accentCyan.opacity(0.30) : Color.white.opacity(0.06))
                 .foregroundColor(isSelected ? Color.accentCyan : Color.white.opacity(0.80))
                 .cornerRadius(4)
@@ -674,19 +686,20 @@ public struct SettingsSheetView: View {
                 )
         }
         .buttonStyle(.plain)
+        .help("\(days) jours d'historique")
     }
     
-    private func quickSecondButton(seconds: Int, label: String) -> some View {
+    private func quickSecondButton(seconds: Int, label: String, isDefault: Bool = false) -> some View {
         let isSelected = settings.playedMinDurationSeconds == seconds
         return Button {
             settings.playedMinDurationSeconds = seconds
             monitor.triggerSessionResync()
         } label: {
             Text(label)
-                .font(.system(size: 9, weight: isSelected ? .bold : .semibold))
-                .padding(.horizontal, 4)
-                .padding(.vertical, 3)
+                .font(.system(size: 9.5, weight: isSelected ? .bold : .semibold, design: .rounded))
+                .lineLimit(1)
                 .frame(maxWidth: .infinity)
+                .frame(height: 22)
                 .background(isSelected ? Color.accentCyan.opacity(0.30) : Color.white.opacity(0.06))
                 .foregroundColor(isSelected ? Color.accentCyan : Color.white.opacity(0.80))
                 .cornerRadius(4)
@@ -696,6 +709,7 @@ public struct SettingsSheetView: View {
                 )
         }
         .buttonStyle(.plain)
+        .help(isDefault ? "\(label) (délai recommandé par défaut)" : "\(seconds) secondes")
     }
 }
 
