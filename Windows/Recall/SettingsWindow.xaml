@@ -29,8 +29,9 @@
 
             <!-- Content -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
                     <!-- Logiciel DJ -->
-                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Logiciel DJ &amp; Source de données" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
                             <Grid>
@@ -45,7 +46,7 @@
                     </Border>
 
                     <!-- Collection Rekordbox XML -->
-                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Collection Rekordbox (Fichier XML)" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
                             <TextBlock Text="Export rekordbox.xml officiel ou synchronisation Lexicon" FontSize="9.5" Foreground="#9CA3AF" Margin="0,2,0,6"/>
@@ -61,7 +62,7 @@
                     </Border>
 
                     <!-- Base Serato -->
-                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Base de données Serato DJ Pro" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
                             <TextBlock Text="Fichier master.sqlite officiel de votre bibliothèque" FontSize="9.5" Foreground="#9CA3AF" Margin="0,2,0,6"/>
@@ -77,7 +78,7 @@
                     </Border>
 
                     <!-- Historique & Algorithme -->
-                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Routines &amp; Historique de mix" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,10"/>
 
@@ -114,7 +115,7 @@
                     </Border>
 
                     <!-- Options d'affichage -->
-                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Affichage &amp; Comportement" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
                             <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Foreground="#E5E7EB" FontSize="10" Margin="0,0,0,6"/>
