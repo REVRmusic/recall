@@ -4,7 +4,6 @@ public struct MainFloatingView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
     @EnvironmentObject var settings: UserSettings
     
-    @State private var showSettings: Bool = false
     @State private var showSearch: Bool = false
     @State private var showGuide: Bool = false
     
@@ -83,7 +82,6 @@ public struct MainFloatingView: View {
                 VStack(spacing: 0) {
                     // Barre d'en-tête (Logo Recall, Bouton Réduire bien visible, Actions)
                     HeaderView(
-                        showSettings: $showSettings,
                         showSearch: $showSearch,
                         showGuide: $showGuide
                     )
@@ -114,11 +112,6 @@ public struct MainFloatingView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .frame(minWidth: 250, maxWidth: .infinity, minHeight: 54, maxHeight: .infinity)
         .ignoresSafeArea() // Indispensable pour que le fond sombre englobe les traffic lights macOS
-        .sheet(isPresented: $showSettings) {
-            SettingsSheetView()
-                .environmentObject(settings)
-                .environmentObject(monitor)
-        }
         .sheet(isPresented: $showSearch) {
             ManualSearchSheetView()
                 .environmentObject(monitor)

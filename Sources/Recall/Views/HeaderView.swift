@@ -3,13 +3,12 @@ import SwiftUI
 public struct HeaderView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
     @EnvironmentObject var settings: UserSettings
+    @ObservedObject private var settingsWindow = SettingsWindowController.shared
     
-    @Binding var showSettings: Bool
     @Binding var showSearch: Bool
     @Binding var showGuide: Bool
     
-    public init(showSettings: Binding<Bool>, showSearch: Binding<Bool>, showGuide: Binding<Bool>) {
-        self._showSettings = showSettings
+    public init(showSearch: Binding<Bool>, showGuide: Binding<Bool>) {
         self._showSearch = showSearch
         self._showGuide = showGuide
     }
@@ -122,20 +121,24 @@ public struct HeaderView: View {
                 .focusable(false)
                 .help(settings.alwaysOnTop ? "Toujours au premier plan (Actif)" : "Premier plan désactivé")
                 
-                // Bouton Paramètres
+                // Bouton Paramètres (s'ouvre au centre de l'écran pour garder Recall visible)
                 Button {
-                    showSettings.toggle()
+                    SettingsWindowController.shared.toggle()
                 } label: {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(settingsWindow.isVisible ? Color.accentCyan : .white.opacity(0.7))
                         .frame(width: 21, height: 21)
-                        .background(Color.white.opacity(0.06))
+                        .background(settingsWindow.isVisible ? Color.accentCyan.opacity(0.25) : Color.white.opacity(0.06))
                         .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(settingsWindow.isVisible ? Color.accentCyan.opacity(0.65) : Color.clear, lineWidth: 1)
+                        )
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
-                .help("Paramètres d'historique et filtres")
+                .help("Paramètres d'historique et filtres (au milieu de l'écran)")
                 
                 // Bouton Fermer Recall élégant
                 CloseHeaderButton()

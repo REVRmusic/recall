@@ -32,6 +32,7 @@ public struct SettingsSheetView: View {
                 
                 // Bouton de fermeture élégant sans focus ring
                 Button {
+                    SettingsWindowController.shared.closeWindow()
                     dismiss()
                 } label: {
                     ZStack {
@@ -646,8 +647,36 @@ public struct SettingsSheetView: View {
                 .padding(.vertical, 10)
             }
         }
-        .frame(width: 335, height: 490)
-        .background(Color.darkBg)
+        .frame(minWidth: 350, maxWidth: .infinity, minHeight: 440, maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.darkBg.opacity(0.96))
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.20),
+                                    Color.accentCyan.opacity(0.18),
+                                    Color.white.opacity(0.06)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .ignoresSafeArea()
+        .onExitCommand {
+            SettingsWindowController.shared.closeWindow()
+            dismiss()
+        }
         .sheet(isPresented: $showGuideFromSettings) {
             GuideSheetView()
         }
