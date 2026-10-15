@@ -179,25 +179,27 @@ public struct DraggableTrackRow: View {
                     .help(camelotTooltip(for: track))
                 }
                 
-                // Badge BPM avec écart
+                // Badge BPM avec écart (strictement sur une seule ligne)
                 VStack(alignment: .trailing, spacing: 0) {
                     Text(track.displayBpm)
                         .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
                         .foregroundColor(.white.opacity(0.9))
                         .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: true)
                     
                     if let diff = track.bpmDiff, abs(diff) > 0.1 {
-                        Text(String(format: "%@%.1f", diff > 0 ? "+" : "", diff))
+                        Text(displayBpmDiff(diff))
                             .font(.system(size: 7.5, weight: .medium, design: .monospaced))
                             .foregroundColor(abs(diff) <= 3.0 ? Color.accentGreen : (abs(diff) <= 8.0 ? Color.accentOrange : Color.gray))
                             .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: true)
                     }
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 1.5)
                 .background(Color.white.opacity(0.06))
                 .cornerRadius(3)
-                .fixedSize(horizontal: true, vertical: false)
+                .fixedSize(horizontal: true, vertical: true)
                 .help(bpmTooltip(for: track))
             }
             .fixedSize(horizontal: true, vertical: false)
@@ -275,11 +277,18 @@ public struct DraggableTrackRow: View {
         return tip
     }
     
+    private func displayBpmDiff(_ diff: Double) -> String {
+        let sign = diff > 0 ? "+" : ""
+        if abs(diff.rounded() - diff) < 0.05 {
+            return "\(sign)\(Int(diff.rounded()))"
+        }
+        return String(format: "%@%.1f", sign, diff)
+    }
+    
     private func bpmTooltip(for track: Track) -> String {
         var tip = "\(track.displayBpm) BPM"
         if let diff = track.bpmDiff, abs(diff) > 0.05 {
-            let sign = diff > 0 ? "+" : ""
-            tip += " (Écart : \(sign)\(String(format: "%.1f", diff)) BPM)"
+            tip += " (Écart : \(displayBpmDiff(diff)) BPM)"
         }
         return tip
     }

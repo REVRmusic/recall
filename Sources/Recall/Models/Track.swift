@@ -99,6 +99,9 @@ public struct Track: Identifiable, Hashable {
     
     public var displayBpm: String {
         if bpm <= 0 { return "--" }
+        if abs(bpm.rounded() - bpm) < 0.05 {
+            return "\(Int(bpm.rounded()))"
+        }
         return String(format: "%.1f", bpm)
     }
     

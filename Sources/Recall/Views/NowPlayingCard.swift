@@ -142,6 +142,8 @@ public struct NowPlayingCard: View {
                         Text("\(track.displayBpm) BPM")
                             .font(.system(size: 10, weight: .semibold, design: .monospaced))
                             .foregroundColor(.white.opacity(0.85))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: true)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1.5)
                             .background(Color.white.opacity(0.08))
