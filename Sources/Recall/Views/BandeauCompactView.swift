@@ -262,7 +262,7 @@ public struct BandeauCompactView: View {
             CloseHeaderButton()
         }
         .padding(.horizontal, 10)
-        .frame(height: 52)
+        .frame(height: 54)
     }
 }
 
