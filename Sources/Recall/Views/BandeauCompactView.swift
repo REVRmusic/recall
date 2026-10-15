@@ -129,9 +129,9 @@ public struct BandeauCompactView: View {
                             .cornerRadius(2.5)
                         }
                         
-                        // Badge Clé Camelot
+                        // Badge Clé Camelot / Musicale
                         if let camelot = match.camelotKey {
-                            Text(camelot.code)
+                            Text(camelot.displayText(mode: settings.keyDisplayMode))
                                 .font(.system(size: 8, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 3.5)
                                 .padding(.vertical, 0.5)

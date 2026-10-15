@@ -154,13 +154,29 @@ public struct DraggableTrackRow: View {
                     .help(transitionTooltip(for: track))
                 }
                 
-                // Badge Clé Harmonique Camelot (couleurs authentiques Serato)
+                // Badge Clé Harmonique Camelot (couleurs authentiques Serato selon réglages)
                 if let camelot = track.camelotKey {
                     VStack(spacing: 0) {
-                        Text(camelot.code)
-                            .font(.system(size: 9.5, weight: .heavy, design: .monospaced))
+                        if settings.keyDisplayMode == 1 {
+                            Text(camelot.musicalName)
+                                .font(.system(size: 9.5, weight: .heavy, design: .monospaced))
+                                .foregroundColor(camelot.color)
+                                .lineLimit(1)
+                        } else if settings.keyDisplayMode == 2 {
+                            HStack(spacing: 2) {
+                                Text(camelot.code)
+                                    .font(.system(size: 9, weight: .heavy, design: .monospaced))
+                                Text(camelot.musicalName)
+                                    .font(.system(size: 7.5, weight: .semibold))
+                            }
                             .foregroundColor(camelot.color)
                             .lineLimit(1)
+                        } else {
+                            Text(camelot.code)
+                                .font(.system(size: 9.5, weight: .heavy, design: .monospaced))
+                                .foregroundColor(camelot.color)
+                                .lineLimit(1)
+                        }
                         
                         if let rel = track.harmonicRelation, rel.isCompatible, rel != .exact {
                             Text(rel.badgeText)

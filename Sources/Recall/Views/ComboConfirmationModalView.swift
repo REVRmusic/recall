@@ -3,6 +3,7 @@ import SwiftUI
 /// Modale de confirmation pour l'enregistrement ou la suppression d'une combinaison favorite
 public struct ComboConfirmationModalView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
+    @ObservedObject private var settings = UserSettings.shared
     let data: ComboConfirmationData
     
     public init(data: ComboConfirmationData) {
@@ -209,7 +210,7 @@ public struct ComboConfirmationModalView: View {
             
             HStack(spacing: 3) {
                 if let camelot = track.camelotKey {
-                    Text(camelot.code)
+                    Text(camelot.displayText(mode: settings.keyDisplayMode))
                         .font(.system(size: 8.5, weight: .bold, design: .rounded))
                         .foregroundColor(camelot.color)
                         .padding(.horizontal, 4)

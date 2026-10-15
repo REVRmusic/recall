@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct ManualSearchSheetView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
+    @EnvironmentObject var settings: UserSettings
     @Environment(\.dismiss) var dismiss
     
     @State private var searchQuery: String = ""
@@ -128,7 +129,7 @@ public struct ManualSearchSheetView: View {
                                     }
                                     
                                     if let camelot = track.camelotKey {
-                                        Text(camelot.code)
+                                        Text(camelot.displayText(mode: settings.keyDisplayMode))
                                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                                             .padding(.horizontal, 5)
                                             .padding(.vertical, 2)

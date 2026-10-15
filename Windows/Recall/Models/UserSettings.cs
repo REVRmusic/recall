@@ -25,6 +25,7 @@ namespace Recall.Models
         public string PlayedTrackColorHex { get; set; } = "#0FA2FF";
         public string PlayedTrackStyle { get; set; } = "both"; // "both", "textOnly", "bgOnly"
         public int PlayedMinDurationSeconds { get; set; } = 25;
+        public int KeyDisplayMode { get; set; } = 0; // 0: Camelot (9A), 1: Musicale (Em), 2: Combiné
 
         private static string SettingsFilePath
         {

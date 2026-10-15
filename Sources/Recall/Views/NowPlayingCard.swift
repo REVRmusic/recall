@@ -123,11 +123,17 @@ public struct NowPlayingCard: View {
                         // Badge Clé Camelot (couleurs authentiques Serato)
                         if let camelot = track.camelotKey {
                             HStack(spacing: 3) {
-                                Text(camelot.code)
-                                    .font(.system(size: 11, weight: .heavy, design: .monospaced))
-                                if settings.keyDisplayMode != 0 {
+                                if settings.keyDisplayMode == 1 {
+                                    Text(camelot.musicalName)
+                                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                                } else if settings.keyDisplayMode == 2 {
+                                    Text(camelot.code)
+                                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
                                     Text("(\(camelot.musicalName))")
                                         .font(.system(size: 8, weight: .medium))
+                                } else {
+                                    Text(camelot.code)
+                                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
                                 }
                             }
                             .padding(.horizontal, 6)

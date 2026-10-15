@@ -677,7 +677,7 @@ public struct SettingsSheetView: View {
                                     )
                                     .fixedSize(horizontal: true, vertical: false)
                                     
-                                    Text("11A")
+                                    Text(CamelotKey(number: 11, letter: "A").displayText(mode: settings.keyDisplayMode))
                                         .font(.system(size: 8.5, weight: .heavy))
                                         .padding(.horizontal, 3.5)
                                         .padding(.vertical, 1)

@@ -48,6 +48,13 @@ namespace Recall.Models
         public string Code => $"{Number}{Letter}";
         public bool IsMinor => Letter == "A";
 
+        public string DisplayText(int mode = 0) => mode switch
+        {
+            1 => string.IsNullOrEmpty(MusicalName) ? Code : MusicalName,
+            2 => string.IsNullOrEmpty(MusicalName) ? Code : $"{Code} ({MusicalName})",
+            _ => Code
+        };
+
         public static CamelotKey? Parse(string? raw)
         {
             if (string.IsNullOrWhiteSpace(raw)) return null;

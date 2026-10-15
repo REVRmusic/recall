@@ -123,7 +123,7 @@ namespace Recall.Models
             }
         }
 
-        public string DisplayKey => CamelotKey?.Code ?? (!string.IsNullOrEmpty(RawKey) ? RawKey : "--");
+        public string DisplayKey => CamelotKey?.DisplayText(UserSettings.Shared.KeyDisplayMode) ?? (!string.IsNullOrEmpty(RawKey) ? RawKey : "--");
         public string KeyColorHex => CamelotKey?.ColorHex ?? "#888888";
 
         public bool IsFileAvailable => !string.IsNullOrEmpty(FilePath) && File.Exists(FilePath);

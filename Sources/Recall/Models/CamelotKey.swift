@@ -21,6 +21,21 @@ public struct CamelotKey: Hashable, Codable, Equatable {
         return "\(number)\(letter)"
     }
     
+    /// Retourne la représentation textuelle selon le mode d'affichage choisi
+    /// - 0: Camelot (ex: "9A")
+    /// - 1: Musicale (ex: "Em")
+    /// - 2: Combiné (ex: "9A (Em)")
+    public func displayText(mode: Int = 0) -> String {
+        switch mode {
+        case 1:
+            return musicalName.isEmpty ? code : musicalName
+        case 2:
+            return musicalName.isEmpty ? code : "\(code) (\(musicalName))"
+        default:
+            return code
+        }
+    }
+    
     public var isMinor: Bool {
         return letter == "A"
     }

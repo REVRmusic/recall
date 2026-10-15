@@ -240,8 +240,12 @@ public struct Track: Identifiable, Hashable {
     }
     
     public var displayKey: String {
+        return displayKey(mode: UserSettings.shared.keyDisplayMode)
+    }
+    
+    public func displayKey(mode: Int) -> String {
         if let camelot = camelotKey {
-            return camelot.code
+            return camelot.displayText(mode: mode)
         }
         if !rawKey.isEmpty {
             return rawKey
