@@ -24,8 +24,8 @@ private class SettingsDimmingBackdropView: NSVisualEffectView {
         wantsLayer = true
         
         let tint = CALayer()
-        // Assombrissement profond pour un contraste élevé et lisible
-        tint.backgroundColor = NSColor.black.withAlphaComponent(0.65).cgColor
+        // Voile sombre doux et translucide (0.38) pour estomper l'arrière-plan sans masquer le contexte
+        tint.backgroundColor = NSColor.black.withAlphaComponent(0.38).cgColor
         tint.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
         tint.frame = bounds
         layer?.addSublayer(tint)
@@ -35,12 +35,6 @@ private class SettingsDimmingBackdropView: NSVisualEffectView {
     override func layout() {
         super.layout()
         tintLayer?.frame = bounds
-    }
-    
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-        NSColor.black.withAlphaComponent(0.65).setFill()
-        dirtyRect.fill(using: .sourceOver)
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -128,11 +122,11 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             defer: false
         )
         dimWindow.isOpaque = false
-        dimWindow.backgroundColor = NSColor(white: 0.0, alpha: 0.65)
+        dimWindow.backgroundColor = .clear
         dimWindow.hasShadow = false
         dimWindow.ignoresMouseEvents = false
-        // Niveau au-dessus des fenêtres flottantes standard (Recall principal à .floating)
-        dimWindow.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 1)
+        // Niveau juste en-dessous de la fenêtre flottante de Recall (.floating) mais au-dessus des applications hôtes (Serato/Rekordbox)
+        dimWindow.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) - 1)
         dimWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         dimWindow.isReleasedWhenClosed = false
         
@@ -166,8 +160,16 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
                 dim.animator().alphaValue = 1.0
             }
         }
+
+        // 3. Maintien explicite de la fenêtre principale Recall au premier plan (au-dessus du fond obscurci)
+        if let mainWindow = FloatingWindowController.shared.window {
+            if mainWindow.level.rawValue <= (dimmingWindow?.level.rawValue ?? 0) {
+                mainWindow.level = .floating
+            }
+            mainWindow.orderFrontRegardless()
+        }
         
-        // 3. Positionnement au centre de l'écran principal
+        // 4. Positionnement au centre de l'écran principal
         if !panel.isVisible {
             if let screen = NSScreen.main {
                 let screenFrame = screen.visibleFrame
@@ -181,7 +183,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             }
         }
         
-        // 4. Affichage de la fenêtre des paramètres au-dessus du fond obscurci
+        // 5. Affichage de la fenêtre des paramètres au-dessus de tout
         panel.orderFrontRegardless()
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -202,6 +204,11 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             }, completionHandler: {
                 dim.orderOut(nil)
             })
+        }
+
+        // Rétablir le niveau standard si l'option Always on Top était désactivée
+        if !UserSettings.shared.alwaysOnTop {
+            FloatingWindowController.shared.window?.level = .normal
         }
         
         DispatchQueue.main.async {

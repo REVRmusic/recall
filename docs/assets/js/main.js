@@ -1114,16 +1114,24 @@ function initRecallAppSimulator() {
   const settingsSaveBtn = document.getElementById("sim-settings-save");
   const settingsBackdrop = document.getElementById("sim-settings-backdrop");
 
+  const simStage = document.getElementById("sim-stage");
+
   function openSettings() {
-    if (!settingsOverlay) return;
-    settingsOverlay.classList.add("open");
-    settingsOverlay.setAttribute("aria-hidden", "false");
+    if (simStage) simStage.classList.add("settings-open");
+    if (settingsBackdrop) settingsBackdrop.classList.add("open");
+    if (settingsOverlay) {
+      settingsOverlay.classList.add("open");
+      settingsOverlay.setAttribute("aria-hidden", "false");
+    }
   }
 
   function closeSettings() {
-    if (!settingsOverlay) return;
-    settingsOverlay.classList.remove("open");
-    settingsOverlay.setAttribute("aria-hidden", "true");
+    if (simStage) simStage.classList.remove("settings-open");
+    if (settingsBackdrop) settingsBackdrop.classList.remove("open");
+    if (settingsOverlay) {
+      settingsOverlay.classList.remove("open");
+      settingsOverlay.setAttribute("aria-hidden", "true");
+    }
   }
 
   if (settingsOpenNormal) settingsOpenNormal.addEventListener("click", openSettings);
