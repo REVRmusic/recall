@@ -1,0 +1,824 @@
+import Foundation
+import SQLite3
+
+public class SeratoDatabaseService {
+    private let dbPath: String
+    
+    public init(databasePath: String = UserSettings.shared.effectiveDatabasePath) {
+        self.dbPath = databasePath
+    }
+    
+    private func openDatabase() -> OpaquePointer? {
+        var db: OpaquePointer?
+        // Ouverture en READWRITE pour permettre à SQLite d'accéder au fichier WAL (-wal / -shm) en temps réel
+        if sqlite3_open_v2(dbPath, &db, SQLITE_OPEN_READWRITE, nil) == SQLITE_OK {
+            // Verrouillage strict en lecture seule via PRAGMA query_only pour garantir l'intégrité de Serato
+            sqlite3_exec(db, "PRAGMA query_only = ON;", nil, nil, nil)
+            sqlite3_exec(db, "PRAGMA busy_timeout = 2000;", nil, nil, nil)
+            return db
+        }
+        
+        // Repli en lecture seule URI si nécessaire
+        let uri = "file:\(dbPath)?immutable=1"
+        if sqlite3_open_v2(uri, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, nil) == SQLITE_OK {
+            return db
+        }
+        
+        return nil
+    }
+    
+// MARK: - Modèle d'état des platines actives
+
+public struct ActiveDecksState {
+    public let deck1: Track?
+    public let deck2: Track?
+    public let latestEntryId: Int
+    public let hasActiveSession: Bool
+    
+    public init(deck1: Track?, deck2: Track?, latestEntryId: Int, hasActiveSession: Bool) {
+        self.deck1 = deck1
+        self.deck2 = deck2
+        self.latestEntryId = latestEntryId
+        self.hasActiveSession = hasActiveSession
+    }
+}
+
+// MARK: - Détection des morceaux en cours de lecture
+
+/// Détecte de façon stricte et robuste les morceaux actuellement chargés et en cours de lecture
+/// sur chaque platine (Deck 1 / Deck 2) pour la session Serato en cours.
+/// Règles strictes :
+/// 1. Ne consulte QUE la session active (session_id le plus récent dans history_session).
+/// 2. Exclut catégoriquement toute piste dont end_time > 0 (piste éjectée, terminée ou remplacée).
+/// 3. Filtre par fenêtre de fraîcheur (anti-stagnation après fin de lecture).
+/// 4. Si une platine n'a aucun morceau chargé dans la session active, elle renvoie nil (platine vide).
+public func fetchActiveDecks() -> ActiveDecksState {
+    guard let db = openDatabase() else {
+        return ActiveDecksState(deck1: nil, deck2: nil, latestEntryId: -1, hasActiveSession: false)
+    }
+    defer { sqlite3_close(db) }
+    
+    // 1. Récupération de la dernière session Serato
+    var sessionStmt: OpaquePointer?
+    var latestSessionId: Int64 = -1
+    var sessionEndTime: Int64 = -1
+    
+    if sqlite3_prepare_v2(db, "SELECT id, end_time FROM history_session ORDER BY id DESC LIMIT 1;", -1, &sessionStmt, nil) == SQLITE_OK {
+        if sqlite3_step(sessionStmt) == SQLITE_ROW {
+            latestSessionId = sqlite3_column_int64(sessionStmt, 0)
+            sessionEndTime = sqlite3_column_int64(sessionStmt, 1)
+        }
+        sqlite3_finalize(sessionStmt)
+    }
+    
+    guard latestSessionId > 0 else {
+        return ActiveDecksState(deck1: nil, deck2: nil, latestEntryId: -1, hasActiveSession: false)
+    }
+    
+    // Si la session Serato a été explicitement clôturée dans SQLite (end_time > 0)
+    if sessionEndTime > 0 {
+        return ActiveDecksState(deck1: nil, deck2: nil, latestEntryId: -1, hasActiveSession: false)
+    }
+    
+    // 2. Récupération des entrées de la session active
+    let sql = """
+    SELECT 
+        id,
+        asset_id,
+        ifnull(name, ''),
+        ifnull(artist, ''),
+        ifnull(bpm, 0.0),
+        ifnull(key, ''),
+        ifnull(file_name, ''),
+        ifnull(portable_id, ''),
+        ifnull(deck, ''),
+        start_time,
+        end_time,
+        ifnull(length_sec, 0)
+    FROM history_entry
+    WHERE session_id = \(latestSessionId)
+    ORDER BY id DESC;
+    """
+    
+    var stmt: OpaquePointer?
+    var d1Track: Track? = nil
+    var d2Track: Track? = nil
+    var maxEntryId: Int = -1
+    let nowUnix = Date().timeIntervalSince1970
+    
+    if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            let entryId = Int(sqlite3_column_int64(stmt, 0))
+            if maxEntryId < 0 {
+                maxEntryId = entryId
+            }
+            
+            var deck = sqlite3_column_text(stmt, 8).map { String(cString: $0) } ?? ""
+            deck = deck.replacingOccurrences(of: "'", with: "")
+            
+            let endTimeUnix = sqlite3_column_int64(stmt, 10)
+            let startTimeUnix = sqlite3_column_int64(stmt, 9)
+            let lengthSec = sqlite3_column_int64(stmt, 11)
+            
+            // RÈGLE 1 : end_time <= 0 (Serato conserve end_time à -1 tant que le morceau est chargé)
+            guard endTimeUnix <= 0 else { continue }
+            
+            // RÈGLE 2 : Fraîcheur temporelle (au maximum 15 min ou 2.5x durée du morceau)
+            let elapsed = nowUnix - Double(startTimeUnix)
+            let maxValidDuration = lengthSec > 0 ? max(Double(lengthSec) * 2.5, 900.0) : 900.0
+            guard elapsed >= 0 && elapsed <= maxValidDuration else { continue }
+            
+            let assetId = Int(sqlite3_column_int64(stmt, 1))
+            let title = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
+            let artist = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
+            let bpm = sqlite3_column_double(stmt, 4)
+            let key = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+            let fileName = sqlite3_column_text(stmt, 6).map { String(cString: $0) } ?? ""
+            let portableId = sqlite3_column_text(stmt, 7).map { String(cString: $0) } ?? ""
+            let playedAt = Date(timeIntervalSince1970: TimeInterval(startTimeUnix))
+            
+            let resolvedPath = resolveTrackFilePath(portableId: portableId, fileName: fileName)
+            
+            let track = Track(
+                id: "entry-\(entryId)",
+                assetId: assetId > 0 ? assetId : nil,
+                historyEntryId: entryId,
+                title: title,
+                artist: artist,
+                bpm: bpm,
+                rawKey: key,
+                filePath: resolvedPath,
+                fileName: fileName,
+                portableId: portableId,
+                deck: deck.isEmpty ? nil : deck,
+                playedAt: playedAt
+            )
+            
+            if deck == "1" && d1Track == nil {
+                d1Track = track
+            } else if deck == "2" && d2Track == nil {
+                d2Track = track
+            }
+            
+            if d1Track != nil && d2Track != nil {
+                break
+            }
+        }
+        sqlite3_finalize(stmt)
+    }
+    
+    return ActiveDecksState(
+        deck1: d1Track,
+        deck2: d2Track,
+        latestEntryId: maxEntryId,
+        hasActiveSession: true
+    )
+}
+    
+    /// Récupère les derniers morceaux enregistrés dans l'historique global
+    public func fetchLatestPlayedTracks(limit: Int = 6) -> [Track] {
+        guard let db = openDatabase() else { return [] }
+        defer { sqlite3_close(db) }
+        
+        let sql = """
+        SELECT 
+            id,
+            asset_id,
+            ifnull(name, ''),
+            ifnull(artist, ''),
+            ifnull(bpm, 0.0),
+            ifnull(key, ''),
+            ifnull(file_name, ''),
+            ifnull(portable_id, ''),
+            ifnull(deck, ''),
+            start_time
+        FROM history_entry
+        WHERE played = 1
+        ORDER BY id DESC
+        LIMIT \(limit);
+        """
+        
+        var stmt: OpaquePointer?
+        var tracks: [Track] = []
+        
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let entryId = Int(sqlite3_column_int64(stmt, 0))
+                let assetId = Int(sqlite3_column_int64(stmt, 1))
+                let title = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
+                let artist = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
+                let bpm = sqlite3_column_double(stmt, 4)
+                let key = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+                let fileName = sqlite3_column_text(stmt, 6).map { String(cString: $0) } ?? ""
+                let portableId = sqlite3_column_text(stmt, 7).map { String(cString: $0) } ?? ""
+                var deck = sqlite3_column_text(stmt, 8).map { String(cString: $0) } ?? ""
+                deck = deck.replacingOccurrences(of: "'", with: "")
+                let startTimeUnix = sqlite3_column_int64(stmt, 9)
+                let playedAt = Date(timeIntervalSince1970: TimeInterval(startTimeUnix))
+                
+                let resolvedPath = resolveTrackFilePath(portableId: portableId, fileName: fileName)
+                
+                let track = Track(
+                    id: "entry-\(entryId)",
+                    assetId: assetId > 0 ? assetId : nil,
+                    historyEntryId: entryId,
+                    title: title,
+                    artist: artist,
+                    bpm: bpm,
+                    rawKey: key,
+                    filePath: resolvedPath,
+                    fileName: fileName,
+                    portableId: portableId,
+                    deck: deck.isEmpty ? nil : deck,
+                    playedAt: playedAt
+                )
+                tracks.append(track)
+            }
+            sqlite3_finalize(stmt)
+        }
+        
+        return tracks
+    }
+    
+    // MARK: - Algorithme de Suggestions d'Enchaînements STRICTEMENT basé sur l'Historique
+    
+    /// Calcule le Top des enchaînements réels joués après le morceau de référence
+    /// dans les sessions Serato sur la période configurée (ex: 360 jours).
+    /// EXCLUSION STRICTE : Ne s'appuie JAMAIS sur le nombre total de lectures de la bibliothèque (metadata).
+    public func fetchTransitions(
+        for referenceTrack: Track,
+        daysLookback: Int = 360,
+        maxResults: Int = 30
+    ) -> [Track] {
+        guard let db = openDatabase() else { return [] }
+        defer { sqlite3_close(db) }
+        
+        var suggestions: [Track] = []
+        var seenTitles = Set<String>()
+        let refTitleKey = normalizeTitle(referenceTrack.displayTitle)
+        seenTitles.insert(refTitleKey)
+        
+        let secondsLookback = Int64(daysLookback) * 86400
+        let minStartTimeUnix = Int64(Date().timeIntervalSince1970) - secondsLookback
+        
+        // --- NIVEAU 1 : Transitions directes immédiates (Track A -> Track B à N+1) ---
+        let directMatches = queryDirectTransitions(
+            db: db,
+            referenceTrack: referenceTrack,
+            minStartTime: minStartTimeUnix,
+            limit: maxResults
+        )
+        
+        for match in directMatches {
+            let key = normalizeTitle(match.displayTitle)
+            if !seenTitles.contains(key) {
+                seenTitles.insert(key)
+                suggestions.append(match)
+            }
+        }
+        
+        // --- NIVEAU 2 : Transitions via variante du morceau actuel (ex: autre remix/edit du même titre) ---
+        if suggestions.count < maxResults {
+            let baseTitle = extractBaseTitle(referenceTrack.displayTitle)
+            if baseTitle.count >= 3 && baseTitle.lowercased() != referenceTrack.displayTitle.lowercased() {
+                let variantMatches = queryBaseTitleTransitions(
+                    db: db,
+                    baseTitle: baseTitle,
+                    excludeAssetId: referenceTrack.assetId,
+                    minStartTime: minStartTimeUnix,
+                    limit: maxResults - suggestions.count
+                )
+                
+                for match in variantMatches {
+                    let key = normalizeTitle(match.displayTitle)
+                    if !seenTitles.contains(key) {
+                        seenTitles.insert(key)
+                        suggestions.append(match)
+                    }
+                }
+            }
+        }
+        
+        // --- NIVEAU 3 : Routines enchaînées (Track A -> Track B -> Track C à N+2 dans la même session) ---
+        if suggestions.count < maxResults {
+            let sequenceMatches = querySecondarySessionTransitions(
+                db: db,
+                referenceTrack: referenceTrack,
+                minStartTime: minStartTimeUnix,
+                limit: maxResults - suggestions.count,
+                excludeTitles: seenTitles
+            )
+            
+            for seqMatch in sequenceMatches {
+                let key = normalizeTitle(seqMatch.displayTitle)
+                if !seenTitles.contains(key) {
+                    seenTitles.insert(key)
+                    suggestions.append(seqMatch)
+                }
+            }
+        }
+        
+        // Calcul des relations harmoniques et écarts BPM par rapport au morceau actuel
+        return suggestions.map { track in
+            var updated = track
+            if let refCamelot = referenceTrack.camelotKey, let trkCamelot = track.camelotKey {
+                updated.harmonicRelation = refCamelot.relationship(with: trkCamelot)
+            }
+            if referenceTrack.bpm > 0 && track.bpm > 0 {
+                updated.bpmDiff = track.bpm - referenceTrack.bpm
+            }
+            return updated
+        }
+    }
+    
+    // MARK: - Requêtes SQL de Transitions Historiques
+    
+    /// Niveau 1 : Morceau joué immédiatement après (N+1) dans la même session
+    private func queryDirectTransitions(
+        db: OpaquePointer,
+        referenceTrack: Track,
+        minStartTime: Int64,
+        limit: Int
+    ) -> [Track] {
+        let safeFileName = escapeSql(referenceTrack.fileName)
+        let assetId = referenceTrack.assetId ?? -1
+        let safeTitle = escapeSql(referenceTrack.displayTitle)
+        
+        let sql = """
+        WITH target_plays AS (
+            SELECT id, session_id, asset_id, file_name, name, start_time
+            FROM history_entry
+            WHERE (
+                (asset_id > 0 AND asset_id = \(assetId))
+                OR (file_name != '' AND file_name = '\(safeFileName)')
+                OR (name != '' AND name = '\(safeTitle)')
+            )
+            AND start_time >= \(minStartTime)
+        ),
+        next_plays AS (
+            SELECT 
+                h2.id as next_id,
+                h2.asset_id as next_asset_id,
+                coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
+                h2.artist as next_artist,
+                h2.bpm as next_bpm,
+                h2.key as next_key,
+                h2.file_name as next_file_name,
+                h2.portable_id as next_portable_id,
+                h2.start_time as next_start_time
+            FROM target_plays tp
+            JOIN history_entry h2 ON h2.session_id = tp.session_id
+                AND h2.start_time > tp.start_time
+                AND h2.start_time <= tp.start_time + 1200
+                AND h2.id != tp.id
+                AND (h2.asset_id != tp.asset_id OR (h2.file_name != tp.file_name AND h2.file_name != ''))
+                AND h2.played = 1
+            WHERE h2.id = (
+                SELECT sub.id FROM history_entry sub
+                WHERE sub.session_id = tp.session_id
+                  AND sub.start_time > tp.start_time
+                  AND sub.played = 1
+                ORDER BY sub.start_time ASC
+                LIMIT 1
+            )
+        )
+        SELECT 
+            clean_title,
+            next_artist,
+            avg(next_bpm) as avg_bpm,
+            next_key,
+            next_file_name,
+            next_portable_id,
+            next_asset_id,
+            count(*) as transition_count,
+            max(next_start_time) as last_played_time
+        FROM next_plays
+        WHERE clean_title != ''
+        GROUP BY clean_title, next_artist
+        ORDER BY transition_count DESC, last_played_time DESC
+        LIMIT \(limit);
+        """
+        
+        return executeTransitionQuery(db: db, sql: sql, matchType: .directTransition)
+    }
+    
+    /// Niveau 2 : Morceau joué après une variante du titre de base (ex: Radio Edit vs Club Mix)
+    private func queryBaseTitleTransitions(
+        db: OpaquePointer,
+        baseTitle: String,
+        excludeAssetId: Int?,
+        minStartTime: Int64,
+        limit: Int
+    ) -> [Track] {
+        let safeBase = escapeSql(baseTitle)
+        let excludeId = excludeAssetId ?? -1
+        
+        let sql = """
+        WITH target_plays AS (
+            SELECT id, session_id, asset_id, file_name, start_time
+            FROM history_entry
+            WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
+              AND (asset_id != \(excludeId) OR \(excludeId) <= 0)
+              AND start_time >= \(minStartTime)
+        ),
+        next_plays AS (
+            SELECT 
+                h2.id as next_id,
+                h2.asset_id as next_asset_id,
+                coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
+                h2.artist as next_artist,
+                h2.bpm as next_bpm,
+                h2.key as next_key,
+                h2.file_name as next_file_name,
+                h2.portable_id as next_portable_id,
+                h2.start_time as next_start_time
+            FROM target_plays tp
+            JOIN history_entry h2 ON h2.session_id = tp.session_id
+                AND h2.start_time > tp.start_time
+                AND h2.start_time <= tp.start_time + 1200
+                AND h2.id != tp.id
+                AND h2.name NOT LIKE '%\(safeBase)%'
+                AND h2.file_name NOT LIKE '%\(safeBase)%'
+                AND h2.played = 1
+            WHERE h2.id = (
+                SELECT sub.id FROM history_entry sub
+                WHERE sub.session_id = tp.session_id
+                  AND sub.start_time > tp.start_time
+                  AND sub.played = 1
+                ORDER BY sub.start_time ASC
+                LIMIT 1
+            )
+        )
+        SELECT 
+            clean_title,
+            next_artist,
+            avg(next_bpm) as avg_bpm,
+            next_key,
+            next_file_name,
+            next_portable_id,
+            next_asset_id,
+            count(*) as transition_count,
+            max(next_start_time) as last_played_time
+        FROM next_plays
+        WHERE clean_title != ''
+        GROUP BY clean_title, next_artist
+        ORDER BY transition_count DESC, last_played_time DESC
+        LIMIT \(limit);
+        """
+        
+        return executeTransitionQuery(db: db, sql: sql, matchType: .sameSongVariant)
+    }
+    
+    /// Niveau 3 : Deuxième morceau enchaîné dans la même session (N+2 - Routine de set)
+    private func querySecondarySessionTransitions(
+        db: OpaquePointer,
+        referenceTrack: Track,
+        minStartTime: Int64,
+        limit: Int,
+        excludeTitles: Set<String>
+    ) -> [Track] {
+        let safeFileName = escapeSql(referenceTrack.fileName)
+        let assetId = referenceTrack.assetId ?? -1
+        let safeTitle = escapeSql(referenceTrack.displayTitle)
+        
+        let sql = """
+        WITH target_plays AS (
+            SELECT id, session_id, asset_id, file_name, start_time
+            FROM history_entry
+            WHERE (
+                (asset_id > 0 AND asset_id = \(assetId))
+                OR (file_name != '' AND file_name = '\(safeFileName)')
+                OR (name != '' AND name = '\(safeTitle)')
+            )
+            AND start_time >= \(minStartTime)
+        ),
+        second_next_plays AS (
+            SELECT 
+                h3.id as next_id,
+                h3.asset_id as next_asset_id,
+                coalesce(nullif(h3.name, ''), h3.file_name) as clean_title,
+                h3.artist as next_artist,
+                h3.bpm as next_bpm,
+                h3.key as next_key,
+                h3.file_name as next_file_name,
+                h3.portable_id as next_portable_id,
+                h3.start_time as next_start_time
+            FROM target_plays tp
+            JOIN history_entry h3 ON h3.session_id = tp.session_id
+                AND h3.start_time > tp.start_time
+                AND h3.start_time <= tp.start_time + 1500
+                AND h3.played = 1
+            WHERE (
+                SELECT count(*) FROM history_entry middle
+                WHERE middle.session_id = tp.session_id
+                  AND middle.start_time > tp.start_time
+                  AND middle.start_time < h3.start_time
+                  AND middle.played = 1
+            ) = 1
+        )
+        SELECT 
+            clean_title,
+            next_artist,
+            avg(next_bpm) as avg_bpm,
+            next_key,
+            next_file_name,
+            next_portable_id,
+            next_asset_id,
+            count(*) as transition_count,
+            max(next_start_time) as last_played_time
+        FROM second_next_plays
+        WHERE clean_title != ''
+        GROUP BY clean_title, next_artist
+        ORDER BY transition_count DESC, last_played_time DESC
+        LIMIT \(limit * 2);
+        """
+        
+        let candidates = executeTransitionQuery(db: db, sql: sql, matchType: .routineSequence)
+        var filtered: [Track] = []
+        for track in candidates {
+            let key = normalizeTitle(track.displayTitle)
+            if !excludeTitles.contains(key) {
+                filtered.append(track)
+                if filtered.count >= limit { break }
+            }
+        }
+        return filtered
+    }
+    
+    private func executeTransitionQuery(
+        db: OpaquePointer,
+        sql: String,
+        matchType: MatchType
+    ) -> [Track] {
+        var results: [Track] = []
+        var stmt: OpaquePointer?
+        
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let title = sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
+                let artist = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+                let bpm = sqlite3_column_double(stmt, 2)
+                let key = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
+                let fileName = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
+                let portableId = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+                let assetId = Int(sqlite3_column_int64(stmt, 6))
+                let count = Int(sqlite3_column_int64(stmt, 7))
+                
+                let resolvedPath = resolveTrackFilePath(portableId: portableId, fileName: fileName)
+                
+                let track = Track(
+                    assetId: assetId > 0 ? assetId : nil,
+                    title: title,
+                    artist: artist,
+                    bpm: bpm,
+                    rawKey: key,
+                    filePath: resolvedPath,
+                    fileName: fileName,
+                    portableId: portableId,
+                    transitionCount: count,
+                    matchType: matchType
+                )
+                results.append(track)
+            }
+            sqlite3_finalize(stmt)
+        }
+        
+        return results
+    }
+    
+    // MARK: - Recherche de Morceaux dans la Bibliothèque Serato
+    
+    public func searchTracks(query: String, limit: Int = 30) -> [Track] {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        guard let db = openDatabase() else { return [] }
+        defer { sqlite3_close(db) }
+        
+        let safeQuery = escapeSql(query)
+        let sql = """
+        SELECT 
+            id,
+            ifnull(name, ''),
+            ifnull(artist, ''),
+            ifnull(bpm, 0.0),
+            ifnull(key, ''),
+            ifnull(file_name, ''),
+            ifnull(portable_id, '')
+        FROM asset
+        WHERE (name LIKE '%\(safeQuery)%' OR artist LIKE '%\(safeQuery)%' OR file_name LIKE '%\(safeQuery)%')
+        ORDER BY id DESC
+        LIMIT \(limit);
+        """
+        
+        var results: [Track] = []
+        var stmt: OpaquePointer?
+        
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let assetId = Int(sqlite3_column_int64(stmt, 0))
+                let title = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+                let artist = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
+                let bpm = sqlite3_column_double(stmt, 3)
+                let key = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
+                let fileName = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+                let portableId = sqlite3_column_text(stmt, 6).map { String(cString: $0) } ?? ""
+                
+                let resolvedPath = resolveTrackFilePath(portableId: portableId, fileName: fileName)
+                
+                let track = Track(
+                    assetId: assetId,
+                    title: title.isEmpty ? (fileName as NSString).deletingPathExtension : title,
+                    artist: artist,
+                    bpm: bpm,
+                    rawKey: key,
+                    filePath: resolvedPath,
+                    fileName: fileName,
+                    portableId: portableId
+                )
+                results.append(track)
+            }
+            sqlite3_finalize(stmt)
+        }
+        
+        return results
+    }
+    
+    // MARK: - Résolution des Fichiers Audio sur le Disque
+    
+    public func resolveTrackFilePath(portableId: String, fileName: String) -> String? {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser.path
+        
+        // 1. portableId direct avec slash initial
+        if portableId.hasPrefix("/") && fm.fileExists(atPath: portableId) {
+            return portableId
+        }
+        
+        // 2. portableId débutant par "Users/..."
+        let slashPortable = "/" + portableId
+        if fm.fileExists(atPath: slashPortable) {
+            return slashPortable
+        }
+        
+        // 3. Dossier de musique principal du DJ (REVR BIBLIOTHEQUE)
+        let revrPath = "\(home)/Music/REVR BIBLIOTHEQUE/\(fileName)"
+        if !fileName.isEmpty && fm.fileExists(atPath: revrPath) {
+            return revrPath
+        }
+        
+        // 4. Dossier ~/Music
+        let musicPath = "\(home)/Music/\(fileName)"
+        if !fileName.isEmpty && fm.fileExists(atPath: musicPath) {
+            return musicPath
+        }
+        
+        // 5. Chemin relatif dans le répertoire home
+        let candidateHome = "\(home)/\(portableId)"
+        if fm.fileExists(atPath: candidateHome) {
+            return candidateHome
+        }
+        
+        // 6. Recherche sur les disques externes (/Volumes/*)
+        if let volumes = try? fm.contentsOfDirectory(atPath: "/Volumes") {
+            for vol in volumes {
+                let candidateVol = "/Volumes/\(vol)/\(portableId)"
+                if fm.fileExists(atPath: candidateVol) {
+                    return candidateVol
+                }
+                if !fileName.isEmpty {
+                    let candidateVolFile = "/Volumes/\(vol)/_Serato_/\(fileName)"
+                    if fm.fileExists(atPath: candidateVolFile) {
+                        return candidateVolFile
+                    }
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    // MARK: - Suivi de la Session en Cours (Morceaux Déjà Joués)
+    
+    public struct RawSessionEntry {
+        public let id: Int
+        public let title: String
+        public let artist: String
+        public let fileName: String
+        public let startTime: Date
+        public let endTime: Date?
+        public let durationSeconds: Double
+        public let isCurrentlyPlaying: Bool
+        public let playedFlag: Int
+    }
+    
+    /// Récupère l'heure de début de la session Serato la plus récente
+    public func fetchLatestSessionStartTime() -> Date? {
+        guard let db = openDatabase() else { return nil }
+        defer { sqlite3_close(db) }
+        
+        let sql = "SELECT start_time FROM history_session ORDER BY id DESC LIMIT 1;"
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            defer { sqlite3_finalize(stmt) }
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                let startUnix = sqlite3_column_int64(stmt, 0)
+                if startUnix > 0 {
+                    return Date(timeIntervalSince1970: TimeInterval(startUnix))
+                }
+            }
+        }
+        return nil
+    }
+    
+    /// Récupère toutes les entrées enregistrées depuis une date avec calcul de durée
+    public func fetchSessionEntries(since: Date) -> [RawSessionEntry] {
+        guard let db = openDatabase() else { return [] }
+        defer { sqlite3_close(db) }
+        
+        let sinceUnix = Int64(since.timeIntervalSince1970)
+        let nowUnix = Date().timeIntervalSince1970
+        
+        let sql = """
+        SELECT 
+            id,
+            ifnull(name, ''),
+            ifnull(artist, ''),
+            ifnull(file_name, ''),
+            start_time,
+            end_time,
+            played
+        FROM history_entry
+        WHERE start_time >= \(sinceUnix)
+        ORDER BY start_time ASC;
+        """
+        
+        var stmt: OpaquePointer?
+        var entries: [RawSessionEntry] = []
+        
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            defer { sqlite3_finalize(stmt) }
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let entryId = Int(sqlite3_column_int64(stmt, 0))
+                let name = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+                let artist = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
+                let fileName = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
+                let startUnix = sqlite3_column_int64(stmt, 4)
+                let endUnix = sqlite3_column_int64(stmt, 5)
+                let playedFlag = Int(sqlite3_column_int(stmt, 6))
+                
+                let startDate = Date(timeIntervalSince1970: TimeInterval(startUnix))
+                var endDate: Date? = nil
+                var duration: Double = 0.0
+                var isCurrent: Bool = false
+                
+                if endUnix > startUnix {
+                    endDate = Date(timeIntervalSince1970: TimeInterval(endUnix))
+                    duration = Double(endUnix - startUnix)
+                } else {
+                    isCurrent = true
+                    duration = max(0.0, nowUnix - Double(startUnix))
+                }
+                
+                let cleanTitle = !name.isEmpty ? name : (fileName as NSString).deletingPathExtension
+                
+                entries.append(RawSessionEntry(
+                    id: entryId,
+                    title: cleanTitle,
+                    artist: artist,
+                    fileName: fileName,
+                    startTime: startDate,
+                    endTime: endDate,
+                    durationSeconds: duration,
+                    isCurrentlyPlaying: isCurrent,
+                    playedFlag: playedFlag
+                ))
+            }
+        }
+        return entries
+    }
+    
+    // MARK: - Utilitaires
+    
+    private func escapeSql(_ str: String) -> String {
+        return str.replacingOccurrences(of: "'", with: "''")
+    }
+    
+    private func normalizeTitle(_ title: String) -> String {
+        return title.lowercased()
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
+    }
+    
+    private func extractBaseTitle(_ fullTitle: String) -> String {
+        var cleaned = fullTitle
+        if let parenRange = cleaned.range(of: "\\s*\\([^)]*\\)", options: .regularExpression) {
+            cleaned.removeSubrange(parenRange)
+        }
+        if let bracketRange = cleaned.range(of: "\\s*\\[[^]]*\\]", options: .regularExpression) {
+            cleaned.removeSubrange(bracketRange)
+        }
+        if let ftRange = cleaned.range(of: "\\s*(ft\\.|feat\\.|vs\\.).*", options: [.regularExpression, .caseInsensitive]) {
+            cleaned.removeSubrange(ftRange)
+        }
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
