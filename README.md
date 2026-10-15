@@ -5,7 +5,7 @@
 <h1 align="center">Recall</h1>
 
 <p align="center">
-  <strong>Compagnon indépendant d'enchaînements musicaux compatible avec Serato DJ Pro</strong><br>
+  <strong>Compagnon indépendant d'enchaînements musicaux compatible avec Serato DJ Pro &amp; Rekordbox</strong><br>
   <em>Suggère en temps réel vos meilleures transitions, basées exclusivement sur vos routines et votre historique réel de mix.</em>
 </p>
 
@@ -14,6 +14,7 @@
   <img src="https://img.shields.io/badge/macOS-13.0%2B-black?style=flat-square&logo=apple" alt="macOS 13.0+">
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?style=flat-square&logo=windows" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Serato%20DJ%20Pro-Compatible-blue?style=flat-square" alt="Compatible Serato DJ Pro">
+  <img src="https://img.shields.io/badge/Rekordbox-Compatible-red?style=flat-square" alt="Compatible Rekordbox">
   <img src="https://img.shields.io/badge/Swift%20%26%20.NET%208-Native-orange?style=flat-square" alt="Swift & .NET">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Licence-MIT-green?style=flat-square" alt="Licence MIT"></a>
   <a href="PRIVACY.md"><img src="https://img.shields.io/badge/Confidentialité-100%25%20Hors--ligne-purple?style=flat-square" alt="100% Local"></a>
@@ -39,10 +40,11 @@
 
 Pendant un set DJ, retrouver rapidement le morceau idéal qui enchaîne parfaitement avec ce qui tourne sur la platine active est crucial. 
 
-Contrairement aux solutions génériques qui se basent sur des algorithmes opaques ou de simples classements de streaming, **Recall analyse directement vos propres sessions passées dans Serato DJ Pro** :
+Contrairement aux solutions génériques qui se basent sur des algorithmes opaques ou de simples classements de streaming, **Recall analyse directement vos propres sessions passées dans Serato DJ Pro et Rekordbox** :
 - **Vos vraies routines** : Si vous avez enchaîné un morceau 12 fois l'an dernier et que le dancefloor a réagi, Recall s'en souvient et vous le propose en tête de liste (`🔥 12x`).
-- **Harmonie instantanée** : Respect fidèle des couleurs de la **Roue de Camelot** de Serato et filtrage automatique des clés compatibles.
-- **Glisser-Déposer direct (`Drag & Drop`)** : Attrapez la suggestion et déposez-la directement sur le Deck 1 ou Deck 2 de Serato.
+- **Harmonie instantanée** : Respect fidèle des couleurs de la **Roue de Camelot** et filtrage automatique des clés compatibles.
+- **Glisser-Déposer direct (`Drag & Drop`)** : Attrapez la suggestion et déposez-la directement sur vos platines Serato ou Rekordbox.
+- **Compatibilité Universelle** : Détection automatique intelligente de votre logiciel DJ actif (Serato DJ Pro ou Pioneer DJ Rekordbox) avec zéro surcharge processeur.
 
 ---
 
@@ -93,30 +95,31 @@ L'exécutable autonome optimisé est généré directement dans `Windows\build-w
 
 ## 🌟 Fonctionnalités Détaillées
 
-### 1. ⏱️ Détection Temps Réel Serato (Deck 1 / Deck 2)
-- Connexion native ultra-rapide et sécurisée en lecture seule (`PRAGMA query_only = ON`) à la base `master.sqlite` de Serato.
-- Mode **AUTO** : bascule automatique sur la platine active.
-- Sélecteur manuel de platine (**DECK 1**, **DECK 2**) ou mode **MANUEL** avec recherche dans toute votre bibliothèque pour préparer une transition à froid.
+### 1. ⏱️ Détection Intelligente Serato DJ Pro & Rekordbox
+- **Serato DJ Pro** : Détection sub-milliseconde des platines actives (Deck 1 / Deck 2) via accès direct sécurisé en lecture seule (`PRAGMA query_only = ON`) au fichier SQLite WAL.
+- **Pioneer DJ Rekordbox** : Lecture et analyse ultra-rapide de votre collection et de vos historiques de playlists (format standard XML Rekordbox). Détecte des dizaines de milliers d'enchaînements passés en quelques fractions de seconde.
+- **Détection Automatique ou Choix Manuel** : Bascule instantanément sur le logiciel DJ actif (Serato ou Rekordbox) sans surcharge CPU.
+- Mode **MANUEL** avec recherche instantanée dans toute votre bibliothèque pour préparer une transition à froid.
 
 ### 2. 📈 Algorithme de Routines Historiques (30 à 730 jours)
 - Priorise strictement les titres que vous avez **réellement enchaînés** dans vos sets passés.
 - Exclusion des lectures isolées ou des pré-écoutes rapides.
 - Décompte visuel dynamique : `🔥 15x`, `🔥 6x`, `2x`.
 
-### 3. 🎯 Glisser-Déposer Natif vers Serato DJ Pro
-- Glissez n'importe quelle ligne de suggestion directement sur la forme d'onde ou le plateau de Serato (Deck 1 ou Deck 2).
-- Intégration double flux macOS (`NSFilenamesPboardType` et `public.file-url`) garantissant une réactivité instantanée.
+### 3. 🎯 Glisser-Déposer Natif (Drag & Drop)
+- Glissez n'importe quelle ligne de suggestion directement sur vos platines Serato DJ Pro ou Rekordbox.
+- Intégration double flux macOS (`NSFilenamesPboardType` et `public.file-url`) et Windows (`DataFormats.FileDrop`) garantissant une réactivité instantanée.
 
 ### 4. 🎼 Clés Camelot Officielles & Filtre BPM Intelligent
-- Couleurs authentiques de la roue Camelot de Serato DJ Pro pour les 24 tonalités (Mineures `A` et Majeures `B`).
+- Couleurs authentiques de la roue Camelot pour les 24 tonalités (Mineures `A` et Majeures `B`).
 - Filtre rapide **Harmonie** (clés compatibles : Identique, Parfaite ±1, Relative, Boost +2).
 - Filtre **BPM ±10%** prenant automatiquement en compte les relations half-time et double-time (ex: 75 BPM compatible avec 150 BPM).
 
-### 5. 🔵 Marquage des Morceaux Déjà Joués (Style Serato)
+### 5. 🔵 Marquage des Morceaux Déjà Joués
 - Identification visuelle instantanée des morceaux déjà joués au cours de votre set pour éviter les doublons accidentels.
-- Rendu fidèle à Serato DJ Pro : surbrillance en **Bleu Serato officiel (`#0FA2FF`)**.
-- **Palette de couleurs personnalisable** dans les paramètres (Bleu Serato, Cyan Mixify, Violet, Émeraude, Orange, Rose, ou sélecteur libre).
-- **3 styles d'affichage** : Texte & Fond, Texte seul (authentique Serato), ou Fond seul.
+- Rendu fidèle : surbrillance en **Bleu officiel (`#0FA2FF`)**.
+- **Palette de couleurs personnalisable** dans les paramètres (Bleu officiel, Cyan Électrique, Violet, Émeraude, Orange, Rose, ou sélecteur libre).
+- **3 styles d'affichage** : Texte & Fond, Texte seul, ou Fond seul.
 - Bouton de remise à zéro rapide de session en un clic.
 
 ### 6. ⭐ Combinaisons Favorites & Filtre "Favs"
@@ -155,7 +158,7 @@ Recall/
 │   └── Recall/
 │       ├── App/                # Cycle de vie Cocoa, NSApplication et FloatingWindowController
 │       ├── Models/             # Modèles de données (Track, CamelotKey, UserSettings)
-│       ├── Services/           # SQLite Serato (WAL), surveillance temps réel, Drag & Drop, Historique
+│       ├── Services/           # SQLite Serato (WAL), Rekordbox (XML), surveillance, Drag & Drop
 │       ├── Views/              # Vues SwiftUI modernes (Main, NowPlaying, Suggestions, Settings, Bandeau)
 │       └── Utils/              # Extensions graphiques et configurateurs de défilement
 └── Windows/                    # Version native Windows (10 & 11 - C# / .NET 8 WPF)
@@ -165,9 +168,9 @@ Recall/
     └── Recall/
         ├── Recall.csproj       # Projet .NET 8 WPF x64
         ├── MainWindow.xaml     # Interface flottante sombre & bandeau compact
-        ├── SettingsWindow.xaml # Modale de configuration et chemins Serato
+        ├── SettingsWindow.xaml # Modale de configuration (Serato, Rekordbox, filtres)
         ├── Models/             # Modèles Track, CamelotKey, UserSettings
-        ├── Services/           # SeratoDatabaseService (SQLite), Monitor, Combos
+        ├── Services/           # SeratoDatabaseService, RekordboxService, Monitor, Combos
         └── Resources/          # Icône Windows AppIcon.ico
 ```
 
@@ -176,7 +179,8 @@ Recall/
 ## ⚖️ Mentions Légales & Marques Déposées
 
 - **Serato Limited** : *Serato*, *Serato DJ*, *Serato DJ Pro*, *Serato DJ Lite* et leurs logos respectifs sont des marques déposées appartenant à **Serato Limited**.
-- **Clause de non-affiliation** : Recall est un logiciel indépendant développé par **REVR** pour la communauté DJ. Recall n'est en aucun cas affilié, sponsorisé, associé, validé ou certifié par Serato Limited. L'utilisation des noms de marque Serato dans cette documentation et dans l'application est faite à titre purement descriptif afin d'indiquer la compatibilité technique du logiciel (*Nominative Fair Use*).
+- **AlphaTheta Corporation** : *Rekordbox*, *Pioneer DJ* et leurs logos respectifs sont des marques déposées appartenant à **AlphaTheta Corporation**.
+- **Clause de non-affiliation** : Recall est un logiciel indépendant développé par **REVR** pour la communauté DJ. Recall n'est en aucun cas affilié, sponsorisé, associé, validé ou certifié par Serato Limited ou AlphaTheta Corporation. L'utilisation des noms de marque dans cette documentation et dans l'application est faite à titre purement descriptif afin d'indiquer la compatibilité technique du logiciel (*Nominative Fair Use*).
 - **Protection de la vie privée** : Pour consulter notre engagement de confidentialité 100 % hors-ligne, reportez-vous au fichier [PRIVACY.md](PRIVACY.md).
 
 ---

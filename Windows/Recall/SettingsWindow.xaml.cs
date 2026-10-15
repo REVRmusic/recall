@@ -33,8 +33,19 @@ namespace Recall
         private void LoadSettings()
         {
             TxtDbPath.Text = _settings.EffectiveDatabasePath;
+            TxtRbXmlPath.Text = _settings.EffectiveRekordboxXmlPath;
             ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
             ChkHidePlayed.IsChecked = _settings.HidePlayedTracks;
+
+            // DJ Software Mode
+            foreach (ComboBoxItem item in CmbDjSoftware.Items)
+            {
+                if (item.Tag?.ToString() == _settings.DjSoftwareMode)
+                {
+                    CmbDjSoftware.SelectedItem = item;
+                    break;
+                }
+            }
 
             // Lookback
             foreach (ComboBoxItem item in CmbLookback.Items)
@@ -67,6 +78,21 @@ namespace Recall
             }
         }
 
+        private void BtnBrowseRbXml_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Sélectionnez votre collection Rekordbox XML",
+                Filter = "Collection XML (*.xml)|*.xml|Tous les fichiers (*.*)|*.*",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                TxtRbXmlPath.Text = dialog.FileName;
+            }
+        }
+
         private void BtnBrowseDb_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog
@@ -84,6 +110,13 @@ namespace Recall
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
+            if (CmbDjSoftware.SelectedItem is ComboBoxItem itemMode && itemMode.Tag != null)
+            {
+                _settings.DjSoftwareMode = itemMode.Tag.ToString()!;
+            }
+
+            _settings.RekordboxXmlCustomPath = TxtRbXmlPath.Text.Trim();
+
             string chosenPath = TxtDbPath.Text.Trim();
             if (chosenPath.Equals(_settings.DefaultDatabasePath, StringComparison.OrdinalIgnoreCase))
             {
@@ -119,6 +152,8 @@ namespace Recall
 
         private void BtnReset_Click(object sender, RoutedEventArgs e)
         {
+            _settings.DjSoftwareMode = "auto";
+            _settings.RekordboxXmlCustomPath = "";
             _settings.SeratoDatabaseCustomPath = "";
             _settings.HistoryDaysLookback = 360;
             _settings.BpmTolerancePercent = 8.0;

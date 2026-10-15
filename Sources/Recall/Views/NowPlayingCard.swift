@@ -23,21 +23,31 @@ public struct NowPlayingCard: View {
                 
                 Spacer()
                 
-                // Sélecteurs de platines compacts intégrés
+                // Sélecteurs de platines ou statut Rekordbox
                 HStack(spacing: 3) {
-                    deckPill(label: "AUTO", isSelected: monitor.activeDeckSelection == "AUTO") {
-                        monitor.selectDeck("AUTO")
-                    }
-                    
-                    if monitor.deck1Track != nil {
-                        deckPill(label: "DECK 1", isSelected: monitor.activeDeckSelection == "1") {
-                            monitor.selectDeck("1")
+                    if monitor.activeDJSoftware == .rekordbox {
+                        Text("REKORDBOX")
+                            .font(.system(size: 8, weight: .bold))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.accentCyan.opacity(0.18))
+                            .foregroundColor(Color.accentCyan)
+                            .cornerRadius(4)
+                    } else {
+                        deckPill(label: "AUTO", isSelected: monitor.activeDeckSelection == "AUTO") {
+                            monitor.selectDeck("AUTO")
                         }
-                    }
-                    
-                    if monitor.deck2Track != nil {
-                        deckPill(label: "DECK 2", isSelected: monitor.activeDeckSelection == "2") {
-                            monitor.selectDeck("2")
+                        
+                        if monitor.deck1Track != nil {
+                            deckPill(label: "DECK 1", isSelected: monitor.activeDeckSelection == "1") {
+                                monitor.selectDeck("1")
+                            }
+                        }
+                        
+                        if monitor.deck2Track != nil {
+                            deckPill(label: "DECK 2", isSelected: monitor.activeDeckSelection == "2") {
+                                monitor.selectDeck("2")
+                            }
                         }
                     }
                     
@@ -175,11 +185,11 @@ public struct NowPlayingCard: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Lancer la lecture")
+                        Text(monitor.activeDJSoftware == .rekordbox ? "Sélectionnez un morceau" : "Lancer la lecture")
                             .font(.system(size: 12.5, weight: .bold))
                             .foregroundColor(.white)
                         
-                        Text("Démarrez un morceau sur Deck 1 ou Deck 2 dans Serato DJ Pro pour afficher les suggestions.")
+                        Text(monitor.activeDJSoftware == .rekordbox ? "Recherchez ou choisissez un morceau de votre collection Rekordbox pour afficher les suggestions instantanées." : "Démarrez un morceau sur Deck 1 ou Deck 2 dans Serato DJ Pro pour afficher les suggestions.")
                             .font(.system(size: 9.5))
                             .foregroundColor(.white.opacity(0.55))
                             .lineLimit(2)

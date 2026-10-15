@@ -29,7 +29,37 @@
 
             <!-- Content -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="14">
+                    <!-- Logiciel DJ -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Logiciel DJ &amp; Source de données" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                            <Grid>
+                                <TextBlock Text="Mode de détection" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbDjSoftware" HorizontalAlignment="Right" Width="180" Background="#12151A" Foreground="#E5E7EB">
+                                    <ComboBoxItem Content="Détection automatique" Tag="auto" IsSelected="True"/>
+                                    <ComboBoxItem Content="Serato DJ Pro" Tag="serato"/>
+                                    <ComboBoxItem Content="Pioneer DJ Rekordbox" Tag="rekordbox"/>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Collection Rekordbox XML -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="Collection Rekordbox (Fichier XML)" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                            <TextBlock Text="Export rekordbox.xml officiel ou synchronisation Lexicon" FontSize="9.5" Foreground="#9CA3AF" Margin="0,2,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtRbXmlPath" Background="#12151A" Foreground="#E5E7EB" BorderBrush="#374151" BorderThickness="1" Padding="6,4" FontSize="10"/>
+                                <Button Grid.Column="1" Content="Parcourir..." Margin="6,0,0,0" Padding="8,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnBrowseRbXml_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Base Serato -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
                         <StackPanel>
@@ -97,7 +127,7 @@
                         <StackPanel Spacing="4">
                             <TextBlock Text="⚖ Mentions Légales &amp; Confidentialité" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF"/>
                             <TextBlock Text="Recall fonctionne à 100% hors-ligne en lecture seule. Aucune donnée ne quitte votre PC." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
-                            <TextBlock Text="Serato Limited : Serato DJ Pro est une marque déposée de Serato Limited. Recall est un compagnon indépendant non affilié." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
+                            <TextBlock Text="Serato DJ Pro est une marque déposée de Serato Limited. Rekordbox est une marque déposée d'AlphaTheta Corporation (Pioneer DJ). Recall est un compagnon indépendant développé par REVR, sans affiliation avec Serato Limited ou AlphaTheta Corporation." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

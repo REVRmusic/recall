@@ -15,7 +15,9 @@ public class SeratoMonitorService: ObservableObject {
     @Published public var historySuggestions: [Track] = []
     @Published public var favoriteSuggestions: [Track] = []
     @Published public var isLoading: Bool = false
+    @Published public var activeDJSoftware: DJSoftwareMode = .serato
     @Published public var isSeratoConnected: Bool = false
+    @Published public var isRekordboxConnected: Bool = false
     @Published public var lastCheckTime: Date = Date()
     @Published public var manualTrackOverride: Track? = nil
     @Published public var previousTrack: Track? = nil
@@ -31,6 +33,15 @@ public class SeratoMonitorService: ObservableObject {
         startMonitoring()
         
         // Rafraîchir les suggestions quand les paramètres changent
+        UserSettings.shared.$djSoftwareMode
+            .dropFirst()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.checkDatabaseUpdates()
+                }
+            }
+            .store(in: &cancellables)
+            
         UserSettings.shared.$historyDaysLookback
             .dropFirst()
             .sink { [weak self] _ in
@@ -76,22 +87,72 @@ public class SeratoMonitorService: ObservableObject {
         timer = nil
     }
     
-    /// Vérifie si de nouveaux morceaux ont été joués dans Serato avec détection stricte des platines actives
+    /// Vérifie si de nouveaux morceaux ont été joués dans Serato ou Rekordbox avec détection automatique
     public func checkDatabaseUpdates() {
         lastCheckTime = Date()
         
-        // 1. Vérifier si l'application Serato DJ est activement lancée sur macOS
+        // 1. Détection des applications DJ en cours d'exécution sur macOS
         let runningApps = NSWorkspace.shared.runningApplications
         let isSeratoRunning = runningApps.contains { app in
             let name = app.localizedName?.lowercased() ?? ""
             let id = app.bundleIdentifier?.lowercased() ?? ""
             return name.contains("serato") || id.contains("com.serato")
         }
+        let isRekordboxRunning = runningApps.contains { app in
+            let name = app.localizedName?.lowercased() ?? ""
+            let id = app.bundleIdentifier?.lowercased() ?? ""
+            return name.contains("rekordbox") || id.contains("com.pioneerdj.rekordboxdj")
+        }
         
-        guard isSeratoRunning else {
-            if isSeratoConnected {
-                isSeratoConnected = false
+        self.isSeratoConnected = isSeratoRunning
+        self.isRekordboxConnected = isRekordboxRunning
+        
+        // 2. Détermination du mode logiciel effectif
+        let mode = UserSettings.shared.djSoftwareMode
+        let effective: DJSoftwareMode
+        switch mode {
+        case .auto:
+            if isRekordboxRunning && !isSeratoRunning {
+                effective = .rekordbox
+            } else {
+                effective = .serato
             }
+        case .serato:
+            effective = .serato
+        case .rekordbox:
+            effective = .rekordbox
+        }
+        
+        if activeDJSoftware != effective {
+            activeDJSoftware = effective
+            if effective == .rekordbox {
+                RekordboxService.shared.loadCollectionIfNeeded()
+            }
+            refreshSuggestions()
+        }
+        
+        // --- BRANCHE REKORDBOX ---
+        if effective == .rekordbox {
+            RekordboxService.shared.loadCollectionIfNeeded()
+            deck1Track = nil
+            deck2Track = nil
+            
+            if let manual = manualTrackOverride {
+                if currentTrack?.id != manual.id {
+                    currentTrack = manual
+                    refreshSuggestions()
+                }
+            } else if !isRekordboxRunning && currentTrack != nil {
+                currentTrack = nil
+                suggestions = []
+                historySuggestions = []
+                favoriteSuggestions = []
+            }
+            return
+        }
+        
+        // --- BRANCHE SERATO DJ PRO ---
+        guard isSeratoRunning else {
             deck1Track = nil
             deck2Track = nil
             if manualTrackOverride == nil {
@@ -103,10 +164,6 @@ public class SeratoMonitorService: ObservableObject {
                 }
             }
             return
-        }
-        
-        if !isSeratoConnected {
-            isSeratoConnected = true
         }
         
         Task.detached(priority: .userInitiated) { [dbService, lastKnownMaxEntryId] in
@@ -181,10 +238,50 @@ public class SeratoMonitorService: ObservableObject {
             suggestions = []
             historySuggestions = []
             favoriteSuggestions = []
+            isLoading = false
             return
         }
         
         isLoading = true
+        
+        // --- 1. Mode Rekordbox ---
+        if activeDJSoftware == .rekordbox {
+            let maxResults = UserSettings.shared.maxSuggestions
+            let minTransitions = UserSettings.shared.minTransitionsCount
+            let bpmTol = UserSettings.shared.bpmTolerancePercent
+            let harmFilter = UserSettings.shared.isHarmonicFilterActive
+            let bpmFilter = UserSettings.shared.isBpmFilterActive
+            let favOnly = UserSettings.shared.isFavoritesFilterActive
+            
+            let (routines, favs, harmonic) = RekordboxService.shared.findNextSuggestions(
+                for: ref,
+                maxResults: maxResults,
+                minTransitions: minTransitions,
+                tolerancePercent: bpmTol,
+                harmonicFilter: harmFilter,
+                bpmFilter: bpmFilter,
+                favoritesOnly: favOnly
+            )
+            
+            self.historySuggestions = routines
+            self.favoriteSuggestions = favs
+            
+            if favOnly {
+                self.suggestions = favs
+            } else {
+                var combined = routines
+                let existingIds = Set(combined.map { $0.id })
+                for h in harmonic where !existingIds.contains(h.id) {
+                    combined.append(h)
+                    if combined.count >= maxResults { break }
+                }
+                self.suggestions = combined
+            }
+            self.isLoading = false
+            return
+        }
+        
+        // --- 2. Mode Serato DJ Pro ---
         let days = UserSettings.shared.historyDaysLookback
         let maxResults = UserSettings.shared.maxSuggestions
         
@@ -305,6 +402,12 @@ public class SeratoMonitorService: ObservableObject {
     public func clearManualOverride() {
         manualTrackOverride = nil
         activeDeckSelection = "AUTO"
+        if activeDJSoftware == .rekordbox {
+            currentTrack = nil
+            suggestions = []
+            historySuggestions = []
+            favoriteSuggestions = []
+        }
         checkDatabaseUpdates()
     }
     

@@ -92,8 +92,16 @@ namespace Recall
             }
             else
             {
-                TxtNowTitle.Text = _monitor.IsSeratoConnected ? "Platine vide" : "En attente de Serato DJ Pro...";
-                TxtNowArtist.Text = _monitor.IsSeratoConnected ? "Chargez un morceau" : "Ouvrez Serato DJ Pro pour démarrer";
+                if (_monitor.ActiveDJSoftware == "rekordbox")
+                {
+                    TxtNowTitle.Text = _monitor.IsRekordboxConnected ? "Aucun morceau sélectionné" : "En attente de Rekordbox...";
+                    TxtNowArtist.Text = _monitor.IsRekordboxConnected ? "Recherchez un morceau dans Rekordbox" : "Ouvrez Pioneer DJ Rekordbox pour démarrer";
+                }
+                else
+                {
+                    TxtNowTitle.Text = _monitor.IsSeratoConnected ? "Platine vide" : "En attente de Serato DJ Pro...";
+                    TxtNowArtist.Text = _monitor.IsSeratoConnected ? "Chargez un morceau" : "Ouvrez Serato DJ Pro pour démarrer";
+                }
                 TxtNowKey.Text = "--";
                 TxtNowBpm.Text = "-- BPM";
                 BtnSaveCombo.Visibility = Visibility.Collapsed;

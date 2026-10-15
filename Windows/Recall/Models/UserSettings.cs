@@ -9,6 +9,8 @@ namespace Recall.Models
         private static UserSettings? _shared;
         public static UserSettings Shared => _shared ??= Load();
 
+        public string DjSoftwareMode { get; set; } = "auto"; // "auto", "serato", "rekordbox"
+        public string RekordboxXmlCustomPath { get; set; } = "";
         public int HistoryDaysLookback { get; set; } = 360;
         public int MaxSuggestions { get; set; } = 30;
         public double BpmTolerancePercent { get; set; } = 8.0;
@@ -58,6 +60,54 @@ namespace Recall.Models
 
         public string EffectiveDatabasePath =>
             !string.IsNullOrWhiteSpace(SeratoDatabaseCustomPath) ? SeratoDatabaseCustomPath.Trim() : DefaultDatabasePath;
+
+        public static string? AutoDetectRekordboxXmlPath()
+        {
+            try
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string candidate1 = Path.Combine(docs, "rekordbox.xml");
+                if (File.Exists(candidate1)) return candidate1;
+
+                string candidate2 = Path.Combine(docs, "Lexicon", "rekordbox.xml");
+                if (File.Exists(candidate2)) return candidate2;
+
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string candidate3 = Path.Combine(appData, "Pioneer", "rekordbox", "rekordbox.xml");
+                if (File.Exists(candidate3)) return candidate3;
+
+                // Settings file
+                string settingsPath = Path.Combine(appData, "Pioneer", "rekordbox6", "rekordbox3.settings");
+                if (File.Exists(settingsPath))
+                {
+                    string content = File.ReadAllText(settingsPath);
+                    var match = System.Text.RegularExpressions.Regex.Match(content, "name=\"bridgeImportedLibraryFile\"\\s+val=\"([^\"]+)\"");
+                    if (match.Success)
+                    {
+                        string candidate = match.Groups[1].Value;
+                        if (File.Exists(candidate)) return candidate;
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        public string EffectiveRekordboxXmlPath
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(RekordboxXmlCustomPath) && File.Exists(RekordboxXmlCustomPath.Trim()))
+                {
+                    return RekordboxXmlCustomPath.Trim();
+                }
+                string? auto = AutoDetectRekordboxXmlPath();
+                if (!string.IsNullOrWhiteSpace(auto)) return auto;
+
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "rekordbox.xml");
+            }
+        }
 
         public static UserSettings Load()
         {

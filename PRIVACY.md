@@ -18,11 +18,13 @@ Recall est une application d'assistance pour DJs conçue pour fonctionner de man
 
 ## 2. Données Consultées sur Votre Ordinateur
 
-Pour vous proposer des suggestions d'enchaînements basées sur vos vrais sets, Recall accède localement à la base de données de votre logiciel DJ :
+Pour vous proposer des suggestions d'enchaînements basées sur vos vrais sets, Recall accède localement aux fichiers de données de votre logiciel DJ :
 
-- **Fichiers consultés** : Le fichier d'historique local `master.sqlite` situé dans `~/Library/Application Support/Serato/Library/`.
-- **Accès strictement en lecture seule** : L'accès est verrouillé au niveau du système par les indicateurs `SQLITE_OPEN_READONLY` et `PRAGMA query_only = ON`. Recall ne modifie jamais, n'altère jamais et n'écrit jamais dans la base de données ou les fichiers de Serato DJ Pro.
-- **Données lues en mémoire vive** : Titre du morceau, nom de l'artiste, BPM, tonalité harmonique (clé Camelot), date/heure de lecture dans le set, platine (Deck 1 / Deck 2) et chemin d'accès local du fichier audio.
+- **Serato DJ Pro** : Le fichier d'historique local `master.sqlite` situé dans `~/Library/Application Support/Serato/Library/` (macOS) ou `%LOCALAPPDATA%\Serato\Library\` (Windows).
+  - **Accès strictement en lecture seule** : L'accès est verrouillé par les indicateurs `SQLITE_OPEN_READONLY` et `PRAGMA query_only = ON`. Recall ne modifie jamais, n'altère jamais et n'écrit jamais dans la base de données ou les fichiers de Serato DJ Pro.
+- **Pioneer DJ Rekordbox** : Le fichier de collection ou d'historique XML (`rekordbox.xml`) exporté ou synchronisé localement.
+  - **Accès en lecture seule** : Recall lit le fichier XML pour analyser les routines et playlists sans jamais altérer votre bibliothèque Rekordbox.
+- **Données lues en mémoire vive** : Titre du morceau, nom de l'artiste, BPM, tonalité harmonique (clé Camelot), date/heure de lecture dans le set, platine (Deck 1 / Deck 2 sous Serato) et chemin d'accès local du fichier audio.
 
 ---
 
@@ -30,24 +32,27 @@ Pour vous proposer des suggestions d'enchaînements basées sur vos vrais sets, 
 
 Toutes les données générées par l'utilisation de Recall sont enregistrées exclusivement sur votre machine dans un répertoire dédié :
 
-- **Emplacement local** : `~/Library/Application Support/Recall/`
+- **Emplacement local** :
+  - **macOS** : `~/Library/Application Support/Recall/`
+  - **Windows** : `%APPDATA%\Recall\`
 - **Données stockées** :
   - `favorite_combos.json` : Vos combinaisons favorites de morceaux enregistrées manuellement.
-  - Préférences d'interface utilisateur (stockées via les `UserDefaults` de macOS) : choix du thème de couleur, style de surbrillance des morceaux joués, durée minimale de lecture avant validation, etc.
-- **Suppression des données** : La suppression de l'application Recall et de son dossier dans `Application Support` efface l'intégralité de ces données de manière définitive.
+  - Préférences d'interface utilisateur (stockées via les `UserDefaults` de macOS ou `settings.json` sous Windows) : choix du logiciel DJ (Auto / Serato / Rekordbox), choix du thème de couleur, style de surbrillance des morceaux joués, durée minimale de lecture avant validation, etc.
+- **Suppression des données** : La suppression de l'application Recall et de son dossier de configuration efface l'intégralité de ces données de manière définitive.
 
 ---
 
 ## 4. Respect des Droits (RGPD / CCPA)
 
-Puisque Recall ne collecte, ne stocke et ne transmet aucune information personnelle à des tiers ou sur des serveurs distants, vos droits fondamentaux (droit d'accès, de rectification, de portabilité et d'effacement) sont garantis nativement par le contrôle total que vous conservez sur vos fichiers locaux sur votre Mac.
+Puisque Recall ne collecte, ne stocke et ne transmet aucune information personnelle à des tiers ou sur des serveurs distants, vos droits fondamentaux (droit d'accès, de rectification, de portabilité et d'effacement) sont garantis nativement par le contrôle total que vous conservez sur vos fichiers locaux.
 
 ---
 
 ## 5. Mentions Légales & Marques Déposées
 
 - **Serato Limited** : *Serato*, *Serato DJ*, *Serato DJ Pro*, *Serato DJ Lite* et leurs logos respectifs sont des marques déposées appartenant à **Serato Limited**.
-- **Indépendance** : Recall est un logiciel indépendant développé par **REVR** à destination de la communauté DJ. Il n'est en aucun cas affilié, sponsorisé, approuvé ou certifié par Serato Limited.
+- **AlphaTheta Corporation** : *Rekordbox*, *Pioneer DJ* et leurs logos respectifs sont des marques déposées appartenant à **AlphaTheta Corporation**.
+- **Indépendance** : Recall est un logiciel compagnon indépendant développé par **REVR** à destination de la communauté DJ. Il n'est en aucun cas affilié, sponsorisé, approuvé ou certifié par Serato Limited ou AlphaTheta Corporation.
 
 ---
 

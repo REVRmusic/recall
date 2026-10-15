@@ -249,11 +249,11 @@ public struct GuideSheetView: View {
                                 )
                                 bulletPoint(
                                     boldText: "2. Glissez le morceau",
-                                    desc: "vers la platine Deck 1 ou Deck 2 de Serato DJ Pro."
+                                    desc: "vers la platine de votre logiciel DJ (Serato DJ Pro ou Rekordbox)."
                                 )
                                 bulletPoint(
                                     boldText: "3. Relâchez :",
-                                    desc: "La piste se charge instantanément sur votre platine Serato."
+                                    desc: "La piste se charge instantanément sur votre platine."
                                 )
                             }
                         }
@@ -348,7 +348,7 @@ public struct GuideSheetView: View {
                                 )
                                 bulletPoint(
                                     boldText: "Marques déposées :",
-                                    desc: "Serato, Serato DJ, Serato DJ Pro et leurs logos sont des marques déposées appartenant à Serato Limited. Recall est un utilitaire compagnon indépendant développé par REVR et n'est en aucun cas affilié, sponsorisé, approuvé ou certifié par Serato Limited."
+                                    desc: "Serato DJ Pro est une marque déposée de Serato Limited. Rekordbox est une marque déposée d'AlphaTheta Corporation (Pioneer DJ). Recall est un utilitaire compagnon indépendant développé par REVR et n'est en aucun cas affilié, sponsorisé, approuvé ou certifié par Serato Limited ou AlphaTheta Corporation."
                                 )
                             }
                         }

@@ -16,7 +16,7 @@ public struct ManualSearchSheetView: View {
         VStack(spacing: 0) {
             // En-tête
             HStack {
-                Text("Rechercher dans la bibliothèque")
+                Text(monitor.activeDJSoftware == .rekordbox ? "Rechercher dans Rekordbox" : "Rechercher dans la bibliothèque")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.white)
                 
@@ -181,9 +181,18 @@ public struct ManualSearchSheetView: View {
         }
         
         isSearching = true
-        let service = self.dbService
+        let isRekordbox = monitor.activeDJSoftware == .rekordbox
+        let db = self.dbService
+        
         Task.detached(priority: .userInitiated) {
-            let results = service.searchTracks(query: query, limit: 25)
+            let results: [Track]
+            if isRekordbox {
+                results = await MainActor.run {
+                    RekordboxService.shared.searchTracks(query: query, limit: 30)
+                }
+            } else {
+                results = db.searchTracks(query: query, limit: 30)
+            }
             await MainActor.run {
                 self.searchResults = results
                 self.isSearching = false

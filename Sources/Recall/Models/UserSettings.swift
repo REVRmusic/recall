@@ -18,9 +18,39 @@ public enum PlayedTrackHighlightStyle: String, CaseIterable, Identifiable {
     }
 }
 
+public enum DJSoftwareMode: String, CaseIterable, Identifiable {
+    case auto = "auto"
+    case serato = "serato"
+    case rekordbox = "rekordbox"
+    
+    public var id: String { rawValue }
+    
+    public var label: String {
+        switch self {
+        case .auto: return "Automatique (Détection temps réel)"
+        case .serato: return "Serato DJ Pro"
+        case .rekordbox: return "Pioneer DJ Rekordbox"
+        }
+    }
+    
+    public var shortLabel: String {
+        switch self {
+        case .auto: return "Auto"
+        case .serato: return "Serato"
+        case .rekordbox: return "Rekordbox"
+        }
+    }
+}
+
 public class UserSettings: ObservableObject {
     public static let shared = UserSettings()
     
+    @Published public var djSoftwareMode: DJSoftwareMode {
+        didSet { UserDefaults.standard.set(djSoftwareMode.rawValue, forKey: "djSoftwareMode") }
+    }
+    @Published public var rekordboxXmlCustomPath: String {
+        didSet { UserDefaults.standard.set(rekordboxXmlCustomPath, forKey: "rekordboxXmlCustomPath") }
+    }
     @Published public var historyDaysLookback: Int {
         didSet { UserDefaults.standard.set(historyDaysLookback, forKey: "historyDaysLookback") }
     }
@@ -69,6 +99,9 @@ public class UserSettings: ObservableObject {
     
     public init() {
         let def = UserDefaults.standard
+        let rawMode = def.string(forKey: "djSoftwareMode") ?? DJSoftwareMode.auto.rawValue
+        self.djSoftwareMode = DJSoftwareMode(rawValue: rawMode) ?? .auto
+        self.rekordboxXmlCustomPath = def.string(forKey: "rekordboxXmlCustomPath") ?? ""
         self.historyDaysLookback = def.object(forKey: "historyDaysLookback") != nil ? def.integer(forKey: "historyDaysLookback") : 360
         self.maxSuggestions = def.object(forKey: "maxSuggestions") != nil ? def.integer(forKey: "maxSuggestions") : 30
         self.bpmTolerancePercent = def.object(forKey: "bpmTolerancePercent") != nil ? def.double(forKey: "bpmTolerancePercent") : 8.0
@@ -98,6 +131,58 @@ public class UserSettings: ObservableObject {
         return defaultDatabasePath
     }
     
+    /// Détection automatique des emplacements connus de collection Rekordbox XML
+    public static func autoDetectRekordboxXmlPath() -> String? {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser.path
+        
+        // 1. Lire rekordbox3.settings si disponible (pont officiel bridgeImportedLibraryFile)
+        let settingsPath = "\(home)/Library/Application Support/Pioneer/rekordbox6/rekordbox3.settings"
+        if fm.fileExists(atPath: settingsPath),
+           let content = try? String(contentsOfFile: settingsPath, encoding: .utf8) {
+            let pattern = "name=\"bridgeImportedLibraryFile\"\\s+val=\"([^\"]+)\""
+            if let regex = try? NSRegularExpression(pattern: pattern),
+               let match = regex.firstMatch(in: content, range: NSRange(content.startIndex..., in: content)),
+               let range = Range(match.range(at: 1), in: content) {
+                let candidate = String(content[range])
+                if fm.fileExists(atPath: candidate) {
+                    return candidate
+                }
+                let stripped = candidate.replacingOccurrences(of: "/Volumes/Macintosh HD", with: "")
+                if fm.fileExists(atPath: stripped) {
+                    return stripped
+                }
+            }
+        }
+        
+        // 2. Emplacements standards de sauvegarde et synchronisation XML Rekordbox
+        let candidates = [
+            "\(home)/Documents/rekordbox.xml",
+            "\(home)/Documents/Lexicon/rekordbox.xml",
+            "\(home)/Documents/Backup Rekordbkox/Collection rekordbox.xml",
+            "\(home)/Library/Pioneer/rekordbox/rekordbox.xml"
+        ]
+        
+        for path in candidates {
+            if fm.fileExists(atPath: path) {
+                return path
+            }
+        }
+        
+        return nil
+    }
+    
+    public var effectiveRekordboxXmlPath: String {
+        let trimmed = rekordboxXmlCustomPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty && FileManager.default.fileExists(atPath: trimmed) {
+            return trimmed
+        }
+        if let autoDetected = UserSettings.autoDetectRekordboxXmlPath() {
+            return autoDetected
+        }
+        return "\(FileManager.default.homeDirectoryForCurrentUser.path)/Documents/rekordbox.xml"
+    }
+    
     public var playedTrackColor: Color {
         Color(hex: playedTrackColorHex)
     }
@@ -108,6 +193,8 @@ public class UserSettings: ObservableObject {
     }
     
     public func resetToDefaults() {
+        djSoftwareMode = .auto
+        rekordboxXmlCustomPath = ""
         historyDaysLookback = 360
         maxSuggestions = 30
         bpmTolerancePercent = 8.0

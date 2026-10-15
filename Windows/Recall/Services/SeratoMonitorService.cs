@@ -25,6 +25,9 @@ namespace Recall.Services
         private List<Track> _favoriteSuggestions = new();
         private HashSet<string> _playedTitlesInSession = new(StringComparer.OrdinalIgnoreCase);
         private bool _isSeratoConnected = false;
+        private bool _isRekordboxConnected = false;
+        private string _activeDJSoftware = "serato";
+        private Track? _manualTrackOverride = null;
         private int _playedCount = 0;
 
         public Track? CurrentTrack
@@ -43,6 +46,18 @@ namespace Recall.Services
         {
             get => _deck2Track;
             set { if (_deck2Track != value) { _deck2Track = value; OnPropertyChanged(); } }
+        }
+
+        public string ActiveDJSoftware
+        {
+            get => _activeDJSoftware;
+            set { if (_activeDJSoftware != value) { _activeDJSoftware = value; OnPropertyChanged(); } }
+        }
+
+        public bool IsRekordboxConnected
+        {
+            get => _isRekordboxConnected;
+            set { if (_isRekordboxConnected != value) { _isRekordboxConnected = value; OnPropertyChanged(); } }
         }
 
         public string ActiveDeckSelection
@@ -85,17 +100,62 @@ namespace Recall.Services
             {
                 Interval = TimeSpan.FromMilliseconds(1500)
             };
-            _timer.Tick += (s, e) => PollSerato();
+            _timer.Tick += (s, e) => PollSoftware();
             _timer.Start();
 
             // Premier polling immédiat
-            PollSerato();
+            PollSoftware();
         }
 
-        public void PollSerato()
+        public void PollSoftware()
         {
+            bool isSeratoRunning = false;
+            bool isRekordboxRunning = false;
+
+            try
+            {
+                isSeratoRunning = System.Diagnostics.Process.GetProcessesByName("Serato DJ Pro").Length > 0;
+                isRekordboxRunning = System.Diagnostics.Process.GetProcessesByName("rekordbox").Length > 0;
+            }
+            catch { }
+
+            IsSeratoConnected = isSeratoRunning;
+            IsRekordboxConnected = isRekordboxRunning;
+
+            string mode = UserSettings.Shared.DjSoftwareMode;
+            string effective = mode switch
+            {
+                "auto" => (isRekordboxRunning && !isSeratoRunning) ? "rekordbox" : "serato",
+                "rekordbox" => "rekordbox",
+                _ => "serato"
+            };
+
+            ActiveDJSoftware = effective;
+
+            if (effective == "rekordbox")
+            {
+                RekordboxService.Shared.LoadCollectionIfNeeded();
+                Deck1Track = null;
+                Deck2Track = null;
+
+                if (_manualTrackOverride != null)
+                {
+                    if (CurrentTrack?.Id != _manualTrackOverride.Id)
+                    {
+                        CurrentTrack = _manualTrackOverride;
+                        RefreshSuggestions();
+                    }
+                }
+                else if (!isRekordboxRunning && CurrentTrack != null)
+                {
+                    CurrentTrack = null;
+                    Suggestions = new();
+                }
+                return;
+            }
+
+            // Serato
             var state = _dbService.FetchActiveDecks();
-            IsSeratoConnected = state.HasActiveSession;
             Deck1Track = state.Deck1;
             Deck2Track = state.Deck2;
 
@@ -103,6 +163,24 @@ namespace Recall.Services
             PlayedCount = _playedTitlesInSession.Count;
 
             UpdateCurrentTrackFromSelection();
+        }
+
+        public void SetManualReferenceTrack(Track track)
+        {
+            _manualTrackOverride = track;
+            CurrentTrack = track;
+            RefreshSuggestions();
+        }
+
+        public void ClearManualOverride()
+        {
+            _manualTrackOverride = null;
+            if (ActiveDJSoftware == "rekordbox")
+            {
+                CurrentTrack = null;
+                Suggestions = new();
+            }
+            PollSoftware();
         }
 
         private void UpdateCurrentTrackFromSelection()
@@ -157,6 +235,42 @@ namespace Recall.Services
             }
 
             var settings = UserSettings.Shared;
+
+            if (ActiveDJSoftware == "rekordbox")
+            {
+                var (routines, favs, harmonic) = RekordboxService.Shared.FindNextSuggestions(
+                    CurrentTrack,
+                    settings.MaxSuggestions,
+                    settings.MinTransitionsCount,
+                    settings.BpmTolerancePercent,
+                    settings.IsHarmonicFilterActive,
+                    settings.IsBpmFilterActive,
+                    settings.IsFavoritesFilterActive
+                );
+
+                _historySuggestions = routines;
+                _favoriteSuggestions = favs;
+
+                if (settings.IsFavoritesFilterActive)
+                {
+                    Suggestions = favs;
+                }
+                else
+                {
+                    var combined = new List<Track>(routines);
+                    var ids = new HashSet<string>(combined.Select(t => t.Id));
+                    foreach (var h in harmonic)
+                    {
+                        if (!ids.Contains(h.Id))
+                        {
+                            combined.Add(h);
+                            if (combined.Count >= settings.MaxSuggestions) break;
+                        }
+                    }
+                    Suggestions = combined;
+                }
+                return;
+            }
 
             // 1. Récupération de l'historique Serato
             _historySuggestions = _dbService.FetchRoutineTransitions(CurrentTrack, settings.HistoryDaysLookback, settings.MaxSuggestions);

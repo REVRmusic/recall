@@ -1,10 +1,12 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct SettingsSheetView: View {
     @EnvironmentObject var settings: UserSettings
     @EnvironmentObject var monitor: SeratoMonitorService
     @ObservedObject private var favService = FavoriteCombosService.shared
     @ObservedObject private var sessionService = SessionHistoryService.shared
+    @ObservedObject private var rbService = RekordboxService.shared
     @Environment(\.dismiss) var dismiss
     @State private var showGuideFromSettings: Bool = false
     
@@ -58,6 +60,124 @@ public struct SettingsSheetView: View {
             
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 9) {
+                    
+                    // SECTION 0 : Logiciel DJ & Source des données
+                    settingCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Label {
+                                    Text("Logiciel DJ")
+                                        .font(.system(size: 11.5, weight: .bold))
+                                        .foregroundColor(.white)
+                                } icon: {
+                                    Image(systemName: "music.note.tv.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Color.accentCyan)
+                                }
+                                
+                                Spacer()
+                                
+                                // Statut de connexion dynamique
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill((monitor.isSeratoConnected || monitor.isRekordboxConnected) ? Color.accentCyan : Color.white.opacity(0.35))
+                                        .frame(width: 5, height: 5)
+                                    
+                                    Text(monitor.isSeratoConnected ? "Serato actif" : (monitor.isRekordboxConnected ? "Rekordbox actif" : "En attente"))
+                                        .font(.system(size: 9.5, weight: .semibold))
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.white.opacity(0.06))
+                                .cornerRadius(4)
+                            }
+                            
+                            // Sélecteur de mode (Automatique, Serato, Rekordbox)
+                            HStack(spacing: 5) {
+                                ForEach(DJSoftwareMode.allCases) { mode in
+                                    Button {
+                                        settings.djSoftwareMode = mode
+                                        monitor.checkDatabaseUpdates()
+                                    } label: {
+                                        Text(mode.shortLabel)
+                                            .font(.system(size: 10, weight: settings.djSoftwareMode == mode ? .bold : .medium))
+                                            .foregroundColor(settings.djSoftwareMode == mode ? .white : .white.opacity(0.6))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 5)
+                                            .background(settings.djSoftwareMode == mode ? Color.accentCyan.opacity(0.3) : Color.white.opacity(0.05))
+                                            .cornerRadius(5)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 5)
+                                                    .stroke(settings.djSoftwareMode == mode ? Color.accentCyan.opacity(0.75) : Color.clear, lineWidth: 1)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .focusable(false)
+                                }
+                            }
+                            
+                            // Détails selon le logiciel sélectionné / actif
+                            if monitor.activeDJSoftware == .rekordbox {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 1) {
+                                            Text("Collection & Enchaînements Rekordbox XML")
+                                                .font(.system(size: 10, weight: .semibold))
+                                                .foregroundColor(.white)
+                                            
+                                            Text("\(rbService.totalTracksCount) morceaux • \(rbService.totalTransitionsCount) enchaînements mémorisés")
+                                                .font(.system(size: 9))
+                                                .foregroundColor(.white.opacity(0.55))
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        Button {
+                                            selectRekordboxXmlFile()
+                                        } label: {
+                                            Text("Parcourir...")
+                                                .font(.system(size: 9.5, weight: .bold))
+                                                .foregroundColor(Color.accentCyan)
+                                                .padding(.horizontal, 7)
+                                                .padding(.vertical, 3)
+                                                .background(Color.accentCyan.opacity(0.18))
+                                                .cornerRadius(4)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .focusable(false)
+                                    }
+                                    
+                                    if !settings.effectiveRekordboxXmlPath.isEmpty {
+                                        Text(settings.effectiveRekordboxXmlPath)
+                                            .font(.system(size: 8.5, design: .monospaced))
+                                            .foregroundColor(.white.opacity(0.4))
+                                            .lineLimit(1)
+                                            .truncationMode(.middle)
+                                    }
+                                    
+                                    if let err = rbService.errorMessage {
+                                        Text(err)
+                                            .font(.system(size: 8.5))
+                                            .foregroundColor(.red.opacity(0.8))
+                                    }
+                                }
+                                .padding(7)
+                                .background(Color.white.opacity(0.03))
+                                .cornerRadius(6)
+                            } else {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.shield.fill")
+                                        .font(.system(size: 9))
+                                        .foregroundColor(Color.accentCyan)
+                                    Text("Accès direct SQLite WAL Serato (Deck 1 / Deck 2 en temps réel)")
+                                        .font(.system(size: 9))
+                                        .foregroundColor(.white.opacity(0.55))
+                                }
+                                .padding(.top, 2)
+                            }
+                        }
+                    }
                     
                     // SECTION 1 : Période d'historique
                     settingCard {
@@ -650,7 +770,7 @@ public struct SettingsSheetView: View {
                                     .foregroundColor(.white.opacity(0.65))
                                     .fixedSize(horizontal: false, vertical: true)
                                 
-                                Text("• **Marques déposées** : Serato DJ Pro est une marque déposée de Serato Limited. Recall est un logiciel indépendant conçu par REVR, sans affiliation ni certification par Serato Limited.")
+                                Text("• **Marques déposées** : Serato DJ Pro est une marque déposée de Serato Limited. Rekordbox est une marque déposée d'AlphaTheta Corporation (Pioneer DJ). Recall est un compagnon indépendant conçu par REVR, sans affiliation, parrainage ni approbation par Serato Limited ou AlphaTheta Corporation.")
                                     .font(.system(size: 8.5))
                                     .foregroundColor(.white.opacity(0.50))
                                     .fixedSize(horizontal: false, vertical: true)
@@ -726,6 +846,21 @@ public struct SettingsSheetView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.white.opacity(0.10), lineWidth: 1)
         )
+    }
+    
+    private func selectRekordboxXmlFile() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.xml]
+        panel.prompt = "Sélectionner la collection Rekordbox"
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            settings.rekordboxXmlCustomPath = url.path
+            RekordboxService.shared.reloadCollection(from: url.path)
+            monitor.refreshSuggestions()
+        }
     }
     
     private func quickDayButton(days: Int, label: String) -> some View {
