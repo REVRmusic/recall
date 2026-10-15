@@ -226,21 +226,32 @@ public struct BandeauCompactView: View {
                     FloatingWindowController.shared.toggleCompactMode(false)
                 }
             } label: {
-                HStack(spacing: 4) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.left.to.line")
+                            .font(.system(size: 9.5, weight: .bold))
+                        Text("Déplier")
+                            .font(.system(size: 10, weight: .heavy))
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(Color.accentCyan.opacity(0.2))
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
+                    )
+                    
                     Image(systemName: "arrow.left.to.line")
                         .font(.system(size: 9.5, weight: .bold))
-                    Text("Déplier")
-                        .font(.system(size: 10, weight: .heavy))
+                        .frame(width: 24, height: 24)
+                        .background(Color.accentCyan.opacity(0.2))
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
+                        )
                 }
-                .foregroundColor(Color.accentCyan)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4.5)
-                .background(Color.accentCyan.opacity(0.2))
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
-                )
             }
             .buttonStyle(.plain)
             .focusable(false)

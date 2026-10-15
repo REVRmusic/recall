@@ -83,7 +83,7 @@ public struct DraggableTrackRow: View {
             Spacer(minLength: 4)
             
             // Métriques (Déjà Joué, Favori, Fréquence d'enchaînement, Clé Camelot Serato, BPM)
-            HStack(spacing: 4) {
+            HStack(spacing: 3.5) {
                 // Badge Déjà Joué dans la session en cours (strictement sur une seule ligne)
                 if track.isPlayedInSession {
                     HStack(spacing: 2.5) {
@@ -113,6 +113,7 @@ public struct DraggableTrackRow: View {
                             .font(.system(size: 6))
                         Text("FAV")
                             .font(.system(size: 7.5, weight: .black, design: .rounded))
+                            .lineLimit(1)
                     }
                     .foregroundColor(Color(hex: "#FF5252"))
                     .padding(.horizontal, 4)
@@ -123,6 +124,7 @@ public struct DraggableTrackRow: View {
                         RoundedRectangle(cornerRadius: 3)
                             .stroke(Color(hex: "#FF5252").opacity(0.6), lineWidth: 0.8)
                     )
+                    .fixedSize(horizontal: true, vertical: false)
                     .help("Combinaison favorite manuelle enregistrée")
                 }
                 
@@ -137,6 +139,7 @@ public struct DraggableTrackRow: View {
                         Text("\(track.transitionCount)x")
                             .font(.system(size: 9, weight: .bold, design: .rounded))
                             .foregroundColor(track.transitionCount >= 3 ? Color.accentFire : Color.accentCyan)
+                            .lineLimit(1)
                     }
                     .padding(.horizontal, 4.5)
                     .padding(.vertical, 1.5)
@@ -145,6 +148,7 @@ public struct DraggableTrackRow: View {
                             .opacity(0.18)
                     )
                     .cornerRadius(3)
+                    .fixedSize(horizontal: true, vertical: false)
                     .help(transitionTooltip(for: track))
                 }
                 
@@ -154,14 +158,16 @@ public struct DraggableTrackRow: View {
                         Text(camelot.code)
                             .font(.system(size: 9.5, weight: .heavy, design: .monospaced))
                             .foregroundColor(camelot.color)
+                            .lineLimit(1)
                         
                         if let rel = track.harmonicRelation, rel.isCompatible, rel != .exact {
                             Text(rel.badgeText)
                                 .font(.system(size: 6.5, weight: .bold))
                                 .foregroundColor(camelot.color.opacity(0.85))
+                                .lineLimit(1)
                         }
                     }
-                    .padding(.horizontal, 5)
+                    .padding(.horizontal, 4)
                     .padding(.vertical, 1.5)
                     .background(camelot.color.opacity(0.2))
                     .cornerRadius(3)
@@ -169,6 +175,7 @@ public struct DraggableTrackRow: View {
                         RoundedRectangle(cornerRadius: 3)
                             .stroke(camelot.color.opacity(0.5), lineWidth: 0.8)
                     )
+                    .fixedSize(horizontal: true, vertical: false)
                     .help(camelotTooltip(for: track))
                 }
                 
@@ -177,19 +184,23 @@ public struct DraggableTrackRow: View {
                     Text(track.displayBpm)
                         .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
                         .foregroundColor(.white.opacity(0.9))
+                        .lineLimit(1)
                     
                     if let diff = track.bpmDiff, abs(diff) > 0.1 {
                         Text(String(format: "%@%.1f", diff > 0 ? "+" : "", diff))
                             .font(.system(size: 7.5, weight: .medium, design: .monospaced))
                             .foregroundColor(abs(diff) <= 3.0 ? Color.accentGreen : (abs(diff) <= 8.0 ? Color.accentOrange : Color.gray))
+                            .lineLimit(1)
                     }
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 1.5)
                 .background(Color.white.opacity(0.06))
                 .cornerRadius(3)
+                .fixedSize(horizontal: true, vertical: false)
                 .help(bpmTooltip(for: track))
             }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)

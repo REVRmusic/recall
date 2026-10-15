@@ -8,6 +8,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     private let defaultWidth: CGFloat = 360
     private let defaultHeight: CGFloat = 530
     private let bandeauHeight: CGFloat = 54
+    private let minWidth: CGFloat = 250
+    private let minHeight: CGFloat = 260
     
     public init() {
         let panel = NSPanel(
@@ -18,6 +20,9 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         )
         
         super.init(window: panel)
+        
+        panel.minSize = NSSize(width: minWidth, height: minHeight)
+        panel.maxSize = NSSize(width: 800, height: 1400)
         
         panel.delegate = self
         panel.title = "Recall"
@@ -67,9 +72,10 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         guard let window = self.window, let screen = NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
         let targetHeight = UserSettings.shared.isCompactMode ? bandeauHeight : defaultHeight
-        let x = visibleFrame.maxX - defaultWidth - 20
+        let widthToUse = window.frame.size.width >= minWidth ? window.frame.size.width : defaultWidth
+        let x = visibleFrame.maxX - widthToUse - 20
         let y = visibleFrame.minY + 20
-        window.setFrame(NSRect(x: x, y: y, width: defaultWidth, height: targetHeight), display: true)
+        window.setFrame(NSRect(x: x, y: y, width: widthToUse, height: targetHeight), display: true)
     }
     
     public func updateAlwaysOnTop(_ enabled: Bool) {
@@ -82,13 +88,22 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         var currentFrame = window.frame
         let targetHeight = compact ? bandeauHeight : defaultHeight
         
+        window.minSize = NSSize(width: minWidth, height: compact ? bandeauHeight : minHeight)
+        window.maxSize = NSSize(width: 800, height: compact ? bandeauHeight : 1400)
+        
         let visibleFrame = screen.visibleFrame
-        // Ancrage sur la droite de l'écran
-        currentFrame.origin.x = visibleFrame.maxX - defaultWidth - 20
-        currentFrame.size.width = defaultWidth
+        if currentFrame.size.width < minWidth {
+            currentFrame.size.width = minWidth
+        }
         currentFrame.size.height = targetHeight
         
         // Empêcher tout débordement hors de l'écran
+        if currentFrame.maxX > visibleFrame.maxX {
+            currentFrame.origin.x = visibleFrame.maxX - currentFrame.size.width
+        }
+        if currentFrame.minX < visibleFrame.minX {
+            currentFrame.origin.x = visibleFrame.minX
+        }
         if currentFrame.maxY > visibleFrame.maxY {
             currentFrame.origin.y = visibleFrame.maxY - targetHeight
         }

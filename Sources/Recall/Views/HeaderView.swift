@@ -15,54 +15,65 @@ public struct HeaderView: View {
     }
     
     public var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 4) {
             // Logo et Nom Recall positionnés nettement tout en haut à gauche
-            HStack(spacing: 5) {
+            HStack(spacing: 3) {
                 // Véritable icône de l'application Recall (vinyle avec centre dégradé cyan/bleu)
                 AppIconImageView()
                 
                 Text("Recall")
-                    .font(.system(size: 13.5, weight: .heavy, design: .rounded))
+                    .font(.system(size: 12, weight: .heavy, design: .rounded))
                     .foregroundColor(.white)
+                    .lineLimit(1)
                     .fixedSize()
                 
                 // Bouton Nouvelle session / Remise à zéro des morceaux déjà joués
                 SessionResetHeaderButton()
             }
-            .fixedSize()
-            .padding(.leading, 2)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.leading, 1)
             
-            Spacer(minLength: 4)
+            Spacer(minLength: 2)
             
-            // Boutons d'actions épurés à droite
-            HStack(spacing: 4) {
-                // Bouton TRÈS VISIBLE pour Réduire en bandeau sur la droite de l'écran
+            // Boutons d'actions épurés à droite (adaptatifs selon la largeur disponible)
+            HStack(spacing: 2.5) {
+                // Bouton Réduire : texte + icône si large, ou icône seule si fenêtre étroite
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         settings.isCompactMode = true
                         FloatingWindowController.shared.toggleCompactMode(true)
                     }
                 } label: {
-                    HStack(spacing: 4) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "arrow.right.to.line")
+                                .font(.system(size: 8.5, weight: .bold))
+                            Text("Réduire")
+                                .font(.system(size: 9.5, weight: .heavy))
+                        }
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 3)
+                        .background(Color.accentCyan.opacity(0.18))
+                        .cornerRadius(5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
+                        )
+                        
                         Image(systemName: "arrow.right.to.line")
-                            .font(.system(size: 9.5, weight: .bold))
-                        Text("Réduire")
-                            .font(.system(size: 10.5, weight: .heavy))
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(Color.accentCyan)
+                            .frame(width: 21, height: 21)
+                            .background(Color.accentCyan.opacity(0.18))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.accentCyan.opacity(0.65), lineWidth: 0.8)
+                            )
                     }
-                    .fixedSize()
-                    .foregroundColor(Color.accentCyan)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.accentCyan.opacity(0.18))
-                    .cornerRadius(6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
-                    )
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
-                .fixedSize()
                 .help("Réduire Recall en petit bandeau sur la droite de l'écran")
                 
                 // Bouton Recherche dans la bibliothèque
@@ -70,9 +81,9 @@ public struct HeaderView: View {
                     showSearch.toggle()
                 } label: {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(monitor.manualTrackOverride != nil ? Color.accentCyan : .white.opacity(0.75))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 21, height: 21)
                         .background(monitor.manualTrackOverride != nil ? Color.accentCyan.opacity(0.2) : Color.white.opacity(0.06))
                         .clipShape(Circle())
                 }
@@ -85,9 +96,9 @@ public struct HeaderView: View {
                     showGuide.toggle()
                 } label: {
                     Image(systemName: "questionmark")
-                        .font(.system(size: 10, weight: .heavy))
+                        .font(.system(size: 9, weight: .heavy))
                         .foregroundColor(.white.opacity(0.75))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 21, height: 21)
                         .background(Color.white.opacity(0.06))
                         .clipShape(Circle())
                 }
@@ -101,9 +112,9 @@ public struct HeaderView: View {
                     FloatingWindowController.shared.updateAlwaysOnTop(settings.alwaysOnTop)
                 } label: {
                     Image(systemName: settings.alwaysOnTop ? "pin.fill" : "pin")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 9, weight: .semibold))
                         .foregroundColor(settings.alwaysOnTop ? Color.accentCyan : .white.opacity(0.5))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 21, height: 21)
                         .background(settings.alwaysOnTop ? Color.accentCyan.opacity(0.2) : Color.white.opacity(0.06))
                         .clipShape(Circle())
                 }
@@ -116,9 +127,9 @@ public struct HeaderView: View {
                     showSettings.toggle()
                 } label: {
                     Image(systemName: "gearshape.fill")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.white.opacity(0.7))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 21, height: 21)
                         .background(Color.white.opacity(0.06))
                         .clipShape(Circle())
                 }
@@ -130,9 +141,9 @@ public struct HeaderView: View {
                 CloseHeaderButton()
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 10)
-        .padding(.bottom, 6)
+        .padding(.horizontal, 7)
+        .padding(.top, 8)
+        .padding(.bottom, 5)
         .frame(height: 38)
     }
 }
@@ -146,9 +157,9 @@ struct CloseHeaderButton: View {
             NSApplication.shared.terminate(nil)
         } label: {
             Image(systemName: "xmark")
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 8.5, weight: .bold))
                 .foregroundColor(isHovered ? .white : .white.opacity(0.6))
-                .frame(width: 24, height: 24)
+                .frame(width: 21, height: 21)
                 .background(isHovered ? Color.red.opacity(0.75) : Color.white.opacity(0.06))
                 .clipShape(Circle())
         }
@@ -226,43 +237,61 @@ struct SessionResetHeaderButton: View {
                 }
             }
         } label: {
-            HStack(spacing: 3) {
-                if showFeedback {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 8, weight: .black))
-                        .foregroundColor(Color.accentGreen)
-                    Text("Nouvelle session")
-                        .font(.system(size: 8.5, weight: .bold))
-                        .foregroundColor(Color.accentGreen)
-                } else {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 8.5, weight: .bold))
-                        .foregroundColor(sessionService.playedCount > 0 ? Color.accentCyan : .white.opacity(isHovered ? 0.85 : 0.45))
-                    
-                    if sessionService.playedCount > 0 {
-                        Text("\(sessionService.playedCount)")
-                            .font(.system(size: 8.5, weight: .heavy, design: .rounded))
-                            .foregroundColor(Color.accentCyan)
-                            .fixedSize()
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 3) {
+                    if showFeedback {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 8, weight: .black))
+                            .foregroundColor(Color.accentGreen)
+                        Text("Reset")
+                            .font(.system(size: 8.5, weight: .bold))
+                            .foregroundColor(Color.accentGreen)
+                    } else {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 8.5, weight: .bold))
+                            .foregroundColor(sessionService.playedCount > 0 ? Color.accentCyan : .white.opacity(isHovered ? 0.85 : 0.45))
+                        
+                        if sessionService.playedCount > 0 {
+                            Text("\(sessionService.playedCount)")
+                                .font(.system(size: 8.5, weight: .heavy, design: .rounded))
+                                .foregroundColor(Color.accentCyan)
+                        }
                     }
                 }
-            }
-            .fixedSize()
-            .padding(.horizontal, sessionService.playedCount > 0 || showFeedback ? 6 : 5)
-            .frame(height: 20)
-            .background(
-                showFeedback ? Color.accentGreen.opacity(0.18) :
-                (sessionService.playedCount > 0 ? Color.accentCyan.opacity(0.16) : Color.white.opacity(isHovered ? 0.08 : 0.04))
-            )
-            .cornerRadius(10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(
-                        showFeedback ? Color.accentGreen.opacity(0.6) :
-                        (sessionService.playedCount > 0 ? Color.accentCyan.opacity(0.45) : Color.white.opacity(0.08)),
-                        lineWidth: 0.8
+                .padding(.horizontal, sessionService.playedCount > 0 || showFeedback ? 6 : 5)
+                .frame(height: 20)
+                .background(
+                    showFeedback ? Color.accentGreen.opacity(0.18) :
+                    (sessionService.playedCount > 0 ? Color.accentCyan.opacity(0.16) : Color.white.opacity(isHovered ? 0.08 : 0.04))
+                )
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(
+                            showFeedback ? Color.accentGreen.opacity(0.6) :
+                            (sessionService.playedCount > 0 ? Color.accentCyan.opacity(0.45) : Color.white.opacity(0.08)),
+                            lineWidth: 0.8
+                        )
+                )
+                
+                Image(systemName: showFeedback ? "checkmark" : "arrow.counterclockwise")
+                    .font(.system(size: 8.5, weight: .bold))
+                    .foregroundColor(showFeedback ? Color.accentGreen : (sessionService.playedCount > 0 ? Color.accentCyan : .white.opacity(isHovered ? 0.85 : 0.45)))
+                    .frame(width: 20, height: 20)
+                    .background(
+                        showFeedback ? Color.accentGreen.opacity(0.18) :
+                        (sessionService.playedCount > 0 ? Color.accentCyan.opacity(0.16) : Color.white.opacity(isHovered ? 0.08 : 0.04))
                     )
-            )
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(
+                                showFeedback ? Color.accentGreen.opacity(0.6) :
+                                (sessionService.playedCount > 0 ? Color.accentCyan.opacity(0.45) : Color.white.opacity(0.08)),
+                                lineWidth: 0.8
+                            )
+                    )
+            }
         }
         .buttonStyle(.plain)
         .focusable(false)
