@@ -1,0 +1,113 @@
+<Window x:Class="Recall.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Recall - Paramètres"
+        Width="440" Height="520"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Loaded="Window_Loaded">
+
+    <Border CornerRadius="12" Background="#161A22" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+        <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header -->
+                <RowDefinition Height="*" />    <!-- Content -->
+                <RowDefinition Height="Auto" /> <!-- Footer Actions -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⚙ Paramètres de Recall" FontWeight="Bold" FontSize="14" Foreground="White"/>
+                </StackPanel>
+                <Button Content="✕" Width="24" Height="24" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
+            </Grid>
+
+            <!-- Content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14">
+                    <!-- Base Serato -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="Base de données Serato DJ Pro" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                            <TextBlock Text="Fichier master.sqlite officiel de votre bibliothèque" FontSize="9.5" Foreground="#9CA3AF" Margin="0,2,0,6"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtDbPath" Background="#12151A" Foreground="#E5E7EB" BorderBrush="#374151" BorderThickness="1" Padding="6,4" FontSize="10"/>
+                                <Button Grid.Column="1" Content="Parcourir..." Margin="6,0,0,0" Padding="8,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnBrowseDb_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Historique & Algorithme -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Routines &amp; Historique de mix" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+
+                            <Grid>
+                                <TextBlock Text="Profondeur d'historique" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbLookback" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
+                                    <ComboBoxItem Content="30 jours" Tag="30"/>
+                                    <ComboBoxItem Content="90 jours" Tag="90"/>
+                                    <ComboBoxItem Content="180 jours" Tag="180"/>
+                                    <ComboBoxItem Content="360 jours (1 an)" Tag="360" IsSelected="True"/>
+                                    <ComboBoxItem Content="730 jours (2 ans)" Tag="730"/>
+                                </ComboBox>
+                            </Grid>
+
+                            <Grid>
+                                <TextBlock Text="Tolérance BPM (filtre)" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbBpmTol" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
+                                    <ComboBoxItem Content="± 4 %" Tag="4.0"/>
+                                    <ComboBoxItem Content="± 8 % (Recommandé)" Tag="8.0" IsSelected="True"/>
+                                    <ComboBoxItem Content="± 10 %" Tag="10.0"/>
+                                    <ComboBoxItem Content="± 15 %" Tag="15.0"/>
+                                </ComboBox>
+                            </Grid>
+
+                            <Grid>
+                                <TextBlock Text="Nombre max de suggestions" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbMaxSug" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
+                                    <ComboBoxItem Content="15 titres" Tag="15"/>
+                                    <ComboBoxItem Content="30 titres (Optimal)" Tag="30" IsSelected="True"/>
+                                    <ComboBoxItem Content="50 titres" Tag="50"/>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Options d'affichage -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Affichage &amp; Comportement" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                            <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Foreground="#E5E7EB" FontSize="10"/>
+                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Foreground="#E5E7EB" FontSize="10"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Mentions Légales & Confidentialité -->
+                    <Border Background="#151820" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="⚖ Mentions Légales &amp; Confidentialité" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF"/>
+                            <TextBlock Text="Recall fonctionne à 100% hors-ligne en lecture seule. Aucune donnée ne quitte votre PC." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
+                            <TextBlock Text="Serato Limited : Serato DJ Pro est une marque déposée de Serato Limited. Recall est un compagnon indépendant non affilié." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer Actions -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0" Spacing="8">
+                <Button Content="Réinitialiser" Padding="10,5" Background="Transparent" Foreground="#9CA3AF" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnReset_Click"/>
+                <Button Content="Enregistrer" Padding="14,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSave_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

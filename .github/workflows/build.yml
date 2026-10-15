@@ -1,4 +1,4 @@
-name: Build & Package Recall
+name: Build & Package Recall (macOS & Windows)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-macos:
     name: Build macOS Release & DMG
     runs-on: macos-14
 
@@ -23,10 +23,55 @@ jobs:
       run: |
         chmod +x build.sh
         ./build.sh --dmg
+        cd build
+        rm -f Recall-macOS.zip
+        zip -r -y Recall-macOS.zip Recall.app
 
-    - name: Upload DMG Artifact
+    - name: Upload macOS DMG Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Recall-DMG
+        name: Recall-macOS-DMG
         path: build/Recall.dmg
+        if-no-files-found: error
+
+    - name: Upload macOS ZIP Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Recall-macOS-ZIP
+        path: build/Recall-macOS.zip
+        if-no-files-found: error
+
+  build-windows:
+    name: Build Windows Release & Executable
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore Windows/Recall.sln
+
+    - name: Publish Self-Contained Windows Executable
+      run: |
+        dotnet publish Windows/Recall/Recall.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o build-win
+        Compress-Archive -Path build-win/* -DestinationPath build-win/Recall-Windows-x64.zip
+
+    - name: Upload Windows x64 Executable Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Recall-Windows-x64-ZIP
+        path: build-win/Recall-Windows-x64.zip
+        if-no-files-found: error
+
+    - name: Upload Windows Standalone EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: Recall-Windows-EXE
+        path: build-win/Recall.exe
         if-no-files-found: error

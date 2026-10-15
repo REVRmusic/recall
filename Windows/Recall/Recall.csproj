@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
+    <AssemblyName>Recall</AssemblyName>
+    <RootNamespace>Recall</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>REVR</Authors>
+    <Company>REVR</Company>
+    <Product>Recall</Product>
+    <Description>Compagnon indépendant d'enchaînements musicaux compatible avec Serato DJ Pro pour Windows</Description>
+    <Copyright>Copyright © 2026 REVR</Copyright>
+    
+    <!-- Paramètres de publication autonome (Self-Contained Single File) -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\AppIcon.ico" />
+  </ItemGroup>
+
+</Project>

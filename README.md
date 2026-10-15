@@ -12,8 +12,9 @@
 <p align="center">
   <a href="https://github.com/REVRmusic/recall/releases"><img src="https://img.shields.io/github/v/release/REVRmusic/recall?style=flat-square&color=0FA2FF&label=Version" alt="Release"></a>
   <img src="https://img.shields.io/badge/macOS-13.0%2B-black?style=flat-square&logo=apple" alt="macOS 13.0+">
+  <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?style=flat-square&logo=windows" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Serato%20DJ%20Pro-Compatible-blue?style=flat-square" alt="Compatible Serato DJ Pro">
-  <img src="https://img.shields.io/badge/Swift-5.9%2B-orange?style=flat-square&logo=swift" alt="Swift">
+  <img src="https://img.shields.io/badge/Swift%20%26%20.NET%208-Native-orange?style=flat-square" alt="Swift & .NET">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Licence-MIT-green?style=flat-square" alt="Licence MIT"></a>
   <a href="PRIVACY.md"><img src="https://img.shields.io/badge/Confidentialité-100%25%20Hors--ligne-purple?style=flat-square" alt="100% Local"></a>
 </p>
@@ -47,45 +48,46 @@ Contrairement aux solutions génériques qui se basent sur des algorithmes opaqu
 
 ## 📥 Téléchargement & Installation
 
-### Option 1 : Téléchargement Direct (Recommandé pour les DJs)
+### 🍏 Pour macOS
 
+#### Option 1 : Téléchargement Direct (Recommandé)
 1. Rendez-vous sur la page des **[Releases GitHub](https://github.com/REVRmusic/recall/releases)**.
-2. Téléchargez le fichier **`Recall.dmg`**.
+2. Téléchargez **`Recall.dmg`**.
 3. Ouvrez le fichier `.dmg` et glissez **Recall** dans votre dossier **Applications**.
 4. Lancez **Serato DJ Pro**, puis ouvrez **Recall** : la détection est automatique et immédiate !
 
 > **Note macOS (Gatekeeper)** : Au premier lancement, si macOS affiche un avertissement de sécurité, faites un clic droit (ou Contrôle + clic) sur **Recall.app** dans `/Applications` puis cliquez sur **Ouvrir**.
 
----
-
-### Option 2 : Installation en 1 ligne dans le Terminal
-
-Copiez et collez la commande suivante dans l'application **Terminal** de votre Mac :
-
+#### Option 2 : Installation en 1 ligne dans le Terminal
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/REVRmusic/recall/main/install.sh)"
 ```
 
-Ce script télécharge automatiquement la dernière version, l'installe dans `/Applications` et configure les autorisations nécessaires.
+#### Option 3 : Compilation depuis les Sources (macOS)
+```bash
+git clone https://github.com/REVRmusic/recall.git
+cd recall
+chmod +x build.sh && ./build.sh --dmg
+```
 
 ---
 
-### Option 3 : Compilation depuis les Sources (Développeurs)
+### 🪟 Pour Windows (10 & 11)
 
-Prérequis : Mac sous macOS 13+ avec Xcode ou Command Line Tools installés (`xcode-select --install`).
+#### Option 1 : Téléchargement Direct (Recommandé)
+1. Rendez-vous sur la page des **[Releases GitHub](https://github.com/REVRmusic/recall/releases)**.
+2. Téléchargez **`Recall-Windows-x64.zip`** ou l'exécutable autonome **`Recall.exe`**.
+3. Dézippez l'archive dans le dossier de votre choix (ex: `C:\Program Files\Recall` ou sur votre Bureau).
+4. Lancez **Serato DJ Pro**, puis double-cliquez sur **`Recall.exe`** : la détection de votre base `%LOCALAPPDATA%\Serato\Library\master.sqlite` est instantanée !
 
-```bash
-# 1. Cloner le dépôt
+#### Option 2 : Compilation depuis les Sources (Windows)
+Prérequis : PC sous Windows 10/11 avec le SDK [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0) installé.
+```cmd
 git clone https://github.com/REVRmusic/recall.git
-cd recall
-
-# 2. Compiler et générer l'application dans /Applications
-chmod +x build.sh
-./build.sh
-
-# Pour générer également l'image disque Recall.dmg :
-./build.sh --dmg
+cd recall\Windows
+build-windows.bat
 ```
+L'exécutable autonome optimisé est généré directement dans `Windows\build-win\Recall.exe`.
 
 ---
 
@@ -132,7 +134,9 @@ chmod +x build.sh
 
 - **100% Hors-ligne** : Aucune donnée ne quitte votre machine. Zéro serveur, zéro télémétrie, zéro traceur.
 - **Accès en Lecture Seule** : Recall ne modifie jamais votre base Serato, vos fichiers audio ou vos tags ID3.
-- **Zéro Dépendance Tierce** : Développé exclusivement en **Swift pur** avec les frameworks natifs d'Apple (SwiftUI, AppKit, SQLite3).
+- **Conception Native Double-Plateforme** :
+  - **macOS** : Développé exclusivement en **Swift pur** avec les frameworks natifs d'Apple (SwiftUI, AppKit, SQLite3).
+  - **Windows** : Développé en **C# / .NET 8 WPF** haute performance avec `Microsoft.Data.Sqlite` et support autonome sans dépendance.
 
 ---
 
@@ -140,19 +144,31 @@ chmod +x build.sh
 
 ```
 Recall/
-├── Package.swift               # Configuration Swift Package Manager (liaison SQLite3)
-├── build.sh                    # Script de compilation Release & création du bundle Recall.app / Recall.dmg
-├── install.sh                  # Script d'installation automatique en une ligne
-├── run.sh                      # Lanceur rapide en mode développement
+├── Package.swift               # Configuration Swift Package Manager (macOS)
+├── build.sh                    # Script de compilation Release macOS (Recall.app & Recall.dmg)
+├── install.sh                  # Script d'installation automatique macOS en une ligne
+├── run.sh                      # Lanceur rapide en mode développement macOS
 ├── LICENSE                     # Licence MIT
-├── Resources/                  # Icônes macOS haute définition et captures d'écran
-└── Sources/
+├── PRIVACY.md                  # Politique de confidentialité 100% hors-ligne
+├── Resources/                  # Icônes haute définition et captures d'écran
+├── Sources/                    # Code source natif macOS (SwiftUI / AppKit)
+│   └── Recall/
+│       ├── App/                # Cycle de vie Cocoa, NSApplication et FloatingWindowController
+│       ├── Models/             # Modèles de données (Track, CamelotKey, UserSettings)
+│       ├── Services/           # SQLite Serato (WAL), surveillance temps réel, Drag & Drop, Historique
+│       ├── Views/              # Vues SwiftUI modernes (Main, NowPlaying, Suggestions, Settings, Bandeau)
+│       └── Utils/              # Extensions graphiques et configurateurs de défilement
+└── Windows/                    # Version native Windows (10 & 11 - C# / .NET 8 WPF)
+    ├── Recall.sln              # Solution Visual Studio
+    ├── build-windows.bat       # Script de compilation 1-clic (.exe autonome)
+    ├── run-windows.bat         # Lanceur rapide Windows
     └── Recall/
-        ├── App/                # Cycle de vie Cocoa, NSApplication et FloatingWindowController
-        ├── Models/             # Modèles de données (Track, CamelotKey, UserSettings)
-        ├── Services/           # SQLite Serato (WAL), surveillance temps réel, Drag & Drop, Historique
-        ├── Views/              # Vues SwiftUI modernes (Main, NowPlaying, Suggestions, Settings, Bandeau)
-        └── Utils/              # Extensions graphiques et configurateurs de défilement
+        ├── Recall.csproj       # Projet .NET 8 WPF x64
+        ├── MainWindow.xaml     # Interface flottante sombre & bandeau compact
+        ├── SettingsWindow.xaml # Modale de configuration et chemins Serato
+        ├── Models/             # Modèles Track, CamelotKey, UserSettings
+        ├── Services/           # SeratoDatabaseService (SQLite), Monitor, Combos
+        └── Resources/          # Icône Windows AppIcon.ico
 ```
 
 ---
