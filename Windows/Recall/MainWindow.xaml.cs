@@ -19,7 +19,6 @@ namespace Recall
         private const double MinNormalHeight = 227.0;
         private const double CompactHeight = 54.0;
         private double _lastNormalHeight = 530.0;
-        private Point _dragStartPoint;
 
         public MainWindow()
         {

@@ -222,7 +222,7 @@ namespace Recall.Services
                         var rel = currentTrack.CamelotKey?.GetRelationshipWith(target.CamelotKey);
                         double? bpmDiff = (currentTrack.Bpm > 0 && target.Bpm > 0) ? target.Bpm - currentTrack.Bpm : null;
 
-                        if (harmonicFilter && (rel == null || !rel.IsCompatible)) continue;
+                        if (harmonicFilter && !rel.IsCompatible()) continue;
                         if (bpmFilter && currentTrack.Bpm > 0 && target.Bpm > 0)
                         {
                             double pct = Math.Abs(target.Bpm - currentTrack.Bpm) / currentTrack.Bpm * 100.0;
@@ -250,7 +250,7 @@ namespace Recall.Services
                     }
 
                     routines = routines.OrderByDescending(t => t.TransitionCount)
-                                       .ThenByDescending(t => t.HarmonicRelation?.IsCompatible == true)
+                                       .ThenByDescending(t => t.HarmonicRelation.IsCompatible())
                                        .ToList();
                 }
 
@@ -277,7 +277,7 @@ namespace Recall.Services
                         if (candidate.CamelotKey == null) continue;
 
                         var rel = currentTrack.CamelotKey.GetRelationshipWith(candidate.CamelotKey);
-                        if (!rel.IsCompatible) continue;
+                        if (!rel.IsCompatible()) continue;
 
                         double? bpmDiff = null;
                         if (currentTrack.Bpm > 0 && candidate.Bpm > 0)
@@ -319,12 +319,12 @@ namespace Recall.Services
             return (routines, favorites, harmonic);
         }
 
-        private static int HarmonicScore(HarmonicRelation? rel) => rel?.Text switch
+        private static int HarmonicScore(HarmonicRelation? rel) => rel switch
         {
-            "Identique" => 4,
-            "Parfait" => 3,
-            "Relatif" => 2,
-            "+2 Boost" => 1,
+            HarmonicRelation.Exact => 4,
+            HarmonicRelation.Adjacent => 3,
+            HarmonicRelation.Relative => 2,
+            HarmonicRelation.EnergyBoost => 1,
             _ => 0
         };
 

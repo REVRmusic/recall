@@ -184,5 +184,7 @@ namespace Recall.Services
 
             return result;
         }
+
+        public List<Track> GetFavoriteTracks(Track currentTrack) => GetFavoriteSuggestionsFor(currentTrack);
     }
 }

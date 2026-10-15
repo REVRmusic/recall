@@ -21,6 +21,9 @@ namespace Recall.Models
             relation == HarmonicRelation.Relative ||
             relation == HarmonicRelation.EnergyBoost;
 
+        public static bool IsCompatible(this HarmonicRelation? relation) =>
+            relation.HasValue && relation.Value.IsCompatible();
+
         public static string BadgeText(this HarmonicRelation relation) => relation switch
         {
             HarmonicRelation.Exact => "Identique",
@@ -30,6 +33,12 @@ namespace Recall.Models
             HarmonicRelation.EnergyDrop => "-2 Drop",
             _ => ""
         };
+
+        public static string BadgeText(this HarmonicRelation? relation) =>
+            relation.HasValue ? relation.Value.BadgeText() : "";
+
+        public static string Text(this HarmonicRelation? relation) =>
+            relation.HasValue ? relation.Value.BadgeText() : "";
     }
 
     public class CamelotKey : IEquatable<CamelotKey>
@@ -125,8 +134,9 @@ namespace Recall.Models
             };
         }
 
-        public HarmonicRelation Relationship(CamelotKey other)
+        public HarmonicRelation Relationship(CamelotKey? other)
         {
+            if (other is null) return HarmonicRelation.Incompatible;
             if (Equals(other)) return HarmonicRelation.Exact;
 
             if (Letter == other.Letter)
@@ -144,6 +154,8 @@ namespace Recall.Models
 
             return HarmonicRelation.Incompatible;
         }
+
+        public HarmonicRelation GetRelationshipWith(CamelotKey? other) => Relationship(other);
 
         public string ColorHex => IsMinor switch
         {
