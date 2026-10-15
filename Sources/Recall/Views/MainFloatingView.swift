@@ -7,11 +7,10 @@ public struct MainFloatingView: View {
     @State private var showSettings: Bool = false
     @State private var showSearch: Bool = false
     @State private var showGuide: Bool = false
-    @State private var searchText: String = ""
     
     public init() {}
     
-    /// Filtrage en direct selon les filtres actifs (Harmonie, BPM, Texte)
+    /// Filtrage en direct selon les filtres actifs (Harmonie, BPM, Favoris)
     private var filteredSuggestions: [Track] {
         var list = settings.isFavoritesFilterActive ? monitor.favoriteSuggestions : monitor.historySuggestions
         
@@ -44,16 +43,7 @@ public struct MainFloatingView: View {
             }
         }
         
-        // 3. Recherche textuelle rapide
-        if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let q = searchText.lowercased()
-            list = list.filter {
-                $0.displayTitle.lowercased().contains(q) ||
-                $0.displayArtist.lowercased().contains(q)
-            }
-        }
-        
-        // 4. Masquer les morceaux déjà joués si l'option est activée
+        // 3. Masquer les morceaux déjà joués si l'option est activée
         if settings.hidePlayedTracks {
             list = list.filter { !$0.isPlayedInSession }
         }
@@ -101,9 +91,8 @@ public struct MainFloatingView: View {
                     // Carte unifiée du morceau en cours de lecture avec sélecteurs de Deck
                     NowPlayingCard()
                     
-                    // Barre de filtres et recherche en 1 seule ligne ultra compacte
+                    // Barre de filtres en 1 seule ligne ultra compacte
                     FilterBarView(
-                        searchText: $searchText,
                         suggestionsCount: filteredSuggestions.count
                     )
                     

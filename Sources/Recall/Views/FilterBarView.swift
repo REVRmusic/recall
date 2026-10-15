@@ -2,16 +2,14 @@ import SwiftUI
 
 public struct FilterBarView: View {
     @EnvironmentObject var settings: UserSettings
-    @Binding var searchText: String
     let suggestionsCount: Int
     
-    public init(searchText: Binding<String>, suggestionsCount: Int) {
-        self._searchText = searchText
+    public init(suggestionsCount: Int) {
         self.suggestionsCount = suggestionsCount
     }
     
     public var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             // Filtre BPM ±10%
             filterTogglePill(
                 title: "BPM ±10%",
@@ -45,41 +43,31 @@ public struct FilterBarView: View {
                 settings.isFavoritesFilterActive.toggle()
             }
             
-            Spacer(minLength: 2)
-            
-            // Mini champ de recherche rapide intégré
-            HStack(spacing: 2) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 8))
-                    .foregroundColor(.white.opacity(0.4))
-                
-                TextField("Filtrer...", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 9))
-                    .foregroundColor(.white)
-                    .frame(minWidth: 26, maxWidth: 44)
-                
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 7.5))
-                            .foregroundColor(.white.opacity(0.4))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2.5)
-            .background(Color.white.opacity(0.05))
-            .cornerRadius(5)
+            Spacer(minLength: 4)
             
             // Compteur de résultats
-            Text("\(suggestionsCount)")
-                .font(.system(size: 9, weight: .bold, design: .rounded))
-                .foregroundColor(.white.opacity(0.4))
-                .padding(.horizontal, 1)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 3) {
+                    Text("\(suggestionsCount)")
+                        .font(.system(size: 9.5, weight: .bold, design: .rounded))
+                        .foregroundColor(.white.opacity(0.65))
+                    Text(suggestionsCount > 1 ? "matchs" : "match")
+                        .font(.system(size: 8.5, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.40))
+                }
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2.5)
+                .background(Color.white.opacity(0.05))
+                .cornerRadius(5)
+                
+                Text("\(suggestionsCount)")
+                    .font(.system(size: 9.5, weight: .bold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.55))
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2.5)
+                    .background(Color.white.opacity(0.05))
+                    .cornerRadius(5)
+            }
         }
         .padding(.horizontal, 8)
         .padding(.bottom, 5)
