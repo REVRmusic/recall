@@ -414,7 +414,7 @@ public struct SettingsSheetView: View {
                             Divider()
                                 .background(Color.white.opacity(0.08))
                             
-                            // Personnalisation de la couleur des morceaux joués (Style Serato)
+                            // Personnalisation de la couleur des morceaux joués
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
                                     Text("Couleur d'identification")
@@ -424,9 +424,9 @@ public struct SettingsSheetView: View {
                                     Spacer()
                                     
                                     let presetNames: [String: String] = [
-                                        "#0FA2FF": "Bleu Serato",
+                                        "#0FA2FF": "Bleu Platine",
                                         "#00D2D3": "Cyan Mixify",
-                                        "#AC63FE": "Violet Serato",
+                                        "#AC63FE": "Violet Néon",
                                         "#2ECC71": "Vert Émeraude",
                                         "#FF9F43": "Orange DJ",
                                         "#FF5252": "Rose Fluo"
@@ -438,9 +438,9 @@ public struct SettingsSheetView: View {
                                 }
                                 
                                 let presetColors: [(hex: String, name: String)] = [
-                                    ("#0FA2FF", "Bleu Serato"),
+                                    ("#0FA2FF", "Bleu Platine"),
                                     ("#00D2D3", "Cyan Mixify"),
-                                    ("#AC63FE", "Violet Serato"),
+                                    ("#AC63FE", "Violet Néon"),
                                     ("#2ECC71", "Vert Émeraude"),
                                     ("#FF9F43", "Orange DJ"),
                                     ("#FF5252", "Rose Fluo")
@@ -487,7 +487,7 @@ public struct SettingsSheetView: View {
                                 }
                             }
                             
-                            // Style d'affichage (Texte seul comme Serato, Fond teinté, ou les deux)
+                            // Style d'affichage (Texte seul, Fond teinté, ou les deux)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("Style d'affichage")
                                     .font(.system(size: 10.5, weight: .semibold))
@@ -625,6 +625,38 @@ public struct SettingsSheetView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    
+                    // SECTION 9 : Mentions Légales & Confidentialité
+                    settingCard {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "lock.shield.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(Color.accentCyan)
+                                
+                                Text("Mentions Légales & Confidentialité")
+                                    .font(.system(size: 10.5, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("• **100 % Local & Hors-ligne** : Aucune donnée personnelle ni télémétrie n'est collectée ou transmise.")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.white.opacity(0.65))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                
+                                Text("• **Lecture seule** : Accès non destructif à l'historique local (`PRAGMA query_only = ON`).")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.white.opacity(0.65))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                
+                                Text("• **Marques déposées** : Serato DJ Pro est une marque déposée de Serato Limited. Recall est un logiciel indépendant conçu par REVR, sans affiliation ni certification par Serato Limited.")
+                                    .font(.system(size: 8.5))
+                                    .foregroundColor(.white.opacity(0.50))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
                     
                     // Bouton Réinitialiser
                     Button {

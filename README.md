@@ -5,17 +5,17 @@
 <h1 align="center">Recall</h1>
 
 <p align="center">
-  <strong>L'assistant intelligent d'enchaînements musicaux pour Serato DJ Pro</strong><br>
+  <strong>Compagnon indépendant d'enchaînements musicaux compatible avec Serato DJ Pro</strong><br>
   <em>Suggère en temps réel vos meilleures transitions, basées exclusivement sur vos routines et votre historique réel de mix.</em>
 </p>
 
 <p align="center">
   <a href="https://github.com/REVRmusic/recall/releases"><img src="https://img.shields.io/github/v/release/REVRmusic/recall?style=flat-square&color=0FA2FF&label=Version" alt="Release"></a>
   <img src="https://img.shields.io/badge/macOS-13.0%2B-black?style=flat-square&logo=apple" alt="macOS 13.0+">
-  <img src="https://img.shields.io/badge/Serato%20DJ%20Pro-Compatible-blue?style=flat-square&logo=serato" alt="Serato DJ Pro">
+  <img src="https://img.shields.io/badge/Serato%20DJ%20Pro-Compatible-blue?style=flat-square" alt="Compatible Serato DJ Pro">
   <img src="https://img.shields.io/badge/Swift-5.9%2B-orange?style=flat-square&logo=swift" alt="Swift">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Licence-MIT-green?style=flat-square" alt="Licence MIT"></a>
-  <img src="https://img.shields.io/badge/Confidentialité-100%25%20Hors--ligne-purple?style=flat-square" alt="100% Local">
+  <a href="PRIVACY.md"><img src="https://img.shields.io/badge/Confidentialité-100%25%20Hors--ligne-purple?style=flat-square" alt="100% Local"></a>
 </p>
 
 ---
@@ -154,6 +154,14 @@ Recall/
         ├── Views/              # Vues SwiftUI modernes (Main, NowPlaying, Suggestions, Settings, Bandeau)
         └── Utils/              # Extensions graphiques et configurateurs de défilement
 ```
+
+---
+
+## ⚖️ Mentions Légales & Marques Déposées
+
+- **Serato Limited** : *Serato*, *Serato DJ*, *Serato DJ Pro*, *Serato DJ Lite* et leurs logos respectifs sont des marques déposées appartenant à **Serato Limited**.
+- **Clause de non-affiliation** : Recall est un logiciel indépendant développé par **REVR** pour la communauté DJ. Recall n'est en aucun cas affilié, sponsorisé, associé, validé ou certifié par Serato Limited. L'utilisation des noms de marque Serato dans cette documentation et dans l'application est faite à titre purement descriptif afin d'indiquer la compatibilité technique du logiciel (*Nominative Fair Use*).
+- **Protection de la vie privée** : Pour consulter notre engagement de confidentialité 100 % hors-ligne, reportez-vous au fichier [PRIVACY.md](PRIVACY.md).
 
 ---
 

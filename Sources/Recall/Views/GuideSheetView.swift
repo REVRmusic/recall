@@ -79,7 +79,7 @@ public struct GuideSheetView: View {
                                 }
                             }
                             
-                            Text("Ce chiffre indique **le nombre exact de fois où vous avez enchaîné ce morceau juste après le morceau actuellement en cours**, lors de vos vrais sets Serato.")
+                            Text("Ce chiffre indique **le nombre exact de fois où vous avez enchaîné ce morceau juste après le morceau actuellement en cours**, lors de vos vrais sets de mix.")
                                 .font(.system(size: 11))
                                 .foregroundColor(.white.opacity(0.85))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -161,7 +161,7 @@ public struct GuideSheetView: View {
                                 badgeExample(text: "9A", color: Color(hex: "#E2BCFF"))
                             }
                             
-                            Text("Recall respecte les couleurs officielles de la roue de Camelot (Serato DJ Pro) pour identifier instantanément les morceaux compatibles :")
+                            Text("Recall respecte les couleurs de la roue de Camelot pour identifier instantanément les morceaux compatibles :")
                                 .font(.system(size: 11))
                                 .foregroundColor(.white.opacity(0.85))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -285,7 +285,7 @@ public struct GuideSheetView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 bulletPoint(
                                     boldText: "Marquage visuel [JOUÉ] :",
-                                    desc: "Le titre est légèrement estompé et porte le badge cyan doux, comme dans Serato."
+                                    desc: "Le titre est mis en valeur avec le style et la couleur configurés dans vos réglages."
                                 )
                                 bulletPoint(
                                     boldText: "Filtre anti pré-écoute :",
@@ -316,6 +316,41 @@ public struct GuideSheetView: View {
                                 .font(.system(size: 10.5))
                                 .foregroundColor(.white.opacity(0.7))
                                 .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    
+                    // SECTION 8 : Mentions Légales & Confidentialité
+                    guideCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Label {
+                                    Text("Mentions Légales & Confidentialité")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(.white)
+                                } icon: {
+                                    Image(systemName: "lock.shield.fill")
+                                        .foregroundColor(Color.accentCyan)
+                                }
+                                
+                                Spacer()
+                                
+                                badgeExample(text: "100% LOCAL", color: Color.accentCyan)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                bulletPoint(
+                                    boldText: "Confidentialité & Zéro télémétrie :",
+                                    desc: "Recall fonctionne à 100 % hors-ligne sur votre Mac. Aucun serveur externe n'est contacté, aucune donnée personnelle ou historique n'est collectée."
+                                )
+                                bulletPoint(
+                                    boldText: "Intégrité des données :",
+                                    desc: "L'accès à l'historique de session s'effectue en lecture seule stricte (PRAGMA query_only = ON), sans jamais modifier ni risquer d'altérer vos fichiers de base."
+                                )
+                                bulletPoint(
+                                    boldText: "Marques déposées :",
+                                    desc: "Serato, Serato DJ, Serato DJ Pro et leurs logos sont des marques déposées appartenant à Serato Limited. Recall est un utilitaire compagnon indépendant développé par REVR et n'est en aucun cas affilié, sponsorisé, approuvé ou certifié par Serato Limited."
+                                )
+                            }
                         }
                     }
                 }

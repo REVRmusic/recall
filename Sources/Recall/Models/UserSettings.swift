@@ -4,7 +4,7 @@ import SwiftUI
 
 public enum PlayedTrackHighlightStyle: String, CaseIterable, Identifiable {
     case both = "both"         // Texte & fond teinté
-    case textOnly = "textOnly" // Texte uniquement (Style Serato pur)
+    case textOnly = "textOnly" // Texte uniquement
     case bgOnly = "bgOnly"     // Fond teinté uniquement
     
     public var id: String { rawValue }
@@ -12,7 +12,7 @@ public enum PlayedTrackHighlightStyle: String, CaseIterable, Identifiable {
     public var label: String {
         switch self {
         case .both: return "Texte & Fond"
-        case .textOnly: return "Texte seul (Serato)"
+        case .textOnly: return "Texte seul"
         case .bgOnly: return "Fond seul"
         }
     }
