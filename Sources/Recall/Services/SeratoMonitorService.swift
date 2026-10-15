@@ -289,6 +289,12 @@ public class SeratoMonitorService: ObservableObject {
         refreshSuggestions()
     }
     
+    /// Force une synchronisation immédiate des morceaux joués selon les critères de session et rafraîchit
+    public func triggerSessionResync() {
+        SessionHistoryService.shared.syncWithDatabase(dbService: self.dbService)
+        refreshSuggestions()
+    }
+    
     public func setManualReferenceTrack(_ track: Track) {
         manualTrackOverride = track
         currentTrack = track

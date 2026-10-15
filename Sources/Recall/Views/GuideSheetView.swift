@@ -289,7 +289,7 @@ public struct GuideSheetView: View {
                                 )
                                 bulletPoint(
                                     boldText: "Filtre anti pré-écoute :",
-                                    desc: "Un morceau n'est validé que s'il a tourné au moins 25 secondes. Les simples pré-écoutes au casque sont ignorées."
+                                    desc: "Un morceau n'est validé que s'il a tourné au moins le délai choisi dans les paramètres (25s par défaut). Les pré-écoutes au casque sont ignorées."
                                 )
                                 bulletPoint(
                                     boldText: "Bouton Reset en haut ↺ :",

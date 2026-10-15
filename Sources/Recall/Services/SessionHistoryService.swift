@@ -118,20 +118,22 @@ public class SessionHistoryService: ObservableObject {
     
     // MARK: - Synchronisation & Détection Pré-écoute vs Lecture Réelle
     
-    /// Interroge l'historique Serato et filtre strictement les morceaux joués (durée >= 25 secondes)
+    /// Interroge l'historique Serato et filtre strictement les morceaux joués (durée >= seuil paramétré)
     public func syncWithDatabase(dbService: SeratoDatabaseService) {
         guard !isSyncing else { return }
         isSyncing = true
         
         let start = sessionStartTime
+        let thresholdSeconds = Double(UserSettings.shared.playedMinDurationSeconds)
+        let playedFlagThreshold = max(5.0, thresholdSeconds * 0.8)
         
-        Task.detached(priority: .utility) { [dbService, start] in
+        Task.detached(priority: .utility) { [dbService, start, thresholdSeconds, playedFlagThreshold] in
             let rawEntries = dbService.fetchSessionEntries(since: start)
             
             // FILTRAGE INTELLIGENT PRÉ-ÉCOUTE :
-            // Un morceau est considéré "JOUÉ" uniquement s'il a tourné pendant au moins 25 secondes
-            // (ou s'il a le flag 'played == 1' ET au moins 20 secondes de lecture).
-            // Les morceaux chargés puis éjectés après 5 ou 10 secondes pour pré-écoute au casque sont rejetés.
+            // Un morceau est considéré "JOUÉ" uniquement s'il a tourné pendant au moins thresholdSeconds
+            // (ou s'il a le flag 'played == 1' ET au moins playedFlagThreshold de lecture).
+            // Les morceaux chargés puis éjectés après une brève pré-écoute au casque sont rejetés.
             var validPlaysByTitle: [String: (title: String, artist: String, fileName: String, lastTime: Date, maxDuration: Double, count: Int)] = [:]
             
             for entry in rawEntries {
@@ -139,11 +141,11 @@ public class SessionHistoryService: ObservableObject {
                 let isGenuinePlay: Bool
                 
                 if entry.isCurrentlyPlaying {
-                    // En cours de lecture sur la platine : doit tourner depuis au moins 25s
-                    isGenuinePlay = duration >= 25.0
+                    // En cours de lecture sur la platine : doit tourner depuis au moins thresholdSeconds
+                    isGenuinePlay = duration >= thresholdSeconds
                 } else {
-                    // Lecture terminée : durée effective requise >= 25s (ou played=1 avec >= 20s)
-                    isGenuinePlay = duration >= 25.0 || (entry.playedFlag == 1 && duration >= 20.0)
+                    // Lecture terminée : durée effective requise >= thresholdSeconds (ou played=1 avec >= playedFlagThreshold)
+                    isGenuinePlay = duration >= thresholdSeconds || (entry.playedFlag == 1 && duration >= playedFlagThreshold)
                 }
                 
                 guard isGenuinePlay else { continue }

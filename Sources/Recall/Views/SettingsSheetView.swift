@@ -337,11 +337,6 @@ public struct SettingsSheetView: View {
                                     .cornerRadius(4)
                             }
                             
-                            Text("Les morceaux joués pendant plus de 25 secondes sont automatiquement mémorisés. Les simples pré-écoutes au casque sont ignorées.")
-                                .font(.system(size: 9.5))
-                                .foregroundColor(.white.opacity(0.55))
-                                .fixedSize(horizontal: false, vertical: true)
-                            
                             HStack {
                                 Text("Masquer les morceaux déjà joués")
                                     .font(.system(size: 10.5, weight: .medium))
@@ -354,6 +349,54 @@ public struct SettingsSheetView: View {
                                     .tint(Color.accentCyan)
                                     .scaleEffect(0.85)
                             }
+                            
+                            Divider()
+                                .background(Color.white.opacity(0.08))
+                            
+                            // Délai de validation (anti-préécoute)
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text("Délai de validation (anti-préécoute)")
+                                        .font(.system(size: 10.5, weight: .semibold))
+                                        .foregroundColor(.white.opacity(0.85))
+                                    
+                                    Spacer()
+                                    
+                                    Text("\(settings.playedMinDurationSeconds) sec")
+                                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                                        .foregroundColor(Color.accentCyan)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 1.5)
+                                        .background(Color.accentCyan.opacity(0.2))
+                                        .cornerRadius(4)
+                                }
+                                
+                                CustomSlider(
+                                    value: Binding(
+                                        get: { Double(settings.playedMinDurationSeconds) },
+                                        set: { newVal in
+                                            settings.playedMinDurationSeconds = Int(newVal)
+                                            monitor.triggerSessionResync()
+                                        }
+                                    ),
+                                    range: 5...90,
+                                    step: 5
+                                )
+                                
+                                HStack(spacing: 4) {
+                                    quickSecondButton(seconds: 10, label: "10s")
+                                    quickSecondButton(seconds: 15, label: "15s")
+                                    quickSecondButton(seconds: 25, label: "25s (défaut)")
+                                    quickSecondButton(seconds: 45, label: "45s")
+                                    quickSecondButton(seconds: 60, label: "1 min")
+                                }
+                                
+                                Text("Un morceau doit tourner au moins \(settings.playedMinDurationSeconds)s pour être mémorisé. Les pré-écoutes au casque plus courtes sont ignorées.")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.white.opacity(0.50))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.top, 2)
                             
                             Divider()
                                 .background(Color.white.opacity(0.08))
@@ -620,6 +663,28 @@ public struct SettingsSheetView: View {
             Text(label)
                 .font(.system(size: 9.5, weight: isSelected ? .bold : .semibold))
                 .padding(.horizontal, 5)
+                .padding(.vertical, 3)
+                .frame(maxWidth: .infinity)
+                .background(isSelected ? Color.accentCyan.opacity(0.30) : Color.white.opacity(0.06))
+                .foregroundColor(isSelected ? Color.accentCyan : Color.white.opacity(0.80))
+                .cornerRadius(4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(isSelected ? Color.accentCyan.opacity(0.75) : Color.white.opacity(0.10), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func quickSecondButton(seconds: Int, label: String) -> some View {
+        let isSelected = settings.playedMinDurationSeconds == seconds
+        return Button {
+            settings.playedMinDurationSeconds = seconds
+            monitor.triggerSessionResync()
+        } label: {
+            Text(label)
+                .font(.system(size: 9, weight: isSelected ? .bold : .semibold))
+                .padding(.horizontal, 4)
                 .padding(.vertical, 3)
                 .frame(maxWidth: .infinity)
                 .background(isSelected ? Color.accentCyan.opacity(0.30) : Color.white.opacity(0.06))

@@ -103,7 +103,7 @@ public struct DraggableTrackRow: View {
                             .stroke(settings.playedTrackColor.opacity(0.55), lineWidth: 0.8)
                     )
                     .fixedSize(horizontal: true, vertical: false)
-                    .help("Déjà joué lors de votre session en cours (durée > 25s)")
+                    .help("Déjà joué lors de votre session en cours (durée > \(settings.playedMinDurationSeconds)s)")
                 }
                 
                 // Badge Combinaison Favorite

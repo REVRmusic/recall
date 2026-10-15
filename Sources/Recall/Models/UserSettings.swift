@@ -63,6 +63,9 @@ public class UserSettings: ObservableObject {
     @Published public var playedTrackStyle: String {
         didSet { UserDefaults.standard.set(playedTrackStyle, forKey: "playedTrackStyle") }
     }
+    @Published public var playedMinDurationSeconds: Int {
+        didSet { UserDefaults.standard.set(playedMinDurationSeconds, forKey: "playedMinDurationSeconds") }
+    }
     
     public init() {
         let def = UserDefaults.standard
@@ -80,6 +83,7 @@ public class UserSettings: ObservableObject {
         self.seratoDatabaseCustomPath = def.string(forKey: "seratoDatabaseCustomPath") ?? ""
         self.playedTrackColorHex = def.string(forKey: "playedTrackColorHex") ?? "#0FA2FF"
         self.playedTrackStyle = def.string(forKey: "playedTrackStyle") ?? "both"
+        self.playedMinDurationSeconds = def.object(forKey: "playedMinDurationSeconds") != nil ? def.integer(forKey: "playedMinDurationSeconds") : 25
     }
     
     public var defaultDatabasePath: String {
@@ -117,5 +121,6 @@ public class UserSettings: ObservableObject {
         seratoDatabaseCustomPath = ""
         playedTrackColorHex = "#0FA2FF"
         playedTrackStyle = "both"
+        playedMinDurationSeconds = 25
     }
 }
