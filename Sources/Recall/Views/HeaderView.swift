@@ -172,18 +172,18 @@ struct CloseHeaderButton: View {
     }
 }
 
-/// Affiche la véritable icône de l'application Recall (vinyle avec centre dégradé cyan/bleu)
+/// Affiche la véritable icône de l'application Recall (petit cerveau mignon DJ)
 struct AppIconImageView: View {
     private var appIcon: NSImage? {
-        if let icon = NSImage(named: NSImage.applicationIconName) {
-            return icon
-        }
         if let path = Bundle.main.path(forResource: "AppIcon", ofType: "png"),
            let icon = NSImage(contentsOfFile: path) {
             return icon
         }
         if let path = Bundle.main.path(forResource: "AppIcon", ofType: "icns"),
            let icon = NSImage(contentsOfFile: path) {
+            return icon
+        }
+        if let icon = NSImage(named: NSImage.applicationIconName) {
             return icon
         }
         return NSApp.applicationIconImage
@@ -200,19 +200,19 @@ struct AppIconImageView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 4.5))
             } else {
                 ZStack {
-                    Circle()
+                    RoundedRectangle(cornerRadius: 4.5)
                         .fill(
                             LinearGradient(
-                                colors: [Color.accentCyan, Color.accentBlue],
+                                colors: [Color(hex: "#FF758C"), Color(hex: "#C471ED")],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 21, height: 21)
                     
-                    Image(systemName: "waveform")
-                        .font(.system(size: 10.5, weight: .black))
-                        .foregroundColor(.black)
+                    Image(systemName: "brain")
+                        .font(.system(size: 11, weight: .heavy))
+                        .foregroundColor(.white)
                 }
             }
         }
