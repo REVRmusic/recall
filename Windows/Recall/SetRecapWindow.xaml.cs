@@ -41,7 +41,15 @@ namespace Recall
         {
             if (e.ButtonState == MouseButtonState.Pressed)
             {
-                DragMove();
+                try { DragMove(); } catch { }
+            }
+        }
+
+        private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                try { DragMove(); } catch { }
             }
         }
 

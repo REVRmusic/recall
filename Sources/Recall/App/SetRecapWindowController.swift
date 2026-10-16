@@ -24,6 +24,24 @@ private class SetRecapPanel: NSPanel {
         }
         super.keyDown(with: event)
     }
+    
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown {
+            let loc = event.locationInWindow
+            let h = frame.size.height
+            let w = frame.size.width
+            
+            // Déplacement fluide de la modale via toute la barre d'en-tête (sauf bouton fermer en haut à droite)
+            if loc.y >= (h - 60) {
+                let isCloseButton = loc.x >= (w - 48) && loc.y >= (h - 48)
+                if !isCloseButton {
+                    self.performDrag(with: event)
+                    return
+                }
+            }
+        }
+        super.sendEvent(event)
+    }
 }
 
 /// Contrôleur dédié à la fenêtre indépendante du Bilan Statistique du Mix (Set Recap) de Recall

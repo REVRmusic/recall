@@ -213,6 +213,7 @@ public struct SetRecapView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var currentTime = Date()
     @State private var showCopyToast: Bool = false
+    @State private var initialWindowOrigin: CGPoint? = nil
     
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
@@ -338,6 +339,26 @@ public struct SetRecapView: View {
             
             Spacer()
             
+            // Poignée visuelle de déplacement
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+                    .font(.system(size: 8.5, weight: .bold))
+                Text("Déplacer")
+                    .font(.system(size: 9, weight: .bold))
+            }
+            .foregroundColor(.white.opacity(0.35))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Color.white.opacity(0.04))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 0.8)
+            )
+            .help("Cliquer et glisser pour déplacer la fenêtre")
+            
+            Spacer()
+            
             if let closeAction = onClose {
                 Button(action: closeAction) {
                     Image(systemName: "xmark.circle.fill")
@@ -350,6 +371,24 @@ public struct SetRecapView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 1)
+                .onChanged { gesture in
+                    guard let window = NSApp.windows.first(where: { $0.title == "Statistiques du Mix Recall" && $0.isVisible }) ?? SetRecapWindowController.shared.window else { return }
+                    if initialWindowOrigin == nil {
+                        initialWindowOrigin = window.frame.origin
+                    }
+                    if let start = initialWindowOrigin {
+                        let newX = start.x + gesture.translation.width
+                        let newY = start.y - gesture.translation.height
+                        window.setFrameOrigin(CGPoint(x: newX, y: newY))
+                    }
+                }
+                .onEnded { _ in
+                    initialWindowOrigin = nil
+                }
+        )
     }
     
     // MARK: - 2. Hero Card Durée & Pacing

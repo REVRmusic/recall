@@ -20,7 +20,7 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid Grid.Row="0" Margin="0,0,0,12" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Width="28" Height="28" CornerRadius="14" Background="#2614C8B0" Margin="0,0,8,0">
                         <TextBlock Text="📊" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -35,6 +35,15 @@
                         <TextBlock x:Name="TxtSessionStatus" Text="Session en direct" FontSize="9.5" Foreground="#9CA3AF"/>
                     </StackPanel>
                 </StackPanel>
+
+                <!-- Poignée visuelle de déplacement -->
+                <Border Background="#10FFFFFF" CornerRadius="10" Padding="8,3" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#20FFFFFF" BorderThickness="1" Cursor="SizeAll">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✣ " FontSize="9" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                        <TextBlock Text="Déplacer" FontSize="9" FontWeight="SemiBold" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
                 <Button Content="✕" Width="24" Height="24" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
             </Grid>
 
