@@ -257,4 +257,30 @@ public struct Track: Identifiable, Hashable {
         guard let p = filePath, !p.isEmpty else { return false }
         return FileManager.default.fileExists(atPath: p)
     }
+    
+    // MARK: - Extraction Intelligente du Titre de Base (Anti-Variantes / Edits / Remixes)
+    
+    /// Extrait le titre de base d'un morceau en retirant les descripteurs de version, remix, edit ou mentions de featuring.
+    /// Ex: "Monalisa - Da Phonk Club Edit" -> "Monalisa"
+    /// Ex: "Monalisa (Extended Mix By Fuvi Clan)" -> "Monalisa"
+    public static func extractBaseTitle(_ fullTitle: String) -> String {
+        var cleaned = fullTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.isEmpty { return "" }
+        
+        // 1. Supprimer les parenthèses, crochets et accolades de version ou featuring
+        cleaned = cleaned.replacingOccurrences(of: "\\s*\\([^)]*\\)", with: "", options: .regularExpression)
+        cleaned = cleaned.replacingOccurrences(of: "\\s*\\[[^]]*\\]", with: "", options: .regularExpression)
+        cleaned = cleaned.replacingOccurrences(of: "\\s*\\{[^}]*\\}", with: "", options: .regularExpression)
+        
+        // 2. Supprimer les mentions de featuring (feat., ft., featuring, with, vs.)
+        let featRegex = "\\s+(feat\\.|ft\\.|featuring|with|vs\\.|pres\\.).*$"
+        cleaned = cleaned.replacingOccurrences(of: featRegex, with: "", options: [.regularExpression, .caseInsensitive])
+        
+        // 3. Supprimer les suffixes de version / remix / edit séparés par un tiret
+        let versionSuffixRegex = "\\s+[-–—]\\s+.*(remix|edit|mix|version|vip|dub|bootleg|rework|flip|extended|club|radio|intro|outro|clean|dirty|short|acapella|instrumental|mashup|refix|cut).*$"
+        cleaned = cleaned.replacingOccurrences(of: versionSuffixRegex, with: "", options: [.regularExpression, .caseInsensitive])
+        
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? fullTitle : cleaned
+    }
 }

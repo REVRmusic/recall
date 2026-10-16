@@ -96,6 +96,9 @@ public class UserSettings: ObservableObject {
     @Published public var playedMinDurationSeconds: Int {
         didSet { UserDefaults.standard.set(playedMinDurationSeconds, forKey: "playedMinDurationSeconds") }
     }
+    @Published public var cumulateVariantSuggestions: Bool {
+        didSet { UserDefaults.standard.set(cumulateVariantSuggestions, forKey: "cumulateVariantSuggestions") }
+    }
     
     public init() {
         let def = UserDefaults.standard
@@ -117,6 +120,7 @@ public class UserSettings: ObservableObject {
         self.playedTrackColorHex = def.string(forKey: "playedTrackColorHex") ?? "#0FA2FF"
         self.playedTrackStyle = def.string(forKey: "playedTrackStyle") ?? "both"
         self.playedMinDurationSeconds = def.object(forKey: "playedMinDurationSeconds") != nil ? def.integer(forKey: "playedMinDurationSeconds") : 25
+        self.cumulateVariantSuggestions = def.object(forKey: "cumulateVariantSuggestions") != nil ? def.bool(forKey: "cumulateVariantSuggestions") : true
     }
     
     public var defaultDatabasePath: String {

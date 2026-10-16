@@ -127,5 +127,18 @@ namespace Recall.Models
         public string KeyColorHex => CamelotKey?.ColorHex ?? "#888888";
 
         public bool IsFileAvailable => !string.IsNullOrEmpty(FilePath) && File.Exists(FilePath);
+
+        public static string ExtractBaseTitle(string fullTitle)
+        {
+            if (string.IsNullOrWhiteSpace(fullTitle)) return "";
+            string cleaned = fullTitle.Trim();
+            cleaned = Regex.Replace(cleaned, @"\s*\([^)]*\)", "");
+            cleaned = Regex.Replace(cleaned, @"\s*\[[^\]]*\]", "");
+            cleaned = Regex.Replace(cleaned, @"\s*\{[^}]*\}", "");
+            cleaned = Regex.Replace(cleaned, @"\s+(feat\.|ft\.|featuring|with|vs\.|pres\.).*$", "", RegexOptions.IgnoreCase);
+            cleaned = Regex.Replace(cleaned, @"\s+[-–—]\s+.*(remix|edit|mix|version|vip|dub|bootleg|rework|flip|extended|club|radio|intro|outro|clean|dirty|short|acapella|instrumental|mashup|refix|cut).*$", "", RegexOptions.IgnoreCase);
+            cleaned = cleaned.Trim();
+            return string.IsNullOrEmpty(cleaned) ? fullTitle : cleaned;
+        }
     }
 }

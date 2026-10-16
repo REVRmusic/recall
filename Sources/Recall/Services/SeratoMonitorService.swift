@@ -60,6 +60,15 @@ public class SeratoMonitorService: ObservableObject {
             }
             .store(in: &cancellables)
             
+        UserSettings.shared.$cumulateVariantSuggestions
+            .dropFirst()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshSuggestions()
+                }
+            }
+            .store(in: &cancellables)
+            
         UserSettings.shared.$isFavoritesFilterActive
             .dropFirst()
             .sink { [weak self] _ in

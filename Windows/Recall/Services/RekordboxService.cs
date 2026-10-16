@@ -211,10 +211,55 @@ namespace Recall.Services
             {
                 string? refTrackId = ResolveTrackId(currentTrack);
 
-                // 1. Routines d'enchaînements
-                if (!string.IsNullOrEmpty(refTrackId) && _transitionMap.TryGetValue(refTrackId, out var nextMap))
+                // 1. Routines d'enchaînements (avec cumul des variantes si activé)
+                var cumulatedMap = new Dictionary<string, int>();
+                var variantIds = new HashSet<string>();
+                if (!string.IsNullOrEmpty(refTrackId)) variantIds.Add(refTrackId);
+
+                if (UserSettings.Shared.CumulateVariantSuggestions)
                 {
-                    foreach (var kv in nextMap)
+                    string refBase = Track.ExtractBaseTitle(currentTrack.DisplayTitle);
+                    if (refBase.Length >= 3)
+                    {
+                        foreach (var cand in _tracksList)
+                        {
+                            string candBase = Track.ExtractBaseTitle(cand.DisplayTitle);
+                            if (!candBase.Equals(refBase, StringComparison.OrdinalIgnoreCase) &&
+                                candBase.IndexOf(refBase, StringComparison.OrdinalIgnoreCase) < 0 &&
+                                refBase.IndexOf(candBase, StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+                            if (currentTrack.CamelotKey != null && cand.CamelotKey != null)
+                            {
+                                if (!cand.CamelotKey.Equals(currentTrack.CamelotKey)) continue;
+                            }
+
+                            if (currentTrack.Bpm > 0 && cand.Bpm > 0)
+                            {
+                                double diff = Math.Abs(cand.Bpm - currentTrack.Bpm);
+                                double pct = diff / currentTrack.Bpm * 100.0;
+                                if (pct > 4.0 && diff > 2.0) continue;
+                            }
+
+                            variantIds.Add(cand.Id);
+                        }
+                    }
+                }
+
+                foreach (var vId in variantIds)
+                {
+                    if (_transitionMap.TryGetValue(vId, out var nextMap))
+                    {
+                        foreach (var kv in nextMap)
+                        {
+                            if (variantIds.Contains(kv.Key)) continue;
+                            cumulatedMap[kv.Key] = cumulatedMap.GetValueOrDefault(kv.Key, 0) + kv.Value;
+                        }
+                    }
+                }
+
+                if (cumulatedMap.Count > 0)
+                {
+                    foreach (var kv in cumulatedMap)
                     {
                         if (kv.Value < minTransitions) continue;
                         if (!_tracksById.TryGetValue(kv.Key, out var target)) continue;

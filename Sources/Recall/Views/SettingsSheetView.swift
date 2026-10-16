@@ -285,7 +285,36 @@ public struct SettingsSheetView: View {
                         }
                     }
                     
-                    // SECTION 4 : Format d'affichage des clés Camelot
+                    // SECTION 4 : Cumul des variantes (Edits, Remixes, Versions)
+                    settingCard {
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                Label {
+                                    Text("Cumuler les versions & remixes")
+                                        .font(.system(size: 11.5, weight: .bold))
+                                        .foregroundColor(.white)
+                                } icon: {
+                                    Image(systemName: "arrow.triangle.swap")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Color.accentCyan)
+                                }
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: $settings.cumulateVariantSuggestions)
+                                    .toggleStyle(.switch)
+                                    .tint(Color.accentCyan)
+                                    .scaleEffect(0.85)
+                            }
+                            
+                            Text("Additionne l'historique d'enchaînements des différentes versions d'un même morceau (Extended, Club Edit, etc.) ayant une gamme harmonique identique et un BPM similaire.")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    
+                    // SECTION 5 : Format d'affichage des clés Camelot
                     settingCard {
                         VStack(alignment: .leading, spacing: 6) {
                             Label {

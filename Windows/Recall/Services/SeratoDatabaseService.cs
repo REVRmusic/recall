@@ -165,10 +165,37 @@ namespace Recall.Services
             long cutoffTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - (lookbackDays * 86400L);
             string targetTitle = currentTrack.DisplayTitle.Trim().Replace("'", "''");
             string targetArtist = currentTrack.DisplayArtist.Trim().Replace("'", "''");
+            string baseTitle = Track.ExtractBaseTitle(currentTrack.DisplayTitle).Trim().Replace("'", "''");
+
+            string matchCondition;
+            if (UserSettings.Shared.CumulateVariantSuggestions && baseTitle.Length >= 3)
+            {
+                string rawKey = currentTrack.RawKey.Trim().Replace("'", "''");
+                double refBpm = currentTrack.Bpm;
+                string keyFilter = !string.IsNullOrEmpty(rawKey) ? $"AND LOWER(curr_e.key) = LOWER('{rawKey}')" : "";
+                string bpmFilter = refBpm > 0 ? $"AND ABS(curr_e.bpm - {refBpm.ToString(System.Globalization.CultureInfo.InvariantCulture)}) <= 3.5" : "";
+                matchCondition = $@"
+                      (
+                          LOWER(curr_e.name) = LOWER('{targetTitle}')
+                          OR (
+                              (LOWER(curr_e.name) LIKE LOWER('%{baseTitle}%') OR LOWER(curr_e.file_name) LIKE LOWER('%{baseTitle}%'))
+                              {keyFilter}
+                              {bpmFilter}
+                          )
+                      )";
+            }
+            else
+            {
+                matchCondition = $@"
+                      (
+                          LOWER(curr_e.name) = LOWER('{targetTitle}')
+                          OR (LOWER(curr_e.name) LIKE LOWER('%{targetTitle}%') AND LOWER(curr_e.artist) = LOWER('{targetArtist}'))
+                      )";
+            }
 
             try
             {
-                // Requête optimisée : trouve les morceaux ayant succédé au morceau cible dans la même session
+                // Requête optimisée : trouve les morceaux ayant succédé au morceau cible (ou ses variantes si activé) dans la même session
                 string sql = $@"
                     SELECT next_e.name, next_e.artist, next_e.bpm, next_e.key,
                            next_e.file_name, next_e.portable_id, COUNT(*) as transition_count
@@ -177,10 +204,7 @@ namespace Recall.Services
                                              AND next_e.id > curr_e.id
                                              AND (next_e.start_time - curr_e.start_time) BETWEEN 30 AND 2700
                     WHERE curr_e.start_time >= {cutoffTime}
-                      AND (
-                          LOWER(curr_e.name) = LOWER('{targetTitle}')
-                          OR (LOWER(curr_e.name) LIKE LOWER('%{targetTitle}%') AND LOWER(curr_e.artist) = LOWER('{targetArtist}'))
-                      )
+                      AND {matchCondition}
                     GROUP BY LOWER(next_e.name), LOWER(next_e.artist)
                     ORDER BY transition_count DESC
                     LIMIT {maxCount};";
@@ -199,8 +223,9 @@ namespace Recall.Services
                     string portableId = reader.GetString(5);
                     int count = reader.GetInt32(6);
 
-                    // Éviter de se suggérer soi-même
+                    // Éviter de se suggérer soi-même ou une autre version du même morceau
                     if (title.Equals(targetTitle, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (UserSettings.Shared.CumulateVariantSuggestions && baseTitle.Length >= 3 && title.IndexOf(baseTitle, StringComparison.OrdinalIgnoreCase) >= 0) continue;
 
                     var candidate = new Track
                     {

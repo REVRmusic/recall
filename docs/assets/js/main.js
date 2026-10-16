@@ -39,7 +39,8 @@ const translations = {
     "sim-sett-dj-label": "Logiciel DJ Actif",
     "sim-sett-key-label": "Format des Clés Harmoniques",
     "sim-sett-bpm-label": "Tolérance Tempo (BPM)",
-    "sim-sett-opt-label": "Options d'Affichage",
+    "sim-sett-opt-label": "Algorithme & Options",
+    "sim-sett-cumulate-variants": "Cumuler les versions & remixes (même clé & BPM)",
     "sim-sett-always-top": "Toujours au premier plan (Floating Window)",
     "sim-sett-hide-played": "Masquer les morceaux déjà joués dans la session",
     "sim-sett-save": "Enregistrer et fermer",
@@ -250,7 +251,8 @@ const translations = {
     "sim-sett-dj-label": "Active DJ Software",
     "sim-sett-key-label": "Harmonic Key Format",
     "sim-sett-bpm-label": "Tempo Tolerance (BPM)",
-    "sim-sett-opt-label": "Display Options",
+    "sim-sett-opt-label": "Algorithm & Options",
+    "sim-sett-cumulate-variants": "Cumulate track versions & remixes (same key & BPM)",
     "sim-sett-always-top": "Always on top (Floating Window)",
     "sim-sett-hide-played": "Hide tracks already played in session",
     "sim-sett-save": "Save and close",
@@ -1231,6 +1233,18 @@ function initRecallAppSimulator() {
   });
 
   // Settings: Checkboxes
+  let cumulateVariants = true;
+  const optCumulateVariants = document.getElementById("sim-opt-cumulate-variants");
+  if (optCumulateVariants) {
+    optCumulateVariants.addEventListener("change", (e) => {
+      cumulateVariants = e.target.checked;
+      showToast(cumulateVariants ? 
+        (currentLang === "en" ? "Variant cumulation active" : "Cumul des versions actif") : 
+        (currentLang === "en" ? "Standard algorithm active" : "Algorithme standard actif"), "🔄");
+      renderApp();
+    });
+  }
+
   const optAlwaysTop = document.getElementById("sim-opt-always-top");
   if (optAlwaysTop) {
     optAlwaysTop.addEventListener("change", (e) => {

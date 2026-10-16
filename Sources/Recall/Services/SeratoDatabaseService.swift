@@ -265,10 +265,29 @@ public func fetchActiveDecks() -> ActiveDecksState {
         let secondsLookback = Int64(daysLookback) * 86400
         let minStartTimeUnix = Int64(Date().timeIntervalSince1970) - secondsLookback
         
-        // --- NIVEAU 1 : Transitions directes immédiates (Track A -> Track B à N+1) ---
+        // --- DÉTECTION DES VARIANTES (Si l'option de cumul est cochée dans les Paramètres) ---
+        let cumulateVariants = UserSettings.shared.cumulateVariantSuggestions
+        let variantInfo: (assetIds: [Int], fileNames: [String], names: [String], baseTitle: String)?
+        if cumulateVariants {
+            variantInfo = findCompatibleVariantIdentifiers(
+                db: db,
+                referenceTrack: referenceTrack,
+                minStartTime: minStartTimeUnix
+            )
+            if let v = variantInfo {
+                for n in v.names {
+                    seenTitles.insert(normalizeTitle(n))
+                }
+            }
+        } else {
+            variantInfo = nil
+        }
+        
+        // --- NIVEAU 1 : Transitions directes (avec cumul des variantes si activé) ---
         let directMatches = queryDirectTransitions(
             db: db,
             referenceTrack: referenceTrack,
+            variantInfo: variantInfo,
             minStartTime: minStartTimeUnix,
             limit: maxResults
         )
@@ -282,8 +301,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
         }
         
         // --- NIVEAU 2 : Transitions via variante du morceau actuel (ex: autre remix/edit du même titre) ---
-        if suggestions.count < maxResults {
-            let baseTitle = extractBaseTitle(referenceTrack.displayTitle)
+        if suggestions.count < maxResults && !cumulateVariants {
+            let baseTitle = Track.extractBaseTitle(referenceTrack.displayTitle)
             if baseTitle.count >= 3 && baseTitle.lowercased() != referenceTrack.displayTitle.lowercased() {
                 let variantMatches = queryBaseTitleTransitions(
                     db: db,
@@ -335,30 +354,164 @@ public func fetchActiveDecks() -> ActiveDecksState {
         }
     }
     
+    // MARK: - Détection des Variantes Compatibles (Même Titre de Base, Même Clé & BPM Similaire)
+    
+    private func hasCommonWords(_ a: String, _ b: String) -> Bool {
+        let stopWords: Set<String> = ["feat", "ft", "x", "&", "and", "the", "dj", "by", "vs"]
+        let wordsA = Set(a.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.count >= 3 && !stopWords.contains($0) })
+        let wordsB = Set(b.lowercased().components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { $0.count >= 3 && !stopWords.contains($0) })
+        return !wordsA.isDisjoint(with: wordsB)
+    }
+
+    /// Trouve toutes les variantes compatibles (edits, remixes, club versions) du morceau de référence ayant:
+    /// - Le même titre de base
+    /// - La même gamme harmonique (même clé Camelot ou tonalité)
+    /// - Sensiblement le même BPM (marge max tolérée de 4% ou ±2 BPM)
+    private func findCompatibleVariantIdentifiers(
+        db: OpaquePointer,
+        referenceTrack: Track,
+        minStartTime: Int64
+    ) -> (assetIds: [Int], fileNames: [String], names: [String], baseTitle: String) {
+        let baseTitle = Track.extractBaseTitle(referenceTrack.displayTitle)
+        guard baseTitle.count >= 3 else {
+            return (
+                referenceTrack.assetId.map { [$0] } ?? [],
+                referenceTrack.fileName.isEmpty ? [] : [referenceTrack.fileName],
+                [referenceTrack.displayTitle, referenceTrack.title].filter { !$0.isEmpty },
+                baseTitle
+            )
+        }
+        
+        var variantAssetIds = Set<Int>()
+        var variantFileNames = Set<String>()
+        var variantNames = Set<String>()
+        
+        if let aid = referenceTrack.assetId, aid > 0 { variantAssetIds.insert(aid) }
+        if !referenceTrack.fileName.isEmpty { variantFileNames.insert(referenceTrack.fileName) }
+        if !referenceTrack.displayTitle.isEmpty { variantNames.insert(referenceTrack.displayTitle) }
+        if !referenceTrack.title.isEmpty { variantNames.insert(referenceTrack.title) }
+        
+        let safeBase = escapeSql(baseTitle)
+        let sql = """
+        SELECT DISTINCT asset_id, file_name, name, artist, bpm, key
+        FROM history_entry
+        WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
+          AND start_time >= \(minStartTime);
+        """
+        
+        var stmt: OpaquePointer?
+        let refCamelot = referenceTrack.camelotKey
+        let refRawKey = referenceTrack.rawKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let refBpm = referenceTrack.bpm
+        let refArtist = referenceTrack.smartParsed.artist?.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let normalizedRefBase = normalizeTitle(baseTitle)
+        
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let assetId = Int(sqlite3_column_int64(stmt, 0))
+                let fileName = (sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                let name = (sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                let artist = (sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                let bpm = sqlite3_column_double(stmt, 4)
+                let keyStr = (sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                let candidateTitle = !name.isEmpty ? name : fileName
+                let candidateBase = Track.extractBaseTitle(candidateTitle)
+                
+                // 1. Titre de base compatible
+                let candNorm = normalizeTitle(candidateBase)
+                guard candNorm == normalizedRefBase ||
+                      candNorm.contains(normalizedRefBase) ||
+                      normalizedRefBase.contains(candNorm) else {
+                    continue
+                }
+                
+                // 2. Artiste compatible si renseigné des deux côtés
+                if !refArtist.isEmpty && !artist.isEmpty {
+                    let candArt = artist.lowercased()
+                    let isArtistCompatible = candArt.contains(refArtist) ||
+                                            refArtist.contains(candArt) ||
+                                            hasCommonWords(refArtist, candArt)
+                    guard isArtistCompatible else { continue }
+                }
+                
+                // 3. Même gamme harmonique (clé identique)
+                if let refC = refCamelot {
+                    guard let candC = CamelotKey.parse(keyStr), candC == refC else {
+                        continue
+                    }
+                } else if !refRawKey.isEmpty && !keyStr.isEmpty {
+                    guard keyStr.lowercased() == refRawKey else {
+                        continue
+                    }
+                }
+                
+                // 4. Sensiblement le même BPM (marge tolérée de 4% ou ±2 BPM)
+                if refBpm > 0 && bpm > 0 {
+                    let diff = abs(bpm - refBpm)
+                    let pct = diff / refBpm * 100.0
+                    guard pct <= 4.0 || diff <= 2.0 else {
+                        continue
+                    }
+                }
+                
+                if assetId > 0 { variantAssetIds.insert(assetId) }
+                if !fileName.isEmpty { variantFileNames.insert(fileName) }
+                if !name.isEmpty { variantNames.insert(name) }
+            }
+            sqlite3_finalize(stmt)
+        }
+        
+        return (Array(variantAssetIds), Array(variantFileNames), Array(variantNames), baseTitle)
+    }
+    
     // MARK: - Requêtes SQL de Transitions Historiques
     
-    /// Niveau 1 : Morceau joué immédiatement après (N+1) dans la même session
+    /// Niveau 1 : Morceau joué immédiatement après (N+1) dans la même session (avec cumul des variantes si activé)
     private func queryDirectTransitions(
         db: OpaquePointer,
         referenceTrack: Track,
+        variantInfo: (assetIds: [Int], fileNames: [String], names: [String], baseTitle: String)?,
         minStartTime: Int64,
         limit: Int
     ) -> [Track] {
-        let safeFileName = escapeSql(referenceTrack.fileName)
-        let assetId = referenceTrack.assetId ?? -1
-        let safeTitle = escapeSql(referenceTrack.displayTitle)
-        let safeRawTitle = escapeSql(referenceTrack.title)
+        let whereTarget: String
+        let whereExcludeSelf: String
+        
+        if let variants = variantInfo, (!variants.assetIds.isEmpty || !variants.fileNames.isEmpty || !variants.names.isEmpty) {
+            let assetPart = variants.assetIds.isEmpty ? "0" : "asset_id IN (\(variants.assetIds.map { "\($0)" }.joined(separator: ",")))"
+            let filePart = variants.fileNames.isEmpty ? "0" : "file_name IN (\(variants.fileNames.map { "'\(escapeSql($0))'" }.joined(separator: ",")))"
+            let namePart = variants.names.isEmpty ? "0" : "name IN (\(variants.names.map { "'\(escapeSql($0))'" }.joined(separator: ",")))"
+            whereTarget = "(\(assetPart) OR \(filePart) OR \(namePart))"
+            
+            let notAssetPart = variants.assetIds.isEmpty ? "" : "AND h2.asset_id NOT IN (\(variants.assetIds.map { "\($0)" }.joined(separator: ",")))"
+            let notFilePart = variants.fileNames.isEmpty ? "" : "AND h2.file_name NOT IN (\(variants.fileNames.map { "'\(escapeSql($0))'" }.joined(separator: ",")))"
+            let notNamePart = variants.names.isEmpty ? "" : "AND h2.name NOT IN (\(variants.names.map { "'\(escapeSql($0))'" }.joined(separator: ",")))"
+            let notBasePart = variants.baseTitle.count >= 3 ? "AND h2.name NOT LIKE '%\(escapeSql(variants.baseTitle))%' AND h2.file_name NOT LIKE '%\(escapeSql(variants.baseTitle))%'" : ""
+            whereExcludeSelf = "\(notAssetPart) \(notFilePart) \(notNamePart) \(notBasePart)"
+        } else {
+            let safeFileName = escapeSql(referenceTrack.fileName)
+            let assetId = referenceTrack.assetId ?? -1
+            let safeTitle = escapeSql(referenceTrack.displayTitle)
+            let safeRawTitle = escapeSql(referenceTrack.title)
+            whereTarget = """
+            (
+                (asset_id > 0 AND asset_id = \(assetId))
+                OR (file_name != '' AND file_name = '\(safeFileName)')
+                OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
+            )
+            """
+            whereExcludeSelf = "AND (h2.asset_id != tp.asset_id OR (h2.file_name != tp.file_name AND h2.file_name != ''))"
+        }
         
         let sql = """
         WITH target_plays AS (
             SELECT id, session_id, asset_id, file_name, name, start_time
             FROM history_entry
-            WHERE (
-                (asset_id > 0 AND asset_id = \(assetId))
-                OR (file_name != '' AND file_name = '\(safeFileName)')
-                OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
-            )
-            AND start_time >= \(minStartTime)
+            WHERE \(whereTarget)
+              AND start_time >= \(minStartTime)
         ),
         next_plays AS (
             SELECT 
@@ -376,7 +529,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
                 AND h2.start_time > tp.start_time
                 AND h2.start_time <= tp.start_time + 1200
                 AND h2.id != tp.id
-                AND (h2.asset_id != tp.asset_id OR (h2.file_name != tp.file_name AND h2.file_name != ''))
+                \(whereExcludeSelf)
                 AND h2.played = 1
             WHERE h2.id = (
                 SELECT sub.id FROM history_entry sub

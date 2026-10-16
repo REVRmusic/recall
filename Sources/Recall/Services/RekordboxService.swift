@@ -131,8 +131,63 @@ public class RekordboxService: ObservableObject {
         var harmonicSuggestions: [Track] = []
         
         // --- 1. ROUTINES D'ENCHAÎNEMENTS (Historique Rekordbox) ---
-        if let refId = refTrackId, let nextEntries = transitionMap[refId] {
-            for (nextId, count) in nextEntries where count >= minTransitions {
+        let cumulateVariants = UserSettings.shared.cumulateVariantSuggestions
+        var cumulatedNextEntries: [String: Int] = [:]
+        var variantTrackIds = Set<String>()
+        if let refId = refTrackId {
+            variantTrackIds.insert(refId)
+        }
+        
+        if cumulateVariants {
+            let refBase = Track.extractBaseTitle(currentTrack.displayTitle)
+            let refCamelot = currentTrack.camelotKey
+            let refBpm = currentTrack.bpm
+            let refArtist = currentTrack.smartParsed.artist?.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            
+            if refBase.count >= 3 {
+                for candidate in tracksList {
+                    let candBase = Track.extractBaseTitle(candidate.displayTitle)
+                    guard candBase.lowercased() == refBase.lowercased() ||
+                          candBase.localizedCaseInsensitiveContains(refBase) ||
+                          refBase.localizedCaseInsensitiveContains(candBase) else { continue }
+                    
+                    // Même gamme harmonique
+                    if let rc = refCamelot {
+                        guard let cc = candidate.camelotKey, cc == rc else { continue }
+                    } else if !currentTrack.rawKey.isEmpty {
+                        guard candidate.rawKey.lowercased() == currentTrack.rawKey.lowercased() else { continue }
+                    }
+                    
+                    // Sensiblement le même BPM (marge tolérée de 4% ou ±2 BPM)
+                    if refBpm > 0 && candidate.bpm > 0 {
+                        let diff = abs(candidate.bpm - refBpm)
+                        let pct = diff / refBpm * 100.0
+                        guard pct <= 4.0 || diff <= 2.0 else { continue }
+                    }
+                    
+                    // Artiste compatible si renseigné des deux côtés
+                    let candArtist = candidate.smartParsed.artist?.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    if !refArtist.isEmpty && !candArtist.isEmpty {
+                        guard candArtist.contains(refArtist) || refArtist.contains(candArtist) else { continue }
+                    }
+                    
+                    variantTrackIds.insert(candidate.id)
+                }
+            }
+        }
+        
+        for vId in variantTrackIds {
+            if let entries = transitionMap[vId] {
+                for (nextId, count) in entries {
+                    // Ne pas suggérer une autre version du même morceau
+                    guard !variantTrackIds.contains(nextId) else { continue }
+                    cumulatedNextEntries[nextId, default: 0] += count
+                }
+            }
+        }
+        
+        if !cumulatedNextEntries.isEmpty {
+            for (nextId, count) in cumulatedNextEntries where count >= minTransitions {
                 guard var targetTrack = tracksById[nextId] else { continue }
                 
                 // Calcul de la compatibilité harmonique et du BPM
