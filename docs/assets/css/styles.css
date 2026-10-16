@@ -759,9 +759,9 @@ img {
   position: absolute;
   inset: 0;
   z-index: 15;
-  background: rgba(4, 7, 16, 0.40);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(4, 7, 16, 0.20);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -809,9 +809,9 @@ img {
   transform: scale(1);
 }
 
-/* Side-by-side display of Recall app and Settings modal on desktop/tablet */
+/* Display of Recall app and Settings modal with full visibility (Z-Index above backdrop) */
 .dj-stage.settings-open {
-  min-height: 640px;
+  min-height: 660px;
 }
 
 @media (min-width: 1024px) {
@@ -835,13 +835,37 @@ img {
 }
 
 @media (max-width: 767px) {
-  .dj-stage.settings-open .recall-sim-container {
-    transform: scale(0.90) translateY(-25px);
-    opacity: 0.85;
+  .dj-stage.settings-open {
+    min-height: 980px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 30px;
   }
-  .sim-settings-modal {
+
+  .dj-stage.settings-open .recall-sim-container {
+    position: relative;
+    z-index: 25;
+    transform: scale(0.88);
+    transform-origin: top center;
+    margin-bottom: 12px;
+    opacity: 1;
+  }
+
+  .dj-stage.settings-open .sim-settings-overlay {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    margin-top: 10px;
+    z-index: 30;
+  }
+
+  .dj-stage.settings-open .sim-settings-modal {
     width: 94%;
-    margin-top: 40px;
+    margin: 0 auto;
+    transform: scale(1);
   }
 }
 
