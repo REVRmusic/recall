@@ -94,7 +94,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
         ifnull(deck, ''),
         start_time,
         end_time,
-        ifnull(length_sec, 0)
+        ifnull(length_sec, 0),
+        ifnull(genre, '')
     FROM history_entry
     WHERE session_id = \(latestSessionId)
     ORDER BY id DESC;
@@ -119,6 +120,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
             let endTimeUnix = sqlite3_column_int64(stmt, 10)
             let startTimeUnix = sqlite3_column_int64(stmt, 9)
             let lengthSec = sqlite3_column_int64(stmt, 11)
+            let genre = sqlite3_column_text(stmt, 12).map { String(cString: $0) } ?? ""
             
             // RÈGLE 1 : end_time <= 0 (Serato conserve end_time à -1 tant que le morceau est chargé)
             guard endTimeUnix <= 0 else { continue }
@@ -151,6 +153,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
                 fileName: fileName,
                 portableId: portableId,
                 deck: deck.isEmpty ? nil : deck,
+                genre: genre,
                 playedAt: playedAt
             )
             
@@ -191,7 +194,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
             ifnull(file_name, ''),
             ifnull(portable_id, ''),
             ifnull(deck, ''),
-            start_time
+            start_time,
+            ifnull(genre, '')
         FROM history_entry
         WHERE played = 1
         ORDER BY id DESC
@@ -214,6 +218,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
                 var deck = sqlite3_column_text(stmt, 8).map { String(cString: $0) } ?? ""
                 deck = deck.replacingOccurrences(of: "'", with: "")
                 let startTimeUnix = sqlite3_column_int64(stmt, 9)
+                let genre = sqlite3_column_text(stmt, 10).map { String(cString: $0) } ?? ""
                 let playedAt = Date(timeIntervalSince1970: TimeInterval(startTimeUnix))
                 
                 let resolvedPath = resolveTrackFilePath(portableId: portableId, fileName: fileName)
@@ -230,6 +235,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
                     fileName: fileName,
                     portableId: portableId,
                     deck: deck.isEmpty ? nil : deck,
+                    genre: genre,
                     playedAt: playedAt
                 )
                 tracks.append(track)

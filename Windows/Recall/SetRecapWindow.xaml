@@ -97,7 +97,7 @@
                         <!-- Genre Dominant (User Request #1) -->
                         <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,4,0">
                             <StackPanel>
-                                <TextBlock Text="GENRE DOMINANT" FontSize="8.5" FontWeight="Bold" Foreground="#9CA3AF"/>
+                                <TextBlock Text="GENRE LE PLUS JOUÉ" FontSize="8.5" FontWeight="Bold" Foreground="#9CA3AF"/>
                                 <TextBlock x:Name="TxtDominantGenre" Text="--" FontSize="16" FontWeight="Bold" Foreground="#14C8B0" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                                 <TextBlock x:Name="TxtDominantGenreInfo" Text="En attente" FontSize="9" Foreground="#9CA3AF" Margin="0,2,0,0"/>
                             </StackPanel>

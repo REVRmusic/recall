@@ -486,11 +486,11 @@ public struct SetRecapView: View {
                 subtext: stats.dominantKey != nil ? "\(stats.dominantKeyCount) tracks (\(Int(stats.dominantKeyPercentage.rounded()))% du set)" : "Clés non analysées"
             )
             
-            // Indicateur 3 : Genre Dominant
+            // Indicateur 3 : Genre le plus joué
             metricCard(
                 icon: "headphones",
                 iconColor: Color.accentCyan,
-                title: "GENRE DOMINANT",
+                title: "GENRE LE PLUS JOUÉ",
                 mainValue: stats.mostPlayedGenre?.name ?? "--",
                 unit: "",
                 subtext: stats.mostPlayedGenre != nil ? "\(stats.mostPlayedGenre!.count) tracks (\(Int(stats.mostPlayedGenre!.percent.rounded()))% du set)" : "En attente des genres",

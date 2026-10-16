@@ -288,10 +288,16 @@ namespace Recall
             sb.AppendLine($"🎵 Morceaux joués : {stats.TotalTracksCount}");
             sb.AppendLine($"⚡ Cadence : {stats.TracksPerHour:F1} tracks/h ({FormatMinutesSeconds(stats.AverageTimePerTrackSeconds)}/track)");
             if (stats.AverageBpm > 0) sb.AppendLine($"⏱ BPM moyen : {stats.AverageBpm:F1} (Plage: {(int)stats.MinBpm}-{(int)stats.MaxBpm})");
-            if (!string.IsNullOrEmpty(stats.DominantKey)) sb.AppendLine($"☯ Tonalité dominante : {stats.DominantKey}");
-            if (stats.MostPlayedGenre != null) sb.AppendLine($"🎧 Genre dominant : {stats.MostPlayedGenre.Name} ({stats.MostPlayedGenre.Count} tracks)");
+            if (!string.IsNullOrEmpty(stats.DominantKey)) sb.AppendLine($"🎹 Tonalité dominante : {stats.DominantKey} ({stats.DominantKeyCount} tracks - {(int)Math.Round(stats.DominantKeyPercentage)}%)");
+            if (stats.MostPlayedGenre != null) sb.AppendLine($"🎧 Genre le plus joué : {stats.MostPlayedGenre.Name} ({stats.MostPlayedGenre.Count} tracks - {(int)Math.Round(stats.MostPlayedGenre.Percent)}%)");
+            if (stats.TopGenres != null && stats.TopGenres.Count > 0)
+            {
+                var genresStr = string.Join(", ", stats.TopGenres.Select(g => $"{g.Name} ({g.Count})"));
+                sb.AppendLine($"🎷 Top Genres : {genresStr}");
+            }
             if (stats.MostPlayedArtist != null) sb.AppendLine($"👑 Artiste le plus joué : {stats.MostPlayedArtist.Name} ({stats.MostPlayedArtist.Count} tracks)");
-            sb.AppendLine("\nMixé avec Recall Companion (mixify.fr)");
+            sb.AppendLine("\n────────────────────────");
+            sb.AppendLine("⚡ Compagnon DJ intelligent Recall (mixify.fr)");
 
             try
             {
