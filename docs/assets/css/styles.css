@@ -2083,6 +2083,11 @@ img {
   color: #c471ed;
 }
 
+.caption-pill.amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
 .mockup-caption-overlay p {
   font-size: 0.84rem;
   color: #e0e5f0;

@@ -28,7 +28,7 @@ const translations = {
     "hero-pill-text": "Compagnon DJ Indépendant & 100 % Hors-Ligne",
     "hero-title-part1": "Ne perdez plus jamais le fil",
     "hero-title-part2": "de vos meilleurs mixes.",
-    "hero-subtitle": "Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées et vos enchaînements harmoniques Camelot en plein set.",
+    "hero-subtitle": "Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées, vos sélections préparées et vos enchaînements harmoniques Camelot en plein set.",
     "hero-btn-mac": "Télécharger pour macOS",
     "hero-btn-win": "Télécharger pour Windows",
     "hero-btn-github": "Code source GitHub",
@@ -42,10 +42,12 @@ const translations = {
     "mockups-title": "Conçu pour s'intégrer discrètement dans votre workflow DJ.",
     "mockups-subtitle": "Découvrez comment Recall s'incruste naturellement au-dessus de Serato DJ Pro et Pioneer Rekordbox en club ou en festival.",
     "mockup-tab-serato-floating": "Serato DJ Pro · Fenêtre Flottante",
+    "mockup-tab-serato-selec": "Serato DJ Pro · Onglet Sélec",
     "mockup-tab-serato-compact": "Serato DJ Pro · Bandeau Compact (78 px)",
     "mockup-tab-rekordbox": "Pioneer Rekordbox · Mode Pro",
     "mockup-tab-settings": "Paramètres & Clés Harmoniques",
     "mockup-caption-serato-floating": "Recall flottant au-dessus du browser Serato, affichant en temps réel vos routines éprouvées et vos enchaînements harmoniques.",
+    "mockup-caption-serato-selec": "L'onglet Sélec : glissez vos morceaux repérés depuis Serato pour les garder sous la main. Recall les trie automatiquement en direct selon l'affinité BPM et harmonique avec le titre en cours de lecture.",
     "mockup-caption-serato-compact": "Mode Bandeau ultra-compact de 78 px : surveillance discrète au bas de l'écran, laissant 100 % d'espace pour les waveforms et les platines.",
     "mockup-caption-rekordbox": "Compatibilité totale avec Pioneer Rekordbox en mode Performance : suggestions instantanées à chaque sélection de track.",
     "mockup-caption-settings": "Panneau de configuration avec estompage doux : ajustez la tolérance BPM, choisissez entre Camelot et Musicale, et activez le mode Always on Top.",
@@ -71,6 +73,9 @@ const translations = {
     "f2-title": "Harmonie Camelot Wheel",
     "f2-desc": "Chaque suggestion affiche sa clé Camelot exacte, ses clés voisines (+1/-1 heure), ses relatifs majeurs/mineurs ou ses boosts d'énergie (+2 heures) pour un mix harmonieux sans fausse note.",
     "f2-badge": "Compatible Clés Musicales & Open Key",
+    "f-selec-title": "Sélec : Votre Scratchpad DJ & Match Dynamique",
+    "f-selec-desc": "Préparez vos sets sans stress : glissez vos pépites depuis Serato directement dans votre Sélec. Vos morceaux restent mémorisés d'une session à l'autre et se réordonnent automatiquement en direct selon leur compatibilité (BPM et clé Camelot) avec le morceau en cours de lecture.",
+    "f-selec-badge": "Tri automatique par BPM & Camelot",
     "f3-title": "Glisser-Déposer Direct (Drag & Drop)",
     "f3-desc": "Attrapez un titre depuis Recall et glissez-le directement sur la platine 1, 2 ou dans vos bacs de Serato et Rekordbox. Zéro manipulation fastidieuse.",
     "f3-badge": "Natif macOS & Windows",
@@ -127,6 +132,10 @@ const translations = {
     "row5-recall": "< 25 Mo / 0 % CPU",
     "row5-spotify": "> 400 Mo + Connexion",
     "row5-notes": "0 Mo (mais statique)",
+    "row6-name": "Scratchpad \"Sélec\" avec tri dynamique",
+    "row6-val-recall": "✅ OUI (Persistant & Trié en direct)",
+    "row6-val-spotify": "❌ Non",
+    "row6-val-notes": "❌ Non (Bacs fixes ou papier)",
     
     // Downloads
     "dl-tag": "Téléchargement Gratuit",
@@ -201,7 +210,7 @@ const translations = {
     "hero-pill-text": "Independent & 100% Offline DJ Companion",
     "hero-title-part1": "Never lose track",
     "hero-title-part2": "of your best mixes.",
-    "hero-subtitle": "The smart DJ copilot that mines your Serato & Rekordbox history to instantly recommend proven routines and Camelot harmonic transitions in live sets.",
+    "hero-subtitle": "The smart DJ copilot that mines your Serato & Rekordbox history to instantly recommend proven routines, prepped selections, and Camelot harmonic transitions in live sets.",
     "hero-btn-mac": "Download for macOS",
     "hero-btn-win": "Download for Windows",
     "hero-btn-github": "GitHub Source Code",
@@ -215,10 +224,12 @@ const translations = {
     "mockups-title": "Engineered to blend seamlessly into your live DJ setup.",
     "mockups-subtitle": "See how Recall sits discreetly above Serato DJ Pro and Pioneer Rekordbox in the club or at festival stages.",
     "mockup-tab-serato-floating": "Serato DJ Pro · Floating Window",
+    "mockup-tab-serato-selec": "Serato DJ Pro · Sélec Tab",
     "mockup-tab-serato-compact": "Serato DJ Pro · Compact Dock (78 px)",
     "mockup-tab-rekordbox": "Pioneer Rekordbox · Pro Mode",
     "mockup-tab-settings": "Settings & Harmonic Keys",
     "mockup-caption-serato-floating": "Recall floating over Serato crate browser, delivering real-time harmonic matches and proven DJ routines on the fly.",
+    "mockup-caption-serato-selec": "The Sélec tab: drop your prep tracks directly from Serato to keep them handy. Recall ranks them live based on BPM and harmonic match with the currently playing track.",
     "mockup-caption-serato-compact": "78px Ultra-Compact Dock mode: subtle monitoring docked at screen bottom, preserving 100% visibility for waveforms and decks.",
     "mockup-caption-rekordbox": "Full compatibility with Pioneer Rekordbox in Performance mode: instant harmonic suggestions on every track transition.",
     "mockup-caption-settings": "Clean settings sheet with soft dimming backdrop: customize BPM tolerance, harmonic key formats, and Always on Top mode.",
@@ -244,6 +255,9 @@ const translations = {
     "f2-title": "Camelot Wheel Harmonic Mixing",
     "f2-desc": "Every suggestion displays exact Camelot keys, adjacent keys (+1/-1 hr), relative major/minor, or +2 energy boost keys for harmonious blends without clashing frequencies.",
     "f2-badge": "Supports Classic & Musical Key modes",
+    "f-selec-title": "Sélec: Smart DJ Scratchpad & Dynamic Match",
+    "f-selec-desc": "Prep your sets with zero stress: drop your hidden gems directly from Serato into your Sélec crate. Your tracks stay saved across sessions and automatically re-order in real time based on BPM and Camelot harmonic compatibility with what's currently playing.",
+    "f-selec-badge": "Live BPM & Camelot Match Ranking",
     "f3-title": "Direct Drag & Drop",
     "f3-desc": "Grab any suggested track right out of Recall and drag it onto Deck 1, Deck 2, or your crates in Serato and Rekordbox. No tedious searching.",
     "f3-badge": "macOS & Windows Native",
@@ -300,6 +314,10 @@ const translations = {
     "row5-recall": "< 25 MB / 0% CPU",
     "row5-spotify": "> 400 MB + Internet",
     "row5-notes": "0 MB (Static & rigid)",
+    "row6-name": "Smart 'Sélec' scratchpad with dynamic match",
+    "row6-val-recall": "✅ YES (Persistent & Live-sorted)",
+    "row6-val-spotify": "❌ No",
+    "row6-val-notes": "❌ No (Static crates or paper)",
     
     // Downloads
     "dl-tag": "Free Download",
@@ -444,6 +462,17 @@ function setLanguage(lang) {
   const activeMobileBtn = document.getElementById(`lang-${currentLang}-mobile`);
   if (activeMobileBtn) activeMobileBtn.classList.add("active");
 
+  // Update mockup title in current language
+  if (typeof getMockupTitles === "function") {
+    const activeTab = document.querySelector(".mockup-tab-btn.active");
+    const titleText = document.getElementById("mockup-title-text");
+    if (activeTab && titleText) {
+      const targetId = activeTab.getAttribute("data-mockup-target");
+      const titles = getMockupTitles(currentLang);
+      if (titles[targetId]) titleText.textContent = titles[targetId];
+    }
+  }
+
   document.documentElement.lang = currentLang;
 }
 
@@ -537,19 +566,31 @@ function initFAQ() {
 }
 
 // --- Mockups Showcase Tabs ---
+function getMockupTitles(lang) {
+  if (lang === "en") {
+    return {
+      "mockup-serato-floating": "Serato DJ Pro — Recall 1.0 (Floating Mode)",
+      "mockup-serato-selec": "Serato DJ Pro — Recall 1.0 (Sélec Scratchpad)",
+      "mockup-serato-compact": "Serato DJ Pro — Recall 1.0 (78px Compact Dock Mode)",
+      "mockup-rekordbox": "Pioneer Rekordbox — Recall 1.0 (Performance Mode)",
+      "mockup-settings": "Recall 1.0 — Settings Sheet & Soft Dimming"
+    };
+  }
+  return {
+    "mockup-serato-floating": "Serato DJ Pro — Recall 1.0 (Mode Flottant)",
+    "mockup-serato-selec": "Serato DJ Pro — Recall 1.0 (Onglet Sélec & Scratchpad)",
+    "mockup-serato-compact": "Serato DJ Pro — Recall 1.0 (Mode Bandeau Compact 78 px)",
+    "mockup-rekordbox": "Pioneer Rekordbox — Recall 1.0 (Mode Performance)",
+    "mockup-settings": "Recall 1.0 — Panneau des Paramètres & Estompage"
+  };
+}
+
 function initMockupTabs() {
   const tabs = document.querySelectorAll(".mockup-tab-btn");
   const panels = document.querySelectorAll(".mockup-panel");
   const titleText = document.getElementById("mockup-title-text");
 
   if (!tabs.length || !panels.length) return;
-
-  const titles = {
-    "mockup-serato-floating": "Serato DJ Pro — Recall 1.0 (Mode Flottant)",
-    "mockup-serato-compact": "Serato DJ Pro — Recall 1.0 (Mode Bandeau Compact 78 px)",
-    "mockup-rekordbox": "Pioneer Rekordbox — Recall 1.0 (Mode Performance)",
-    "mockup-settings": "Recall 1.0 — Panneau des Paramètres & Estompage"
-  };
 
   tabs.forEach(tab => {
     tab.addEventListener("click", () => {
@@ -568,6 +609,7 @@ function initMockupTabs() {
       const activePanel = document.getElementById(targetId);
       if (activePanel) activePanel.classList.add("active");
 
+      const titles = getMockupTitles(currentLang);
       if (titleText && titles[targetId]) {
         titleText.textContent = titles[targetId];
       }

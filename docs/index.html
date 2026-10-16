@@ -183,6 +183,10 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 3v18"/></svg>
           <span data-i18n="mockup-tab-serato-floating">Serato DJ Pro · Fenêtre Flottante</span>
         </button>
+        <button type="button" class="mockup-tab-btn" data-mockup-target="mockup-serato-selec" role="tab" aria-selected="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span data-i18n="mockup-tab-serato-selec">Serato DJ Pro · Onglet Sélec</span>
+        </button>
         <button type="button" class="mockup-tab-btn" data-mockup-target="mockup-serato-compact" role="tab" aria-selected="false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="14" width="18" height="7" rx="2"/></svg>
           <span data-i18n="mockup-tab-serato-compact">Serato DJ Pro · Bandeau Compact (78 px)</span>
@@ -224,7 +228,16 @@
             </div>
           </div>
 
-          <!-- Item 2: Serato Compact Dock -->
+          <!-- Item 2: Serato Sélec Drawer -->
+          <div class="mockup-panel" id="mockup-serato-selec">
+            <img src="assets/images/recall-serato-selec.png" alt="Recall avec l'onglet Sélec ouvert au-dessus de Serato DJ Pro" class="mockup-img" loading="lazy">
+            <div class="mockup-caption-overlay">
+              <span class="caption-pill amber">🔖 Scratchpad Sélec</span>
+              <p data-i18n="mockup-caption-serato-selec">L'onglet Sélec : glissez vos morceaux repérés depuis Serato pour les garder sous la main. Recall les trie automatiquement en direct selon l'affinité BPM et harmonique avec le titre en cours de lecture.</p>
+            </div>
+          </div>
+
+          <!-- Item 3: Serato Compact Dock -->
           <div class="mockup-panel" id="mockup-serato-compact">
             <img src="assets/images/recall-compact-serato.png" alt="Recall en mode bandeau compact 78px dans Serato DJ Pro" class="mockup-img" loading="lazy">
             <div class="mockup-caption-overlay">
@@ -233,7 +246,7 @@
             </div>
           </div>
 
-          <!-- Item 3: Rekordbox Pro Mode -->
+          <!-- Item 4: Rekordbox Pro Mode -->
           <div class="mockup-panel" id="mockup-rekordbox">
             <img src="assets/images/recall-rekordbox.png" alt="Recall compatible avec Pioneer Rekordbox" class="mockup-img" loading="lazy">
             <div class="mockup-caption-overlay">
@@ -242,7 +255,7 @@
             </div>
           </div>
 
-          <!-- Item 4: Settings & Backdrop -->
+          <!-- Item 5: Settings & Backdrop -->
           <div class="mockup-panel" id="mockup-settings">
             <img src="assets/images/recall-settings-backdrop.png" alt="Paramètres de Recall avec fond obscurci" class="mockup-img" loading="lazy">
             <div class="mockup-caption-overlay">
@@ -335,6 +348,18 @@
           <span class="bento-highlight" data-i18n="f2-badge">Compatible Clés Musicales & Open Key</span>
         </div>
 
+        <!-- Feature NEW: Sélec Scratchpad (Col 8) -->
+        <div class="bento-card col-8" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(20, 25, 35, 0.9)); border-color: rgba(245, 158, 11, 0.25);">
+          <div>
+            <span class="bento-icon">🔖</span>
+            <h3 class="bento-title" data-i18n="f-selec-title">Sélec : Votre Scratchpad DJ & Match Dynamique</h3>
+            <p class="bento-desc" data-i18n="f-selec-desc">
+              Préparez vos sets sans stress : glissez vos pépites depuis Serato directement dans votre Sélec. Vos morceaux restent mémorisés d'une session à l'autre et se réordonnent automatiquement en direct selon leur compatibilité (BPM et clé Camelot) avec le morceau en cours de lecture.
+            </p>
+          </div>
+          <span class="bento-highlight" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);" data-i18n="f-selec-badge">Tri automatique par BPM & Camelot</span>
+        </div>
+
         <!-- Feature 3: Drag & Drop (Col 4) -->
         <div class="bento-card col-4">
           <div>
@@ -347,8 +372,8 @@
           <span class="bento-highlight" data-i18n="f3-badge">Natif macOS & Windows</span>
         </div>
 
-        <!-- Feature 4: Compact Bar (Col 4) -->
-        <div class="bento-card col-4">
+        <!-- Feature 4: Compact Bar (Col 6) -->
+        <div class="bento-card col-6">
           <div>
             <span class="bento-icon">📏</span>
             <h3 class="bento-title" data-i18n="f4-title">Bandeau Compact Ultra-Fin (78 px)</h3>
@@ -359,8 +384,8 @@
           <span class="bento-highlight" data-i18n="f4-badge">Fenêtre toujours au premier plan</span>
         </div>
 
-        <!-- Feature 5: Auto-Detection (Col 4) -->
-        <div class="bento-card col-4">
+        <!-- Feature 5: Auto-Detection (Col 6) -->
+        <div class="bento-card col-6">
           <div>
             <span class="bento-icon">⚡️</span>
             <h3 class="bento-title" data-i18n="f5-title">Détection Automatique (0,1 ms)</h3>
@@ -500,6 +525,12 @@
               <td class="highlight-col" style="color: var(--cyan-primary); font-weight: 700;" data-i18n="row5-recall">< 25 Mo / 0 % CPU</td>
               <td data-i18n="row5-spotify">> 400 Mo + Connexion</td>
               <td data-i18n="row5-notes">0 Mo (mais statique)</td>
+            </tr>
+            <tr>
+              <td data-i18n="row6-name">Scratchpad "Sélec" avec tri dynamique</td>
+              <td class="highlight-col" style="color: var(--accent-emerald); font-weight: 700;" data-i18n="row6-val-recall">✅ OUI (Persistant & Trié en direct)</td>
+              <td data-i18n="row6-val-spotify">❌ Non</td>
+              <td data-i18n="row6-val-notes">❌ Non (Bacs fixes ou papier)</td>
             </tr>
           </tbody>
         </table>
