@@ -2,6 +2,13 @@
    RECALL — Main Interactive Scripts & Bilingual i18n
    ========================================================================== */
 
+// ==========================================================================
+// CONFIGURATION : Tracker Google Sheets (Comptabilisation des Téléchargements)
+// ==========================================================================
+// Collez ici l'URL de votre application Web Google Apps Script (/exec).
+// Guide complet d'installation en 2 min : voir `google-sheets-tracker/README.md`
+const GOOGLE_SHEET_TRACKER_URL = "https://script.google.com/macros/s/AKfycbx_VOTRE_ID_GOOGLE_SCRIPT_ICI/exec";
+
 // --- Dictionnaire Bilingue (FR / EN) ---
 const translations = {
   fr: {
@@ -388,6 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavbarScroll();
   initMockupTabs();
   initFAQ();
+  initDownloadTracker();
 });
 
 // --- Language Switching ---
@@ -565,4 +573,191 @@ function initMockupTabs() {
       }
     });
   });
+}
+
+// ==========================================================================
+// Tracker de Téléchargements Google Sheets
+// ==========================================================================
+function sendDownloadEvent(eventData) {
+  const url = localStorage.getItem("recall_tracker_url") || 
+              (new URLSearchParams(window.location.search)).get("tracker_url") || 
+              GOOGLE_SHEET_TRACKER_URL;
+
+  const payload = {
+    platform: eventData.platform || "macOS",
+    file: eventData.file || "Recall.dmg",
+    version: "1.0.0",
+    event: eventData.event || "Téléchargement direct",
+    location: eventData.location || "Section Téléchargement",
+    site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
+    browser_lang: navigator.language || "",
+    resolution: `${window.screen.width}x${window.screen.height}`,
+    referrer: document.referrer || "Direct",
+    ua: navigator.userAgent
+  };
+
+  // 1. Sauvegarde locale immédiate (utile pour tests / debug)
+  try {
+    const localCount = parseInt(localStorage.getItem("recall_downloads_count") || "0", 10) + 1;
+    localStorage.setItem("recall_downloads_count", localCount.toString());
+    const history = JSON.parse(localStorage.getItem("recall_downloads_history") || "[]");
+    history.push({ date: new Date().toISOString(), ...payload });
+    localStorage.setItem("recall_downloads_history", JSON.stringify(history.slice(-50)));
+  } catch (e) {}
+
+  // 2. Si l'URL Google Sheets n'a pas encore été configurée
+  if (!url || url.includes("VOTRE_ID_GOOGLE_SCRIPT_ICI")) {
+    console.log("📥 [Recall Tracker - Mode Simulation] Téléchargement capté avec succès :", payload);
+    console.info("💡 Pour enregistrer ce téléchargement dans votre Google Sheet, suivez les instructions dans 'google-sheets-tracker/README.md'");
+    return;
+  }
+
+  // 3. Envoi asynchrone non-bloquant vers Google Sheets (GET avec URLSearchParams)
+  try {
+    const params = new URLSearchParams();
+    for (const key in payload) {
+      params.append(key, payload[key]);
+    }
+    const fullUrl = url + (url.includes("?") ? "&" : "?") + params.toString();
+
+    // Le mode 'no-cors' permet d'ignorer la redirection 302 de Google Apps Script
+    fetch(fullUrl, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "no-cache",
+      priority: "high"
+    }).catch(err => {
+      console.warn("Erreur envoi tracker Google Sheet :", err);
+    });
+  } catch (err) {
+    console.warn("Exception tracker Google Sheet :", err);
+  }
+}
+
+function initDownloadTracker() {
+  // 1. Bouton Carte Téléchargement macOS (.dmg)
+  const macCardBtn = document.querySelector(".download-btn.primary");
+  if (macCardBtn) {
+    macCardBtn.addEventListener("click", () => {
+      sendDownloadEvent({
+        platform: "macOS",
+        file: "Recall.dmg",
+        event: "Téléchargement direct",
+        location: "Carte macOS (.dmg)"
+      });
+    });
+  }
+
+  // 2. Lien Format .zip macOS
+  const macZipBtn = document.querySelector(".download-subtext-link");
+  if (macZipBtn) {
+    macZipBtn.addEventListener("click", () => {
+      sendDownloadEvent({
+        platform: "macOS",
+        file: "Recall-macOS.zip",
+        event: "Téléchargement direct",
+        location: "Lien Zip macOS"
+      });
+    });
+  }
+
+  // 3. Bouton Carte Téléchargement Windows (.zip)
+  const winCardBtn = document.querySelector(".download-btn.secondary");
+  if (winCardBtn) {
+    winCardBtn.addEventListener("click", () => {
+      sendDownloadEvent({
+        platform: "Windows",
+        file: "Recall-Windows.zip",
+        event: "Téléchargement direct",
+        location: "Carte Windows (.zip)"
+      });
+    });
+  }
+
+  // 4. Boutons d'action dans le Hero (défilement vers #download)
+  const heroMacBtn = document.querySelector(".hero-actions .btn-primary");
+  if (heroMacBtn) {
+    heroMacBtn.addEventListener("click", () => {
+      sendDownloadEvent({
+        platform: "macOS",
+        file: "Recall.dmg",
+        event: "Intention de téléchargement",
+        location: "Hero Header macOS"
+      });
+    });
+  }
+
+  const heroWinBtn = document.querySelector(".hero-actions .btn-secondary");
+  if (heroWinBtn) {
+    heroWinBtn.addEventListener("click", () => {
+      sendDownloadEvent({
+        platform: "Windows",
+        file: "Recall-Windows.zip",
+        event: "Intention de téléchargement",
+        location: "Hero Header Windows"
+      });
+    });
+  }
+
+  // 5. Boutons CTA de la barre de navigation (desktop et tiroir mobile)
+  document.querySelectorAll(".btn-nav-download").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const isMobile = btn.classList.contains("mobile-cta");
+      sendDownloadEvent({
+        platform: "Multi",
+        file: "Section Téléchargement",
+        event: "Intention de téléchargement",
+        location: isMobile ? "Menu Mobile Navigation" : "Barre de Navigation Haute"
+      });
+    });
+  });
+
+  // 6. Support pour tout élément personnalisé doté de [data-track-download]
+  document.querySelectorAll("[data-track-download]").forEach(el => {
+    if (el === macCardBtn || el === winCardBtn || el === macZipBtn) return;
+    el.addEventListener("click", () => {
+      sendDownloadEvent({
+        platform: el.getAttribute("data-track-download") || "macOS",
+        file: el.getAttribute("data-track-file") || "Recall",
+        event: el.getAttribute("data-track-event") || "Téléchargement direct",
+        location: el.getAttribute("data-track-location") || "Bouton personnalisé"
+      });
+    });
+  });
+
+  // 7. Chargement optionnel des statistiques en direct
+  loadDownloadStats();
+}
+
+function loadDownloadStats() {
+  const url = localStorage.getItem("recall_tracker_url") || 
+              (new URLSearchParams(window.location.search)).get("tracker_url") || 
+              GOOGLE_SHEET_TRACKER_URL;
+
+  const counterBox = document.getElementById("download-live-counter");
+  const counterText = document.getElementById("download-counter-text");
+  if (!counterBox || !counterText) return;
+
+  if (!url || url.includes("VOTRE_ID_GOOGLE_SCRIPT_ICI")) {
+    const local = parseInt(localStorage.getItem("recall_downloads_count") || "0", 10);
+    if (local > 0) {
+      counterText.textContent = `${local} téléchargement${local > 1 ? "s" : ""} enregistré${local > 1 ? "s" : ""} (local)`;
+      counterBox.style.display = "inline-flex";
+    }
+    return;
+  }
+
+  fetch(url + (url.includes("?") ? "&" : "?") + "action=stats")
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.status === "success" && data.totalDownloads >= 0) {
+        const count = data.totalDownloads;
+        const msg = (typeof currentLang !== "undefined" && currentLang === "en")
+          ? `${count} downloads on macOS & Windows`
+          : `${count} téléchargement${count > 1 ? "s" : ""} sur macOS & Windows`;
+        counterText.textContent = msg;
+        counterBox.style.display = "inline-flex";
+      }
+    })
+    .catch(() => {});
 }

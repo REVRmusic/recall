@@ -518,6 +518,12 @@
         <p class="section-subtitle" data-i18n="dl-subtitle">
           Téléchargez la version officielle 1.0.0 pour macOS ou Windows. Aucun compte requis, installez et mixez.
         </p>
+
+        <!-- Badge Compteur de téléchargements en direct (alimenté par Google Sheets) -->
+        <div id="download-live-counter" class="download-live-counter" style="display: none;">
+          <span class="pulse-dot"></span>
+          <span id="download-counter-text">Statistiques des téléchargements...</span>
+        </div>
       </div>
 
       <div class="download-grid">
@@ -534,14 +540,14 @@
           </div>
 
           <div>
-            <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-btn primary">
+            <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-btn primary" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Carte macOS (.dmg)">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
               <span data-i18n="dl-mac-btn">Télécharger Recall.dmg</span>
             </a>
             <div class="download-subtext">
-              <span data-i18n="dl-mac-zip">Télécharger au format .zip</span> &bull; 64-bit Universal Binary
+              <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-subtext-link" data-track-download="macOS" data-track-file="Recall-macOS.zip" data-track-location="Lien Zip macOS"><span data-i18n="dl-mac-zip">Télécharger au format .zip</span></a> &bull; 64-bit Universal Binary
             </div>
           </div>
         </div>
@@ -561,7 +567,7 @@
           </div>
 
           <div>
-            <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-btn secondary">
+            <a href="https://github.com/REVRmusic/recall/releases/latest" target="_blank" rel="noopener noreferrer" class="download-btn secondary" data-track-download="Windows" data-track-file="Recall-Windows.zip" data-track-location="Carte Windows (.zip)">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
