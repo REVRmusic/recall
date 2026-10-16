@@ -216,6 +216,8 @@ const translations = {
     "footer-rights": "Tous droits réservés. Développé avec passion pour les DJs.",
     "footer-github-link": "Dépôt GitHub",
     "footer-welcome-link": "Le mot de REVR",
+    "footer-feedback-link": "Suggérer une amélioration",
+    "nav-feedback": "Idées & Retours",
 
     // Welcome Modal : Le mot de REVR
     "welcome-tag": "Le mot de REVR",
@@ -223,9 +225,37 @@ const translations = {
     "welcome-p1": "Salut à toutes et à tous, chères et chers collègues DJs,<br><br>J'ai développé cet outil avec une intention claire&nbsp;: <strong>épauler les DJs et absolument pas les remplacer</strong>. L'idée est de soulager ces petits moments d'hésitation qu'on peut toutes et tous traverser lors de nos sets, face à la fatigue ou à un instant de déconcentration.",
     "welcome-p2": "J'y ai également intégré des fonctionnalités pour nous aider à <strong>sortir plus facilement de nos routines</strong> et explorer de nouvelles idées en plein mix. J'espère sincèrement que ça vous plaira&nbsp;! Si c'est le cas, n'hésitez pas à le partager autour de vous, à vos ami·e·s DJs (débutant·e·s comme confirmé·e·s).",
     "welcome-p3": "Plus j'aurai de retours, plus je pourrai faire évoluer l'outil à notre image à toutes et à tous&nbsp;! Cœur sur vous et plein d'énergie dans vos futures dates&nbsp;!",
+    "welcome-feedback-btn": "Une idée pour Recall ? Faire un retour à REVR",
     "welcome-sig-role": "Artiste DJ & Développeur de Recall",
     "welcome-cta": "Découvrir Recall",
-    "welcome-dont-show": "Ne plus afficher ce message au démarrage"
+    "welcome-dont-show": "Ne plus afficher ce message au démarrage",
+
+    // Modale de Retours & Suggestions DJs
+    "floating-feedback-text": "Une idée ?",
+    "feedback-modal-title": "Suggérer une amélioration",
+    "feedback-modal-subtitle": "Une idée de fonctionnalité ? Un besoin rencontré pendant vos sets ? Votre retour aide directement REVR à faire évoluer Recall.",
+    "feedback-cat-label": "Catégorie :",
+    "feedback-cat-improve": "Amélioration",
+    "feedback-cat-feature": "Nouvelle fonction",
+    "feedback-cat-compat": "Compatibilité DJ",
+    "feedback-cat-bug": "Bug / Problème",
+    "feedback-cat-other": "Autre mot",
+    "feedback-msg-label": "Votre message ou suggestion",
+    "feedback-msg-placeholder": "Décrivez votre idée, le problème rencontré en mix ou ce qui vous ferait gagner du temps...",
+    "feedback-author-label": "Nom ou Pseudo DJ",
+    "feedback-author-placeholder": "ex: DJ Alex",
+    "feedback-email-label": "E-mail de contact",
+    "feedback-email-placeholder": "nom@exemple.com",
+    "feedback-optional": "(optionnel)",
+    "feedback-soft-label": "Logiciel DJ principal :",
+    "feedback-soft-both": "Les deux",
+    "feedback-soft-other": "Autre",
+    "feedback-submit-btn": "Envoyer ma suggestion",
+    "feedback-submitting": "Envoi en cours...",
+    "feedback-direct-note": "Ou contactez directement REVR par email : <a href=\"mailto:contact@mixify.fr\">contact@mixify.fr</a>",
+    "feedback-success-title": "Merci pour votre retour !",
+    "feedback-success-desc": "Votre suggestion a bien été transmise à REVR et enregistrée dans la base de données. Chaque retour est précieux pour faire grandir Recall.",
+    "feedback-close-btn": "Fermer"
   },
   
   en: {
@@ -433,6 +463,8 @@ const translations = {
     "footer-rights": "All rights reserved. Built with passion for DJs worldwide.",
     "footer-github-link": "GitHub Repository",
     "footer-welcome-link": "A Word from REVR",
+    "footer-feedback-link": "Suggest an Improvement",
+    "nav-feedback": "Ideas & Feedback",
 
     // Welcome Modal : A word from REVR
     "welcome-tag": "A Word from REVR",
@@ -440,9 +472,37 @@ const translations = {
     "welcome-p1": "Hey everyone, fellow DJs and selectors,<br><br>I built this tool with a clear mission in mind: <strong>to assist DJs, never to replace them</strong>. It is designed to ease those quick moments of hesitation we can all experience during long sets, whether from fatigue or a brief lapse in focus.",
     "welcome-p2": "I also added helpful tools to make it easier to <strong>break out of our comfort zone routines</strong> and spark fresh mixes on the fly. I truly hope you love it! If you do, feel free to share it with your DJ friends (from beginners to seasoned pros).",
     "welcome-p3": "The more feedback you share, the better I can improve and evolve Recall to fit our collective needs. Much love to everyone, and best of luck on your upcoming gigs!",
+    "welcome-feedback-btn": "Have an idea for Recall? Send feedback to REVR",
     "welcome-sig-role": "DJ Artist & Developer of Recall",
     "welcome-cta": "Explore Recall",
-    "welcome-dont-show": "Don't show this message on startup"
+    "welcome-dont-show": "Don't show this message on startup",
+
+    // Feedback Modal & Floating CTA
+    "floating-feedback-text": "Have an idea?",
+    "feedback-modal-title": "Suggest an Improvement",
+    "feedback-modal-subtitle": "A feature idea? A workflow hurdle during your live sets? Your feedback directly helps REVR shape the future of Recall.",
+    "feedback-cat-label": "Category:",
+    "feedback-cat-improve": "Improvement",
+    "feedback-cat-feature": "New Feature",
+    "feedback-cat-compat": "DJ Compatibility",
+    "feedback-cat-bug": "Bug / Issue",
+    "feedback-cat-other": "Other Note",
+    "feedback-msg-label": "Your message or suggestion",
+    "feedback-msg-placeholder": "Describe your idea, what would save you time during sets, or issue details...",
+    "feedback-author-label": "Name or DJ Alias",
+    "feedback-author-placeholder": "e.g. DJ Alex",
+    "feedback-email-label": "Contact Email",
+    "feedback-email-placeholder": "name@example.com",
+    "feedback-optional": "(optional)",
+    "feedback-soft-label": "Primary DJ Software:",
+    "feedback-soft-both": "Both",
+    "feedback-soft-other": "Other",
+    "feedback-submit-btn": "Send My Suggestion",
+    "feedback-submitting": "Sending...",
+    "feedback-direct-note": "Or reach out directly to REVR by email: <a href=\"mailto:contact@mixify.fr\">contact@mixify.fr</a>",
+    "feedback-success-title": "Thank you for your feedback!",
+    "feedback-success-desc": "Your suggestion has been sent to REVR and recorded in the database. Every piece of feedback helps build a better tool for DJs worldwide.",
+    "feedback-close-btn": "Close"
   }
 };
 
@@ -566,6 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMockupTabs();
   initFAQ();
   initWelcomeModal();
+  initFeedbackModal();
   initDownloadModal();
   initDownloadTracker();
 });
@@ -597,6 +658,13 @@ function setLanguage(lang) {
     const key = el.getAttribute("data-i18n");
     if (dict[key]) {
       el.innerHTML = dict[key];
+    }
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (dict[key]) {
+      el.setAttribute("placeholder", dict[key]);
     }
   });
 
@@ -907,6 +975,15 @@ function initWelcomeModal() {
     }
   });
 
+  // Bouton de raccourci feedback dans le mot de REVR
+  const welcomeFeedbackBtn = document.getElementById("welcome-open-feedback-btn");
+  if (welcomeFeedbackBtn) {
+    welcomeFeedbackBtn.addEventListener("click", () => {
+      closeWelcomeModal();
+      openFeedbackModal();
+    });
+  }
+
   // Liens pour réouvrir manuellement la modale (footer / menu)
   if (openLinkFooter) {
     openLinkFooter.addEventListener("click", (e) => {
@@ -930,12 +1007,288 @@ function initWelcomeModal() {
   // Si l'URL contient ?welcome=1 ou #welcome, on force l'ouverture
   const urlParams = new URLSearchParams(window.location.search);
   const forceWelcome = urlParams.get("welcome") === "1" || window.location.hash === "#welcome";
+  const isFeedback = urlParams.has("feedback") || window.location.hash === "#feedback";
 
-  if (!isDismissed || forceWelcome) {
+  // Ne pas ouvrir la modale de bienvenue si l'utilisateur arrive spécifiquement pour le feedback
+  if (!isFeedback && (!isDismissed || forceWelcome)) {
     setTimeout(() => {
       openWelcomeModal();
     }, 450);
   }
+}
+
+// ==========================================================================
+// Boîte Modale de Feedback : Suggérer une amélioration / Retour à REVR
+// ==========================================================================
+function openFeedbackModal(options = {}) {
+  const modal = document.getElementById("feedback-modal");
+  if (!modal) return;
+
+  // Si la modale de bienvenue est ouverte, la fermer discrètement
+  const welcomeModal = document.getElementById("welcome-modal");
+  if (welcomeModal && welcomeModal.classList.contains("active")) {
+    welcomeModal.classList.remove("active");
+    welcomeModal.setAttribute("aria-hidden", "true");
+  }
+
+  // Réinitialiser les vues (afficher le formulaire, cacher le succès)
+  const formView = document.getElementById("feedback-form-view");
+  const successView = document.getElementById("feedback-success-view");
+  if (formView) formView.style.display = "block";
+  if (successView) successView.style.display = "none";
+
+  // Pré-remplir les options si fournies
+  if (options.category) {
+    const catInput = document.querySelector(`input[name="feedback_cat"][value="${options.category}"]`);
+    if (catInput) {
+      catInput.checked = true;
+      updateFeedbackPillsState();
+    }
+  }
+
+  if (options.software) {
+    const softInput = document.querySelector(`input[name="feedback_soft"][value="${options.software}"]`);
+    if (softInput) {
+      softInput.checked = true;
+      updateFeedbackSoftPillsState();
+    }
+  }
+
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+
+  // Focus immédiat sur la zone de message
+  setTimeout(() => {
+    const textarea = document.getElementById("feedback-message-input");
+    if (textarea) textarea.focus();
+  }, 150);
+}
+
+function closeFeedbackModal() {
+  const modal = document.getElementById("feedback-modal");
+  if (!modal) return;
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function updateFeedbackPillsState() {
+  document.querySelectorAll("#feedback-category-pills .feedback-pill").forEach(pill => {
+    const radio = pill.querySelector("input[type='radio']");
+    if (radio && radio.checked) {
+      pill.classList.add("active");
+    } else {
+      pill.classList.remove("active");
+    }
+  });
+}
+
+function updateFeedbackSoftPillsState() {
+  document.querySelectorAll("#feedback-soft-pills .feedback-soft-pill").forEach(pill => {
+    const radio = pill.querySelector("input[type='radio']");
+    if (radio && radio.checked) {
+      pill.classList.add("active");
+    } else {
+      pill.classList.remove("active");
+    }
+  });
+}
+
+function initFeedbackModal() {
+  const modal = document.getElementById("feedback-modal");
+  const closeBtn = document.getElementById("feedback-close-btn");
+  const closeSuccessBtn = document.getElementById("feedback-close-success-btn");
+  const form = document.getElementById("feedback-form");
+  const floatingBtn = document.getElementById("floating-feedback-btn");
+
+  if (!modal) return;
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeFeedbackModal);
+  }
+  if (closeSuccessBtn) {
+    closeSuccessBtn.addEventListener("click", closeFeedbackModal);
+  }
+
+  // Fermeture au clic sur le fond flouté
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeFeedbackModal();
+    }
+  });
+
+  // Fermeture avec la touche Échap
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("active")) {
+      closeFeedbackModal();
+    }
+  });
+
+  // Bouton flottant
+  if (floatingBtn) {
+    floatingBtn.addEventListener("click", () => {
+      openFeedbackModal();
+    });
+  }
+
+  // Écoute de tous les liens href="#feedback"
+  document.querySelectorAll('a[href="#feedback"]').forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Ferme le drawer mobile si ouvert
+      const mobileNav = document.getElementById("mobile-nav-drawer");
+      const mobileBackdrop = document.getElementById("mobile-nav-backdrop");
+      if (mobileNav && mobileNav.classList.contains("open")) {
+        mobileNav.classList.remove("open");
+        if (mobileBackdrop) mobileBackdrop.classList.remove("open");
+        document.body.style.overflow = "";
+      }
+      openFeedbackModal();
+    });
+  });
+
+  // Mise à jour de l'apparence des pills lors de la sélection
+  document.querySelectorAll("#feedback-category-pills input[type='radio']").forEach(radio => {
+    radio.addEventListener("change", updateFeedbackPillsState);
+  });
+  document.querySelectorAll("#feedback-soft-pills input[type='radio']").forEach(radio => {
+    radio.addEventListener("change", updateFeedbackSoftPillsState);
+  });
+
+  // Soumission du formulaire
+  if (form) {
+    form.addEventListener("submit", submitFeedbackForm);
+  }
+
+  // Détection automatique dans l'URL (?feedback=1 ou #feedback)
+  const urlParams = new URLSearchParams(window.location.search);
+  const isFeedbackParam = urlParams.has("feedback") || urlParams.get("action") === "feedback" || window.location.hash === "#feedback";
+  if (isFeedbackParam) {
+    const initialCategory = urlParams.get("category");
+    const initialSoftware = urlParams.get("software");
+    setTimeout(() => {
+      openFeedbackModal({
+        category: initialCategory,
+        software: initialSoftware
+      });
+    }, 400);
+  }
+}
+
+function submitFeedbackForm(e) {
+  e.preventDefault();
+
+  const msgInput = document.getElementById("feedback-message-input");
+  const authorInput = document.getElementById("feedback-author-input");
+  const emailInput = document.getElementById("feedback-email-input");
+  const submitBtn = document.getElementById("feedback-submit-btn");
+  const submitText = document.getElementById("feedback-submit-text");
+
+  const message = (msgInput ? msgInput.value : "").trim();
+  if (message.length < 5) {
+    if (msgInput) {
+      msgInput.focus();
+      msgInput.style.borderColor = "#ff5252";
+      setTimeout(() => { msgInput.style.borderColor = ""; }, 2500);
+    }
+    return;
+  }
+
+  const selectedCatRadio = document.querySelector("input[name='feedback_cat']:checked");
+  const category = selectedCatRadio ? selectedCatRadio.value : "Suggestion d'amélioration";
+
+  const selectedSoftRadio = document.querySelector("input[name='feedback_soft']:checked");
+  const software = selectedSoftRadio ? selectedSoftRadio.value : "Non précisé";
+
+  const author = (authorInput ? authorInput.value : "").trim() || "Anonyme";
+  const email = (emailInput ? emailInput.value : "").trim();
+
+  // Détection de la provenance
+  const urlParams = new URLSearchParams(window.location.search);
+  let source = "Site Web";
+  if (urlParams.get("source") === "app_macos") {
+    source = "App macOS";
+  } else if (urlParams.get("source") === "app_windows") {
+    source = "App Windows";
+  }
+
+  // État de chargement
+  if (submitBtn) submitBtn.disabled = true;
+  if (submitText) {
+    const dict = translations[currentLang] || translations["fr"];
+    submitText.textContent = dict["feedback-submitting"] || "Envoi en cours...";
+  }
+
+  const url = localStorage.getItem("recall_tracker_url") || 
+              (new URLSearchParams(window.location.search)).get("tracker_url") || 
+              GOOGLE_SHEET_TRACKER_URL;
+
+  const payload = {
+    action: "feedback",
+    type: "feedback",
+    category: category,
+    message: message,
+    author: author,
+    email: email,
+    software: software,
+    source: source,
+    version: "1.0.0",
+    event: "💡 Suggestion : " + category,
+    location: author + (email ? " <" + email + ">" : ""),
+    file: (software ? "[" + software + "] " : "") + message,
+    platform: source,
+    site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
+    ua: navigator.userAgent
+  };
+
+  // Sauvegarde locale de secours
+  try {
+    const feedbacks = JSON.parse(localStorage.getItem("recall_feedbacks_history") || "[]");
+    feedbacks.push({ date: new Date().toISOString(), ...payload });
+    localStorage.setItem("recall_feedbacks_history", JSON.stringify(feedbacks.slice(-50)));
+  } catch (err) {}
+
+  // Envoi asynchrone sécurisé vers Google Apps Script
+  try {
+    const params = new URLSearchParams();
+    for (const key in payload) {
+      params.append(key, payload[key]);
+    }
+    const fullUrl = url + (url.includes("?") ? "&" : "?") + params.toString();
+
+    fetch(fullUrl, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "no-cache",
+      priority: "high"
+    }).finally(() => {
+      showFeedbackSuccess();
+    });
+  } catch (err) {
+    showFeedbackSuccess();
+  }
+}
+
+function showFeedbackSuccess() {
+  const formView = document.getElementById("feedback-form-view");
+  const successView = document.getElementById("feedback-success-view");
+  const submitBtn = document.getElementById("feedback-submit-btn");
+  const submitText = document.getElementById("feedback-submit-text");
+  const form = document.getElementById("feedback-form");
+
+  if (submitBtn) submitBtn.disabled = false;
+  if (submitText) {
+    const dict = translations[currentLang] || translations["fr"];
+    submitText.textContent = dict["feedback-submit-btn"] || "Envoyer ma suggestion";
+  }
+
+  if (form) form.reset();
+  updateFeedbackPillsState();
+  updateFeedbackSoftPillsState();
+
+  if (formView) formView.style.display = "none";
+  if (successView) successView.style.display = "flex";
 }
 
 // ==========================================================================

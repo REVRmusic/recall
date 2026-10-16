@@ -78,6 +78,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         settingsItem.target = self
         appMenu.addItem(settingsItem)
         
+        let feedbackItem = NSMenuItem(
+            title: "Suggérer une amélioration…",
+            action: #selector(openFeedbackWebsiteAction),
+            keyEquivalent: ""
+        )
+        feedbackItem.target = self
+        appMenu.addItem(feedbackItem)
+        
         appMenu.addItem(NSMenuItem.separator())
         
         // Sous-menu Services standard macOS
@@ -206,6 +214,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         checkUpdateHelpItem.target = self
         helpMenu.addItem(checkUpdateHelpItem)
         
+        let feedbackHelpItem = NSMenuItem(
+            title: "Faire un retour au développeur…",
+            action: #selector(openFeedbackWebsiteAction),
+            keyEquivalent: ""
+        )
+        feedbackHelpItem.target = self
+        helpMenu.addItem(feedbackHelpItem)
+        
         helpMenu.addItem(NSMenuItem.separator())
         
         let websiteItem = NSMenuItem(
@@ -244,6 +260,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
     
+    @objc private func openFeedbackWebsiteAction() {
+        if let url = URL(string: "https://mixify.fr/?feedback=1&source=app_macos") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
     @objc private func showAboutAction() {
         let alert = NSAlert()
         alert.messageText = "Recall \(AutoUpdateService.shared.currentAppVersion)"
@@ -251,6 +273,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.addButton(withTitle: "Site officiel")
+        alert.addButton(withTitle: "Suggérer une idée")
         alert.addButton(withTitle: "Rechercher une mise à jour")
         
         NSApp.activate(ignoringOtherApps: true)
@@ -260,6 +283,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                 NSWorkspace.shared.open(url)
             }
         } else if response == .alertThirdButtonReturn {
+            openFeedbackWebsiteAction()
+        } else if response == NSApplication.ModalResponse(rawValue: 1003) {
             checkForUpdatesAction()
         }
     }

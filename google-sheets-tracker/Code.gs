@@ -73,12 +73,91 @@ function setupSheetsIfNeeded(ss) {
     dashSheet.getRange("B4:B10").setFontWeight("bold").setFontSize(12).setHorizontalAlignment("center").setBackground("#F1F5F9");
     dashSheet.autoResizeColumns(1, 3);
   }
+
+  var feedbackSheet = ss.getSheetByName("💡 Retours & Suggestions");
+  if (!feedbackSheet) {
+    feedbackSheet = ss.insertSheet("💡 Retours & Suggestions");
+    var fbHeaders = [
+      "Date & Heure",
+      "Catégorie",
+      "Message / Suggestion",
+      "Nom / Pseudo DJ",
+      "Email de contact",
+      "Logiciel DJ",
+      "Provenance",
+      "Version",
+      "Navigateur / OS"
+    ];
+    feedbackSheet.appendRow(fbHeaders);
+    var fbHeaderRange = feedbackSheet.getRange(1, 1, 1, fbHeaders.length);
+    fbHeaderRange.setBackground("#0F172A");
+    fbHeaderRange.setFontColor("#00F0FF");
+    fbHeaderRange.setFontWeight("bold");
+    feedbackSheet.setFrozenRows(1);
+    feedbackSheet.autoResizeColumns(1, fbHeaders.length);
+  }
 }
 
 function handleRequest(params) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   setupSheetsIfNeeded(ss);
   var sheet = ss.getSheetByName("Téléchargements");
+
+  // Mode enregistrement d'un retour ou d'une suggestion (?action=feedback)
+  if (params.action === "feedback" || params.type === "feedback" || params.is_feedback === "true" || params.suggestion) {
+    var fbSheet = ss.getSheetByName("💡 Retours & Suggestions");
+    if (!fbSheet) {
+      setupSheetsIfNeeded(ss);
+      fbSheet = ss.getSheetByName("💡 Retours & Suggestions");
+    }
+    var fbNow = new Date();
+    var category = params.category || "Suggestion d'amélioration";
+    var message = params.message || params.suggestion || "(Message vide)";
+    var author = params.author || params.name || "Anonyme";
+    var email = params.email || "";
+    var software = params.software || "Non précisé";
+    var source = params.source || "Site web";
+    var appVersion = params.version || "1.0.0";
+    var userAgent = params.ua || "";
+
+    if (fbSheet) {
+      fbSheet.appendRow([
+        fbNow,
+        category,
+        message,
+        author,
+        email,
+        software,
+        source,
+        appVersion,
+        userAgent
+      ]);
+    }
+
+    // Notification email optionnelle à REVR
+    try {
+      var ownerEmail = Session.getEffectiveUser().getEmail();
+      if (ownerEmail && ownerEmail.indexOf("@") !== -1) {
+        MailApp.sendEmail({
+          to: ownerEmail,
+          subject: "💡 Nouveau retour Recall : " + category + " (de " + author + ")",
+          body: "Salut REVR,\n\nUn nouveau retour a été envoyé pour Recall (" + source + ") :\n\n" +
+                "• Catégorie : " + category + "\n" +
+                "• DJ / Auteur : " + author + (email ? " (" + email + ")" : "") + "\n" +
+                "• Logiciel DJ : " + software + "\n" +
+                "• Version : " + appVersion + "\n\n" +
+                "Message :\n" +
+                message + "\n\n" +
+                "---\nConsultez l'onglet '💡 Retours & Suggestions' dans votre Google Sheet Recall."
+        });
+      }
+    } catch (mailErr) {}
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Retour enregistré avec succès"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 
   // Mode lecture des statistiques (?action=stats) pour affichage d'un compteur en direct
   if (params.action === "stats") {

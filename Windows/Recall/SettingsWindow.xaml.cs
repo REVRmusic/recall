@@ -183,5 +183,18 @@ namespace Recall
         {
             Close();
         }
+
+        private void BtnFeedback_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://mixify.fr/?feedback=1&source=app_windows",
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
     }
 }

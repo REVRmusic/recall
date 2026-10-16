@@ -78,6 +78,7 @@
         <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
         <li><a href="#compatibility" class="nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
         <li><a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a></li>
+        <li><a href="#feedback" class="nav-link nav-feedback-link" id="nav-feedback-link" data-i18n="nav-feedback"><span class="nav-feedback-badge">💡</span> Idées & Retours</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -797,6 +798,7 @@
           <li><a href="#download" data-i18n="nav-download">Télécharger</a></li>
           <li><a href="#faq" data-i18n="nav-faq">FAQ</a></li>
           <li><a href="#welcome" id="open-welcome-modal-link" data-i18n="footer-welcome-link">Le mot de REVR</a></li>
+          <li><a href="#feedback" id="open-feedback-modal-link" data-i18n="footer-feedback-link">Suggérer une amélioration</a></li>
           <li><a href="#mentions-legales" data-i18n="nav-legal">Mentions Légales</a></li>
           <li><a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" data-i18n="footer-github-link">Dépôt GitHub</a></li>
         </ul>
@@ -832,6 +834,7 @@
       <li><a href="#problem" class="mobile-nav-link" data-i18n="nav-problem">Pourquoi Recall&nbsp;?</a></li>
       <li><a href="#faq" class="mobile-nav-link" data-i18n="nav-faq">FAQ</a></li>
       <li><a href="#welcome" class="mobile-nav-link" id="open-welcome-modal-mobile" data-i18n="footer-welcome-link">Le mot de REVR</a></li>
+      <li><a href="#feedback" class="mobile-nav-link" id="open-feedback-modal-mobile" data-i18n="footer-feedback-link">💡 Suggérer une amélioration</a></li>
     </ul>
 
     <div class="mobile-nav-footer">
@@ -883,6 +886,13 @@
         <p class="welcome-p" data-i18n="welcome-p3">
           Plus j'aurai de retours, plus je pourrai faire évoluer l'outil à notre image à toutes et à tous&nbsp;! Cœur sur vous et plein d'énergie dans vos futures dates&nbsp;!
         </p>
+
+        <div class="welcome-feedback-banner">
+          <button type="button" class="welcome-feedback-btn" id="welcome-open-feedback-btn">
+            <span class="welcome-fb-icon">💡</span>
+            <span data-i18n="welcome-feedback-btn">Une idée pour Recall ? Faire un retour à REVR</span>
+          </button>
+        </div>
 
         <div class="welcome-signature-block">
           <div class="welcome-sig-text">
@@ -986,6 +996,141 @@
       <div class="modal-footer">
         <p class="modal-fallback" data-i18n="modal-fallback">Le téléchargement ne s'est pas lancé automatiquement ?</p>
         <a href="#" class="modal-retry-btn" id="modal-retry-link" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Modale Recommencer" data-i18n="modal-retry">Cliquez ici pour relancer le téléchargement direct</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton flottant de suggestion pour DJs -->
+  <button id="floating-feedback-btn" class="floating-feedback-btn" aria-label="Suggérer une amélioration" title="Suggérer une amélioration à REVR">
+    <span class="floating-feedback-icon">💡</span>
+    <span class="floating-feedback-text" data-i18n="floating-feedback-text">Une idée ?</span>
+  </button>
+
+  <!-- Modale : Faire un retour au développeur / Suggérer une amélioration -->
+  <div class="feedback-modal-overlay" id="feedback-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="feedback-modal-title">
+    <div class="feedback-modal-card">
+      <button class="modal-close-btn" id="feedback-close-btn" aria-label="Fermer la boîte de dialogue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Vue Formulaire -->
+      <div class="feedback-modal-content" id="feedback-form-view">
+        <div class="feedback-modal-header">
+          <div class="feedback-icon-glow">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
+              <line x1="9" y1="21" x2="15" y2="21"></line>
+            </svg>
+          </div>
+          <h3 class="feedback-modal-title" id="feedback-modal-title" data-i18n="feedback-modal-title">Suggérer une amélioration</h3>
+          <p class="feedback-modal-subtitle" data-i18n="feedback-modal-subtitle">Une idée de fonctionnalité ? Un besoin rencontré pendant vos sets ? Votre retour aide directement REVR à faire évoluer Recall.</p>
+        </div>
+
+        <form id="feedback-form" class="feedback-form">
+          <!-- Type de suggestion (Pills) -->
+          <div class="feedback-group">
+            <label class="feedback-label" data-i18n="feedback-cat-label">Catégorie :</label>
+            <div class="feedback-pills" id="feedback-category-pills">
+              <label class="feedback-pill active">
+                <input type="radio" name="feedback_cat" value="Suggestion d'amélioration" checked>
+                <span>💡 <strong data-i18n="feedback-cat-improve">Amélioration</strong></span>
+              </label>
+              <label class="feedback-pill">
+                <input type="radio" name="feedback_cat" value="Nouvelle fonctionnalité">
+                <span>⚡ <strong data-i18n="feedback-cat-feature">Nouvelle fonction</strong></span>
+              </label>
+              <label class="feedback-pill">
+                <input type="radio" name="feedback_cat" value="Compatibilité Serato / Rekordbox">
+                <span>🎛️ <strong data-i18n="feedback-cat-compat">Compatibilité DJ</strong></span>
+              </label>
+              <label class="feedback-pill">
+                <input type="radio" name="feedback_cat" value="Signalement de bug">
+                <span>🐛 <strong data-i18n="feedback-cat-bug">Bug / Problème</strong></span>
+              </label>
+              <label class="feedback-pill">
+                <input type="radio" name="feedback_cat" value="Message amical / Autre">
+                <span>💬 <strong data-i18n="feedback-cat-other">Autre mot</strong></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Message -->
+          <div class="feedback-group">
+            <label for="feedback-message-input" class="feedback-label">
+              <span data-i18n="feedback-msg-label">Votre message ou suggestion</span> <span class="feedback-req">*</span>
+            </label>
+            <textarea id="feedback-message-input" class="feedback-textarea" rows="4" required minlength="5" placeholder="Décrivez votre idée, le problème rencontré en mix ou ce qui vous ferait gagner du temps..." data-i18n-placeholder="feedback-msg-placeholder"></textarea>
+          </div>
+
+          <!-- Auteur & Email -->
+          <div class="feedback-row">
+            <div class="feedback-group">
+              <label for="feedback-author-input" class="feedback-label">
+                <span data-i18n="feedback-author-label">Nom ou Pseudo DJ</span> <span class="feedback-opt" data-i18n="feedback-optional">(optionnel)</span>
+              </label>
+              <input type="text" id="feedback-author-input" class="feedback-input" placeholder="ex: DJ Alex" data-i18n-placeholder="feedback-author-placeholder">
+            </div>
+            <div class="feedback-group">
+              <label for="feedback-email-input" class="feedback-label">
+                <span data-i18n="feedback-email-label">E-mail de contact</span> <span class="feedback-opt" data-i18n="feedback-optional">(optionnel)</span>
+              </label>
+              <input type="email" id="feedback-email-input" class="feedback-input" placeholder="nom@exemple.com" data-i18n-placeholder="feedback-email-placeholder">
+            </div>
+          </div>
+
+          <!-- Logiciel DJ utilisé -->
+          <div class="feedback-group">
+            <label class="feedback-label" data-i18n="feedback-soft-label">Logiciel DJ principal :</label>
+            <div class="feedback-soft-pills" id="feedback-soft-pills">
+              <label class="feedback-soft-pill active">
+                <input type="radio" name="feedback_soft" value="Serato DJ Pro" checked>
+                <span>Serato DJ Pro</span>
+              </label>
+              <label class="feedback-soft-pill">
+                <input type="radio" name="feedback_soft" value="Pioneer Rekordbox">
+                <span>Rekordbox</span>
+              </label>
+              <label class="feedback-soft-pill">
+                <input type="radio" name="feedback_soft" value="Les deux">
+                <span data-i18n="feedback-soft-both">Les deux</span>
+              </label>
+              <label class="feedback-soft-pill">
+                <input type="radio" name="feedback_soft" value="Autre logiciel">
+                <span data-i18n="feedback-soft-other">Autre</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Pied de formulaire -->
+          <div class="feedback-footer">
+            <button type="submit" class="btn-primary feedback-submit-btn" id="feedback-submit-btn">
+              <span id="feedback-submit-text" data-i18n="feedback-submit-btn">Envoyer ma suggestion</span>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+            <p class="feedback-direct-note" data-i18n="feedback-direct-note">
+              Ou contactez directement REVR par email : <a href="mailto:contact@mixify.fr">contact@mixify.fr</a>
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <!-- Vue Confirmation de Succès -->
+      <div class="feedback-modal-success" id="feedback-success-view" style="display: none;">
+        <div class="feedback-success-glow">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h3 class="feedback-success-title" data-i18n="feedback-success-title">Merci pour votre retour !</h3>
+        <p class="feedback-success-desc" data-i18n="feedback-success-desc">Votre suggestion a bien été transmise à REVR et enregistrée dans la base de données. Chaque retour est précieux pour faire grandir Recall.</p>
+        <button type="button" class="btn-primary feedback-close-success-btn" id="feedback-close-success-btn" data-i18n="feedback-close-btn">Fermer</button>
       </div>
     </div>
   </div>

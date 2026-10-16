@@ -319,6 +319,57 @@ public struct GuideSheetView: View {
                         }
                     }
                     
+                    // SECTION : Suggérer une idée ou faire un retour
+                    guideCard {
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Label {
+                                    Text("Une idée d'amélioration ?")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(.white)
+                                } icon: {
+                                    Image(systemName: "lightbulb.fill")
+                                        .foregroundColor(Color.accentCyan)
+                                }
+                                
+                                Spacer()
+                                
+                                Text("REVR")
+                                    .font(.system(size: 8.5, weight: .heavy, design: .rounded))
+                                    .foregroundColor(Color.accentCyan)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1.5)
+                                    .background(Color.accentCyan.opacity(0.18))
+                                    .cornerRadius(3)
+                            }
+                            
+                            Text("Recall est développé avec passion pour la communauté DJ. Vos idées et retours terrain sont précieux pour façonner les prochaines fonctionnalités.")
+                                .font(.system(size: 10.5))
+                                .foregroundColor(.white.opacity(0.75))
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            Button {
+                                if let url = URL(string: "https://mixify.fr/?feedback=1&source=app_macos") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "paperplane.fill")
+                                        .font(.system(size: 8.5))
+                                    Text("Partager une suggestion (Web) ↗")
+                                        .font(.system(size: 9.5, weight: .bold))
+                                }
+                                .foregroundColor(Color.accentCyan)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3.5)
+                                .background(Color.accentCyan.opacity(0.16))
+                                .cornerRadius(4)
+                            }
+                            .buttonStyle(.plain)
+                            .focusable(false)
+                        }
+                    }
+                    
                     // SECTION 8 : Mentions Légales & Confidentialité
                     guideCard {
                         VStack(alignment: .leading, spacing: 8) {

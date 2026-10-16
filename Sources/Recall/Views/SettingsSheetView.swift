@@ -858,6 +858,47 @@ public struct SettingsSheetView: View {
                         }
                     }
                     
+                    // SECTION : Suggérer une amélioration / Retour au développeur
+                    settingCard {
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(Color.accentCyan)
+                                    
+                                    Text("Suggérer une amélioration")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Spacer()
+                                
+                                Text("REVR")
+                                    .font(.system(size: 8.5, weight: .heavy, design: .rounded))
+                                    .foregroundColor(Color.accentCyan)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1.5)
+                                    .background(Color.accentCyan.opacity(0.18))
+                                    .cornerRadius(3)
+                            }
+                            
+                            Text("Une idée de fonctionnalité ? Un retour d'expérience en plein mix ? Vos suggestions aident directement REVR à faire évoluer Recall.")
+                                .font(.system(size: 9))
+                                .foregroundColor(.white.opacity(0.65))
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            SettingActionButton(
+                                icon: "paperplane.fill",
+                                title: "Faire un retour à REVR (Web) ↗"
+                            ) {
+                                if let url = URL(string: "https://mixify.fr/?feedback=1&source=app_macos") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+                        }
+                    }
+                    
                     // SECTION 9 : Mentions Légales & Confidentialité
                     settingCard {
                         VStack(alignment: .leading, spacing: 6) {

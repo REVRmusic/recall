@@ -52,6 +52,23 @@ Ce dossier contient la solution complète permettant d'utiliser **Google Sheets*
 
 ---
 
+## 💡 NOUVEAU : Onglet « Retours & Suggestions »
+Le même script collecte désormais automatiquement toutes les suggestions et retours soumis par les DJs :
+- Depuis la modale de feedback sur le site web (`https://mixify.fr/?feedback=1`).
+- Depuis l'application Recall (bouton dédié dans les Paramètres et le menu macOS / Windows).
+
+Un onglet intitulé **`💡 Retours & Suggestions`** est généré automatiquement avec :
+- **Date & Heure**
+- **Catégorie** (Amélioration, Nouvelle fonctionnalité, Compatibilité DJ, Bug, Autre)
+- **Message / Idée de suggestion**
+- **Nom ou Pseudo DJ** (optionnel)
+- **E-mail de contact** (optionnel)
+- **Logiciel DJ utilisé** (Serato DJ Pro, Pioneer Rekordbox, etc.)
+- **Provenance** (Site web, App macOS, App Windows)
+- **Version** (`1.0.0`)
+
+---
+
 ## 📈 Ce qui est enregistré dans votre feuille :
 - **Date & Heure exacte** (au format `AAAA-MM-JJ HH:mm:ss`)
 - **Plateforme** (`macOS` ou `Windows`)
@@ -68,4 +85,5 @@ Ce dossier contient la solution complète permettant d'utiliser **Google Sheets*
 ---
 
 ## 🔒 Confidentialité & RGPD
-Ce tracker ne collecte aucune donnée personnelle nominative (aucun nom, aucune adresse email, aucune adresse IP n'est stockée dans la feuille). Il respecte à 100 % la philosophie privée et hors-ligne du projet Recall.
+Ce tracker ne collecte aucune donnée personnelle non consentie. Pour les suggestions, l'adresse e-mail et le pseudo sont strictement facultatifs et servent uniquement si l'utilisateur souhaite un retour de REVR.
+

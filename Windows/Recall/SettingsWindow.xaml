@@ -131,6 +131,18 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Suggérer une amélioration -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Text="💡 Suggérer une amélioration" FontWeight="SemiBold" FontSize="11" Foreground="#00F0FF"/>
+                                <TextBlock Text="REVR" HorizontalAlignment="Right" FontSize="9" FontWeight="Bold" Foreground="#00F0FF"/>
+                            </Grid>
+                            <TextBlock Text="Une idée de fonctionnalité ou un retour sur vos sets ? Transmettez vos suggestions directement à REVR." FontSize="9.5" Foreground="#9CA3AF" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            <Button Content="Faire un retour au développeur (Web) ↗" Padding="8,4" Background="#14C8B0" Foreground="#12151A" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnFeedback_Click"/>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Mentions Légales & Confidentialité -->
                     <Border Background="#151820" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10">
                         <StackPanel>
