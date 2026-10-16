@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Recall"
         Width="360" Height="530"
-        MinWidth="250" MaxWidth="480"
+        MinWidth="300" MaxWidth="560"
         MinHeight="54" MaxHeight="720"
         WindowStyle="None"
         AllowsTransparency="True"

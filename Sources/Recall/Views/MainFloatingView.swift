@@ -110,7 +110,12 @@ public struct MainFloatingView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 14))
-        .frame(minWidth: 250, maxWidth: FloatingWindowController.maxWidth, minHeight: 54, maxHeight: FloatingWindowController.maxHeight)
+        .frame(
+            minWidth: settings.isCompactMode ? FloatingWindowController.minCompactWidth : FloatingWindowController.minNormalWidth,
+            maxWidth: FloatingWindowController.maxWidth,
+            minHeight: settings.isCompactMode ? FloatingWindowController.bandeauHeight : FloatingWindowController.minNormalHeight,
+            maxHeight: FloatingWindowController.maxHeight
+        )
         .ignoresSafeArea() // Indispensable pour que le fond sombre englobe les traffic lights macOS
         .sheet(isPresented: $showSearch) {
             ManualSearchSheetView()

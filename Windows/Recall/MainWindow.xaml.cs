@@ -18,7 +18,12 @@ namespace Recall
 
         private const double MinNormalHeight = 227.0;
         private const double CompactHeight = 54.0;
+        private const double MinCompactWidth = 420.0;
+        private const double DefaultCompactWidth = 440.0;
+        private const double MinNormalWidth = 300.0;
+        private const double DefaultNormalWidth = 360.0;
         private double _lastNormalHeight = 530.0;
+        private double _lastNormalWidth = 360.0;
 
         public MainWindow()
         {
@@ -151,15 +156,20 @@ namespace Recall
             if (compact)
             {
                 if (Height >= MinNormalHeight) _lastNormalHeight = Height;
+                if (Width >= MinNormalWidth) _lastNormalWidth = Width;
                 NormalViewGrid.Visibility = Visibility.Collapsed;
                 CompactViewGrid.Visibility = Visibility.Visible;
                 Height = CompactHeight;
+                MinWidth = MinCompactWidth;
+                Width = Math.Max(MinCompactWidth, Math.Max(Width, DefaultCompactWidth));
             }
             else
             {
                 CompactViewGrid.Visibility = Visibility.Collapsed;
                 NormalViewGrid.Visibility = Visibility.Visible;
                 Height = Math.Max(MinNormalHeight, _lastNormalHeight);
+                MinWidth = MinNormalWidth;
+                Width = Math.Max(MinNormalWidth, _lastNormalWidth);
             }
 
             // Toujours calé en bas à droite

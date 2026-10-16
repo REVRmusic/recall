@@ -53,6 +53,7 @@ public struct BandeauCompactView: View {
                             .padding(.vertical, 0.5)
                             .background(Color.accentCyan.opacity(0.2))
                             .cornerRadius(3)
+                            .fixedSize(horizontal: true, vertical: false)
                         
                         Text(match.displayTitle)
                             .font(.system(size: 11, weight: .bold))
