@@ -65,12 +65,12 @@
       </a>
 
       <ul class="nav-links">
-        <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
         <li><a href="#demo" class="nav-link" data-i18n="nav-demo">Démonstration</a></li>
+        <li><a href="#mockups" class="nav-link" data-i18n="nav-mockups">Aperçu Réel</a></li>
+        <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
         <li><a href="#compatibility" class="nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
         <li><a href="#problem" class="nav-link" data-i18n="nav-problem">Pourquoi Recall&nbsp;?</a></li>
         <li><a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a></li>
-        <li><a href="#mentions-legales" class="nav-link" data-i18n="nav-legal">Mentions Légales</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -485,6 +485,97 @@
               <span data-i18n="sim-interactive-hint">Simulation interactive temps réel : cliquez sur n'importe quel morceau pour l'enchaîner, filtrez par BPM et harmonie, ou ouvrez les réglages (⚙️) pour tester le fond obscurci et le format des clés.</span>
             </div>
 
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Section: Mockups & Real DJ Environments
+       ======================================================================== -->
+  <section id="mockups" class="section mockups-section">
+    <div class="container">
+      <div class="section-header-center">
+        <span class="section-tag" data-i18n="mockups-tag">EN SITUATION RÉELLE</span>
+        <h2 class="section-title" data-i18n="mockups-title">Conçu pour s'intégrer discrètement dans votre workflow DJ.</h2>
+        <p class="section-subtitle" data-i18n="mockups-subtitle">
+          Que vous mixiez sur Serato DJ Pro ou Pioneer Rekordbox, Recall s'intègre en surcouche ultra-légère au-dessus de vos platines sans jamais gêner vos waveforms ni votre navigation.
+        </p>
+      </div>
+
+      <!-- Mockup Navigation Pills -->
+      <div class="mockup-tabs-bar" role="tablist">
+        <button type="button" class="mockup-tab-btn active" data-mockup-target="mockup-serato-floating" role="tab" aria-selected="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 3v18"/></svg>
+          <span data-i18n="mockup-tab-serato-floating">Serato DJ Pro · Fenêtre Flottante</span>
+        </button>
+        <button type="button" class="mockup-tab-btn" data-mockup-target="mockup-serato-compact" role="tab" aria-selected="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="14" width="18" height="7" rx="2"/></svg>
+          <span data-i18n="mockup-tab-serato-compact">Serato DJ Pro · Bandeau Compact (78 px)</span>
+        </button>
+        <button type="button" class="mockup-tab-btn" data-mockup-target="mockup-rekordbox" role="tab" aria-selected="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/></svg>
+          <span data-i18n="mockup-tab-rekordbox">Pioneer Rekordbox · Mode Pro</span>
+        </button>
+        <button type="button" class="mockup-tab-btn" data-mockup-target="mockup-settings" role="tab" aria-selected="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span data-i18n="mockup-tab-settings">Paramètres & Clés Harmoniques</span>
+        </button>
+      </div>
+
+      <!-- Mockup Device Frame Container -->
+      <div class="mockup-viewport">
+        <!-- Frame Chrome Bar (macOS Window style) -->
+        <div class="mockup-chrome-bar">
+          <div class="window-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="mockup-chrome-title" id="mockup-chrome-title">
+            <span class="chrome-status-dot"></span>
+            <span id="mockup-title-text">Serato DJ Pro — Recall 1.0 (Mode Flottant)</span>
+          </div>
+          <div class="mockup-chrome-badge">macOS & Windows</div>
+        </div>
+
+        <!-- Panels for each Mockup -->
+        <div class="mockup-media-stage">
+          <!-- Item 1: Serato Floating -->
+          <div class="mockup-panel active" id="mockup-serato-floating">
+            <img src="assets/images/recall-serato-dj-mockup.png" alt="Recall en mode flottant au-dessus de Serato DJ Pro" class="mockup-img" loading="lazy">
+            <div class="mockup-caption-overlay">
+              <span class="caption-pill">✨ Overlay Discret</span>
+              <p data-i18n="mockup-caption-serato-floating">Recall flottant au-dessus du browser Serato, affichant en temps réel vos routines éprouvées et vos enchaînements harmoniques.</p>
+            </div>
+          </div>
+
+          <!-- Item 2: Serato Compact Dock -->
+          <div class="mockup-panel" id="mockup-serato-compact">
+            <img src="assets/images/recall-compact-serato.png" alt="Recall en mode bandeau compact 78px dans Serato DJ Pro" class="mockup-img" loading="lazy">
+            <div class="mockup-caption-overlay">
+              <span class="caption-pill cyan">⚡ Mode Compact 78 px</span>
+              <p data-i18n="mockup-caption-serato-compact">Mode Bandeau ultra-compact de 78 px : surveillance discrète au bas de l'écran, laissant 100 % d'espace pour les waveforms et les platines.</p>
+            </div>
+          </div>
+
+          <!-- Item 3: Rekordbox Pro Mode -->
+          <div class="mockup-panel" id="mockup-rekordbox">
+            <img src="assets/images/recall-rekordbox.png" alt="Recall compatible avec Pioneer Rekordbox" class="mockup-img" loading="lazy">
+            <div class="mockup-caption-overlay">
+              <span class="caption-pill purple">🎛️ Pioneer Rekordbox</span>
+              <p data-i18n="mockup-caption-rekordbox">Compatibilité totale avec Pioneer Rekordbox en mode Performance : suggestions instantanées à chaque sélection de track.</p>
+            </div>
+          </div>
+
+          <!-- Item 4: Settings & Backdrop -->
+          <div class="mockup-panel" id="mockup-settings">
+            <img src="assets/images/recall-settings-backdrop.png" alt="Paramètres de Recall avec fond obscurci" class="mockup-img" loading="lazy">
+            <div class="mockup-caption-overlay">
+              <span class="caption-pill">⚙️ Personnalisation Complète</span>
+              <p data-i18n="mockup-caption-settings">Panneau de configuration avec estompage doux : ajustez la tolérance BPM, choisissez entre Camelot et Musicale, et activez le mode Always on Top.</p>
+            </div>
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ const translations = {
     // Nav
     "nav-features": "Fonctionnalités",
     "nav-demo": "Démonstration",
+    "nav-mockups": "Aperçu Réel",
     "nav-compatibility": "Compatibilité",
     "nav-problem": "Pourquoi Recall&nbsp;?",
     "nav-download": "Télécharger",
@@ -58,6 +59,19 @@ const translations = {
     "sim-compact-expand": "Déplier",
     "sim-interactive-hint": "Simulation interactive temps réel : cliquez sur n'importe quel morceau pour l'enchaîner, filtrez par BPM et harmonie, ou ouvrez les réglages (⚙️) pour tester le fond obscurci et le format des clés.",
     
+    // Mockups Showcase Section
+    "mockups-tag": "EN SITUATION RÉELLE",
+    "mockups-title": "Conçu pour s'intégrer discrètement dans votre workflow DJ.",
+    "mockups-subtitle": "Découvrez comment Recall s'incruste naturellement au-dessus de Serato DJ Pro et Pioneer Rekordbox en club ou en festival.",
+    "mockup-tab-serato-floating": "Serato DJ Pro · Fenêtre Flottante",
+    "mockup-tab-serato-compact": "Serato DJ Pro · Bandeau Compact (78 px)",
+    "mockup-tab-rekordbox": "Pioneer Rekordbox · Mode Pro",
+    "mockup-tab-settings": "Paramètres & Clés Harmoniques",
+    "mockup-caption-serato-floating": "Recall flottant au-dessus du browser Serato, affichant en temps réel vos routines éprouvées et vos enchaînements harmoniques.",
+    "mockup-caption-serato-compact": "Mode Bandeau ultra-compact de 78 px : surveillance discrète au bas de l'écran, laissant 100 % d'espace pour les waveforms et les platines.",
+    "mockup-caption-rekordbox": "Compatibilité totale avec Pioneer Rekordbox en mode Performance : suggestions instantanées à chaque sélection de track.",
+    "mockup-caption-settings": "Panneau de configuration avec estompage doux : ajustez la tolérance BPM, choisissez entre Camelot et Musicale, et activez le mode Always on Top.",
+
     // Problem Section
     "problem-tag": "Le Dilemme du DJ en Club",
     "problem-title": "Pourquoi vos meilleurs mixes tombent dans l'oubli&nbsp;?",
@@ -205,6 +219,7 @@ const translations = {
     // Nav
     "nav-features": "Features",
     "nav-demo": "Live Demo",
+    "nav-mockups": "Live Mockups",
     "nav-compatibility": "Compatibility",
     "nav-problem": "Why Recall?",
     "nav-download": "Download",
@@ -255,6 +270,19 @@ const translations = {
     "sim-compact-expand": "Expand",
     "sim-interactive-hint": "Live interactive simulation: click any track to transition, filter by BPM and harmony, or open settings (⚙️) to test the dimmed backdrop and key format.",
     
+    // Mockups Showcase Section
+    "mockups-tag": "IN REAL CONDITIONS",
+    "mockups-title": "Engineered to blend seamlessly into your live DJ setup.",
+    "mockups-subtitle": "See how Recall sits discreetly above Serato DJ Pro and Pioneer Rekordbox in the club or at festival stages.",
+    "mockup-tab-serato-floating": "Serato DJ Pro · Floating Window",
+    "mockup-tab-serato-compact": "Serato DJ Pro · Compact Dock (78 px)",
+    "mockup-tab-rekordbox": "Pioneer Rekordbox · Pro Mode",
+    "mockup-tab-settings": "Settings & Harmonic Keys",
+    "mockup-caption-serato-floating": "Recall floating over Serato crate browser, delivering real-time harmonic matches and proven DJ routines on the fly.",
+    "mockup-caption-serato-compact": "78px Ultra-Compact Dock mode: subtle monitoring docked at screen bottom, preserving 100% visibility for waveforms and decks.",
+    "mockup-caption-rekordbox": "Full compatibility with Pioneer Rekordbox in Performance mode: instant harmonic suggestions on every track transition.",
+    "mockup-caption-settings": "Clean settings sheet with soft dimming backdrop: customize BPM tolerance, harmonic key formats, and Always on Top mode.",
+
     // Problem Section
     "problem-tag": "The Club DJ Dilemma",
     "problem-title": "Why do your greatest mixes get forgotten?",
@@ -509,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMobileMenu();
   initNavbarScroll();
   initRecallAppSimulator();
+  initMockupTabs();
   initFAQ();
 });
 
@@ -1257,6 +1286,45 @@ function initFAQ() {
       if (!isActive) {
         item.classList.add("active");
         answer.style.maxHeight = answer.scrollHeight + 30 + "px";
+      }
+    });
+  });
+}
+
+// --- Mockups Showcase Tabs ---
+function initMockupTabs() {
+  const tabs = document.querySelectorAll(".mockup-tab-btn");
+  const panels = document.querySelectorAll(".mockup-panel");
+  const titleText = document.getElementById("mockup-title-text");
+
+  if (!tabs.length || !panels.length) return;
+
+  const titles = {
+    "mockup-serato-floating": "Serato DJ Pro — Recall 1.0 (Mode Flottant)",
+    "mockup-serato-compact": "Serato DJ Pro — Recall 1.0 (Mode Bandeau Compact 78 px)",
+    "mockup-rekordbox": "Pioneer Rekordbox — Recall 1.0 (Mode Performance)",
+    "mockup-settings": "Recall 1.0 — Panneau des Paramètres & Estompage"
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      const targetId = tab.getAttribute("data-mockup-target");
+      if (!targetId) return;
+
+      tabs.forEach(t => {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+      });
+      panels.forEach(p => p.classList.remove("active"));
+
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
+
+      const activePanel = document.getElementById(targetId);
+      if (activePanel) activePanel.classList.add("active");
+
+      if (titleText && titles[targetId]) {
+        titleText.textContent = titles[targetId];
       }
     });
   });
