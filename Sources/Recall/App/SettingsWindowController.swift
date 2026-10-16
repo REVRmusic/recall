@@ -30,6 +30,14 @@ private class SettingsDimmingBackdropView: NSVisualEffectView {
 
 /// Sous-classe de NSPanel pour gérer l'échappement (Escape), le raccourci Cmd+, et la fermeture propre
 private class SettingsPanel: NSPanel {
+    override var canBecomeKey: Bool {
+        return true
+    }
+    
+    override var canBecomeMain: Bool {
+        return true
+    }
+    
     override func cancelOperation(_ sender: Any?) {
         SettingsWindowController.shared.closeWindow()
     }
@@ -61,7 +69,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
     public init() {
         let panel = SettingsPanel(
             contentRect: NSRect(x: 0, y: 0, width: defaultWidth, height: defaultHeight),
-            styleMask: [.titled, .closable, .resizable, .fullSizeContentView, .nonactivatingPanel],
+            styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )

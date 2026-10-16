@@ -24,7 +24,22 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
         return false
     }
     
+    public override var canBecomeKey: Bool {
+        return true
+    }
+    
+    public override var canBecomeMain: Bool {
+        return true
+    }
+    
     public override func sendEvent(_ event: NSEvent) {
+        // Activation immédiate si clic alors que l'application n'est pas encore active
+        if event.type == .leftMouseDown {
+            if !NSApp.isActive {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+        
         // Raccourci clavier Cmd+, pour ouvrir directement les Paramètres
         if event.type == .keyDown {
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -149,7 +164,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         
         let panel = RecallFloatingPanel(
             contentRect: NSRect(x: 0, y: 0, width: initW, height: initH),
-            styleMask: [.titled, .resizable, .fullSizeContentView, .nonactivatingPanel],
+            styleMask: [.titled, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
