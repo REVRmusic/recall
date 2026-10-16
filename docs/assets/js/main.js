@@ -7,7 +7,7 @@
 // ==========================================================================
 // Collez ici l'URL de votre application Web Google Apps Script (/exec).
 // Guide complet d'installation en 2 min : voir `google-sheets-tracker/README.md`
-const GOOGLE_SHEET_TRACKER_URL = "https://script.google.com/macros/s/AKfycbx_VOTRE_ID_GOOGLE_SCRIPT_ICI/exec";
+const GOOGLE_SHEET_TRACKER_URL = "https://script.google.com/macros/s/AKfycbwRVVec0m7BxPfDXL_06kkrfc75AUU5U2D_YLRL8YcMKCqZEXG6cd77EpEEKiIX-6Ad7g/exec";
 
 // --- Dictionnaire Bilingue (FR / EN) ---
 const translations = {
