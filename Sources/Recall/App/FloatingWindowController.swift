@@ -2,6 +2,43 @@ import Foundation
 import AppKit
 import SwiftUI
 
+/// Panneau flottant Recall spécialisé désactivant tout comportement système indésirable lors d'un double-clic
+public final class RecallFloatingPanel: NSPanel {
+    public override func zoom(_ sender: Any?) {
+        // Bloque le zoom et recentrage automatique de macOS
+    }
+    
+    public override func performZoom(_ sender: Any?) {
+        // Bloque le zoom automatique
+    }
+    
+    public override func miniaturize(_ sender: Any?) {
+        // Bloque la miniaturisation automatique
+    }
+    
+    public override func performMiniaturize(_ sender: Any?) {
+        // Bloque la miniaturisation automatique
+    }
+    
+    public override var isZoomed: Bool {
+        return false
+    }
+    
+    public override func sendEvent(_ event: NSEvent) {
+        // Intercepte les double-clics (clickCount >= 2) sur les zones déplaçables du fond de l'application
+        // pour empêcher macOS d'exécuter l'action système "Double-click a window's title bar to zoom/center"
+        if (event.type == .leftMouseDown || event.type == .leftMouseUp) && event.clickCount >= 2 {
+            if let contentView = self.contentView {
+                let hitView = contentView.hitTest(event.locationInWindow)
+                if !(hitView is NSTextView || hitView is NSTextField) {
+                    return
+                }
+            }
+        }
+        super.sendEvent(event)
+    }
+}
+
 public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     public static let shared = FloatingWindowController()
     
@@ -43,7 +80,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         let minW = isCompact ? Self.minCompactWidth : Self.minNormalWidth
         let minH = isCompact ? Self.bandeauHeight : Self.minNormalHeight
         
-        let panel = NSPanel(
+        let panel = RecallFloatingPanel(
             contentRect: NSRect(x: 0, y: 0, width: initW, height: initH),
             styleMask: [.titled, .resizable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
@@ -171,6 +208,18 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
             let newFrame = NSRect(x: x, y: y, width: targetWidth, height: targetHeight)
             window.setFrame(newFrame, display: true)
         }
+    }
+    
+    // MARK: - Protection Anti-Zoom et Anti-Centrage Système (Double-Clic)
+    
+    public func windowShouldZoom(_ window: NSWindow, toFrame newFrame: NSRect) -> Bool {
+        // Empêche formellement tout zoom ou recentrage automatique provoqué par un double-clic
+        return false
+    }
+    
+    public func windowWillUseStandardFrame(_ window: NSWindow, defaultFrame newFrame: NSRect) -> NSRect {
+        // Empêche l'agrandissement vers la frame standard ou le centre de l'écran
+        return window.frame
     }
     
     // MARK: - Redimensionnement Interactif et Bascule Dynamique

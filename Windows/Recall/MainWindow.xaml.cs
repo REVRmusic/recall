@@ -47,6 +47,13 @@ namespace Recall
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // Empêche le comportement système de maximisation ou recentrage lors d'un double-clic
+            if (e.ClickCount >= 2)
+            {
+                e.Handled = true;
+                return;
+            }
+
             if (e.ButtonState == MouseButtonState.Pressed)
             {
                 DragMove();
