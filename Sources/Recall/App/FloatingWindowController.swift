@@ -49,8 +49,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     public static let minNormalWidth: CGFloat = 300
     public static let minNormalHeight: CGFloat = 227 // Hauteur minimale correspondant à 1 suggestion visible
     
-    public static let minCompactWidth: CGFloat = 420 // Largeur minimale du mode réduit garantissant la visibilité intégrale de tous les éléments
-    public static let defaultCompactWidth: CGFloat = 440 // Largeur par défaut confortable pour le bandeau compact
+    public static let minCompactWidth: CGFloat = 300 // Largeur minimale du mode réduit permettant un ancrage discret sur Serato
+    public static let defaultCompactWidth: CGFloat = 360 // Largeur par défaut confortable pour le bandeau compact
     
     public static let maxWidth: CGFloat = 560
     public static let maxHeight: CGFloat = 720
@@ -184,9 +184,10 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
             }
             targetHeight = Self.bandeauHeight
             
-            // Garantit impérativement au minimum la largeur minimale augmentée du mode réduit (420 pt)
+            // Conserve la largeur actuelle si elle respecte le minimum (300 pt), sinon applique la largeur par défaut (360 pt)
             let minW = Self.minCompactWidth
-            targetWidth = max(minW, min(effectiveMaxWidth, max(currentFrame.size.width, Self.defaultCompactWidth)))
+            let desiredW = currentFrame.size.width >= minW ? currentFrame.size.width : Self.defaultCompactWidth
+            targetWidth = max(minW, min(effectiveMaxWidth, desiredW))
             
             window.minSize = NSSize(width: minW, height: Self.bandeauHeight)
             let x = visibleFrame.maxX - targetWidth

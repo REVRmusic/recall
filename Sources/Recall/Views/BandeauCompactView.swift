@@ -110,6 +110,7 @@ public struct BandeauCompactView: View {
                             .padding(.vertical, 0.5)
                             .background(Color(hex: "#FF5252").opacity(0.2))
                             .cornerRadius(2.5)
+                            .fixedSize(horizontal: true, vertical: false)
                         }
                         
                         // Badge Compteur d'enchaînements historiques
@@ -128,6 +129,7 @@ public struct BandeauCompactView: View {
                             .padding(.vertical, 0.5)
                             .background((match.transitionCount >= 3 ? Color.accentFire : Color.accentCyan).opacity(0.18))
                             .cornerRadius(2.5)
+                            .fixedSize(horizontal: true, vertical: false)
                         }
                         
                         // Badge Clé Camelot / Musicale
@@ -139,6 +141,7 @@ public struct BandeauCompactView: View {
                                 .background(camelot.color.opacity(0.25))
                                 .foregroundColor(camelot.color)
                                 .cornerRadius(2.5)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                         
                         // Badge BPM
@@ -149,6 +152,7 @@ public struct BandeauCompactView: View {
                             .padding(.vertical, 0.5)
                             .background(Color.white.opacity(0.08))
                             .cornerRadius(2.5)
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                 } else if monitor.currentTrack != nil {
                     VStack(alignment: .leading, spacing: 1) {

@@ -18,8 +18,8 @@ namespace Recall
 
         private const double MinNormalHeight = 227.0;
         private const double CompactHeight = 54.0;
-        private const double MinCompactWidth = 420.0;
-        private const double DefaultCompactWidth = 440.0;
+        private const double MinCompactWidth = 300.0;
+        private const double DefaultCompactWidth = 360.0;
         private const double MinNormalWidth = 300.0;
         private const double DefaultNormalWidth = 360.0;
         private double _lastNormalHeight = 530.0;
@@ -168,7 +168,7 @@ namespace Recall
                 CompactViewGrid.Visibility = Visibility.Visible;
                 Height = CompactHeight;
                 MinWidth = MinCompactWidth;
-                Width = Math.Max(MinCompactWidth, Math.Max(Width, DefaultCompactWidth));
+                Width = Math.Max(MinCompactWidth, Width >= MinCompactWidth ? Width : DefaultCompactWidth);
             }
             else
             {
