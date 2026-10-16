@@ -26,16 +26,27 @@
 
 ---
 
-## 📸 Aperçu de l'Interface
+## 📸 Aperçu en Situation Réelle
 
 <p align="center">
-  <img src="Resources/Screenshots/recall-main.png" alt="Recall - Interface Principale" width="48%">
-  <img src="Resources/Screenshots/recall-settings.png" alt="Recall - Paramètres et Personnalisation" width="48%">
+  <em>Recall en mode flottant au-dessus de Serato DJ Pro avec détection live et suggestions harmoniques :</em><br>
+  <img src="Resources/Screenshots/recall-serato-dj-mockup.png" alt="Recall en mode flottant au-dessus de Serato DJ Pro" width="100%">
 </p>
 
 <p align="center">
-  <em>Mode compact discret repliable toujours visible au-dessus de Serato DJ Pro :</em><br>
-  <img src="Resources/Screenshots/recall-compact.png" alt="Recall - Mode Bandeau Compact" width="70%">
+  <em>Le nouvel onglet Sélec (Scratchpad DJ avec classement automatique par affinité BPM & Camelot) :</em><br>
+  <img src="Resources/Screenshots/recall-serato-selec.png" alt="Recall - Onglet Sélec au-dessus de Serato DJ Pro" width="100%">
+</p>
+
+<p align="center">
+  <em>Mode Bandeau Compact (78 px) docké en bas d'écran & Compatibilité Pioneer Rekordbox :</em><br>
+  <img src="Resources/Screenshots/recall-compact-serato.png" alt="Recall - Mode Bandeau Compact 78px" width="49%">
+  <img src="Resources/Screenshots/recall-rekordbox.png" alt="Recall - Compatibilité Pioneer Rekordbox" width="49%">
+</p>
+
+<p align="center">
+  <em>Panneau de configuration épuré avec estompage doux :</em><br>
+  <img src="Resources/Screenshots/recall-settings-backdrop.png" alt="Recall - Panneau des Paramètres et Estompage" width="70%">
 </p>
 
 ---
@@ -46,6 +57,7 @@ Pendant un set DJ, retrouver rapidement le morceau idéal qui enchaîne parfaite
 
 Contrairement aux solutions génériques qui se basent sur des algorithmes opaques ou de simples classements de streaming, **Recall analyse directement vos propres sessions passées dans Serato DJ Pro et Rekordbox** :
 - **Vos vraies routines** : Si vous avez enchaîné un morceau 12 fois l'an dernier et que le dancefloor a réagi, Recall s'en souvient et vous le propose en tête de liste (`🔥 12x`).
+- **Scratchpad "Sélec" intelligent** : Glissez vos pépites repérées en amont depuis Serato directement dans votre Sélec. Elles restent enregistrées et se réordonnent automatiquement en direct selon leur compatibilité harmonique et BPM avec le titre en cours de lecture.
 - **Harmonie instantanée** : Respect fidèle des couleurs de la **Roue de Camelot** et filtrage automatique des clés compatibles.
 - **Glisser-Déposer direct (`Drag & Drop`)** : Attrapez la suggestion et déposez-la directement sur vos platines Serato ou Rekordbox.
 - **Compatibilité Universelle** : Détection automatique intelligente de votre logiciel DJ actif (Serato DJ Pro ou Pioneer DJ Rekordbox) avec zéro surcharge processeur.
@@ -110,30 +122,40 @@ L'exécutable autonome optimisé est généré directement dans `Windows\build-w
 - Exclusion des lectures isolées ou des pré-écoutes rapides.
 - Décompte visuel dynamique : `🔥 15x`, `🔥 6x`, `2x`.
 
-### 3. 🎯 Glisser-Déposer Natif (Drag & Drop)
+### 3. 🔖 Scratchpad "Sélec" & Classement Dynamique en Direct
+- **Préparation de sets sans friction** : Glissez n'importe quel morceau depuis le browser de Serato DJ Pro directement sur la fenêtre de Recall (ou cliquez sur le marque-page 🔖) pour l'ajouter à votre sélection de titres à jouer prochainement.
+- **Persistance totale inter-sessions** : Contrairement aux bacs temporaires ou aux réinitialisations de session, votre Sélec n'est **jamais vidée automatiquement**. Vos morceaux restent enregistrés même si vous redémarrez l'ordinateur ou actualisez votre set.
+- **Tri intelligent en direct selon le morceau actif** : Dès qu'un nouveau morceau démarre sur vos platines, votre liste Sélec se réordonne automatiquement en tête de liste :
+  - **BPM prioritaire** : Les morceaux au tempo le plus proche sont placés en haut (avec prise en compte native des relations double-time et half-time).
+  - **Harmonie Camelot** : Bonus de compatibilité harmonique (clés identiques, voisines ±1, relatives majeures/mineures ou boosts +2).
+  - **Bonus de combos & favoris** : Vos enchaînements éprouvés remontent naturellement.
+- **Suppression unitaire & vidage facile** : Chaque titre dispose d'une icône de corbeille 🗑️ pour le retirer dès qu'il a été joué, avec un bouton global « Vider la sélec » pour repartir à zéro.
+
+### 4. 🎯 Glisser-Déposer Bidirectionnel (Drag & Drop)
 - Glissez n'importe quelle ligne de suggestion directement sur vos platines Serato DJ Pro ou Rekordbox.
+- Glissez n'importe quel fichier audio depuis Serato vers Recall pour l'ajouter instantanément à votre **Sélec**.
 - Intégration double flux macOS (`NSFilenamesPboardType` et `public.file-url`) et Windows (`DataFormats.FileDrop`) garantissant une réactivité instantanée.
 
-### 4. 🎼 Clés Camelot Officielles & Filtre BPM Intelligent
+### 5. 🎼 Clés Camelot Officielles & Filtre BPM Intelligent
 - Couleurs authentiques de la roue Camelot pour les 24 tonalités (Mineures `A` et Majeures `B`).
 - Filtre rapide **Harmonie** (clés compatibles : Identique, Parfaite ±1, Relative, Boost +2).
 - Filtre **BPM ±10%** prenant automatiquement en compte les relations half-time et double-time (ex: 75 BPM compatible avec 150 BPM).
 
-### 5. 🔵 Marquage des Morceaux Déjà Joués
+### 6. 🔵 Marquage des Morceaux Déjà Joués
 - Identification visuelle instantanée des morceaux déjà joués au cours de votre set pour éviter les doublons accidentels.
 - Rendu fidèle : surbrillance en **Bleu officiel (`#0FA2FF`)**.
 - **Palette de couleurs personnalisable** dans les paramètres (Bleu officiel, Cyan Électrique, Violet, Émeraude, Orange, Rose, ou sélecteur libre).
 - **3 styles d'affichage** : Texte & Fond, Texte seul, ou Fond seul.
 - Bouton de remise à zéro rapide de session en un clic.
 
-### 6. ⭐ Combinaisons Favorites & Filtre "Favs"
+### 7. ⭐ Combinaisons Favorites & Filtre "Favs"
 - Enregistrement immédiat d'une alchimie parfaite entre deux morceaux via le bouton **Favori** avec modal de confirmation rapide.
 - Filtre rapide **Favoris** pour isoler vos enchaînements fétiches en situation de mix intense.
 
-### 7. 🪟 Interface Flottante Compacte (`Always-on-top`)
+### 8. 🪟 Interface Flottante & Bandeau Compact 78 px (`Always-on-top`)
 - Se positionne discrètement au-dessus de Serato sans jamais gêner les platines ou les crates.
 - Verre dépoli translucide moderne (*frosted glass vibrancy* / `.ultraThinMaterial`).
-- Bouton de réduction en **Bandeau Compact** affichant le Top Match en cours d'un simple coup d'œil.
+- Bouton de réduction en **Bandeau Compact (78 px)** affichant le Top Match en cours d'un simple coup d'œil.
 
 ---
 
@@ -162,7 +184,7 @@ Recall/
 │   └── Recall/
 │       ├── App/                # Cycle de vie Cocoa, NSApplication et FloatingWindowController
 │       ├── Models/             # Modèles de données (Track, CamelotKey, UserSettings)
-│       ├── Services/           # SQLite Serato (WAL), Rekordbox (XML), surveillance, Drag & Drop
+│       ├── Services/           # SQLite Serato (WAL), Rekordbox (XML), ToPlayService (Sélec), Drag & Drop
 │       ├── Views/              # Vues SwiftUI modernes (Main, NowPlaying, Suggestions, Settings, Bandeau)
 │       └── Utils/              # Extensions graphiques et configurateurs de défilement
 └── Windows/                    # Version native Windows (10 & 11 - C# / .NET 8 WPF)
@@ -174,7 +196,7 @@ Recall/
         ├── MainWindow.xaml     # Interface flottante sombre & bandeau compact
         ├── SettingsWindow.xaml # Modale de configuration (Serato, Rekordbox, filtres)
         ├── Models/             # Modèles Track, CamelotKey, UserSettings
-        ├── Services/           # SeratoDatabaseService, RekordboxService, Monitor, Combos
+        ├── Services/           # SeratoDatabaseService, RekordboxService, ToPlayService (Sélec), Combos
         └── Resources/          # Icône Windows AppIcon.ico
 ```
 
