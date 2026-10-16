@@ -2,10 +2,9 @@ import Foundation
 import AppKit
 import SwiftUI
 
-/// Vue de fond d'écran obscurci (dimming backdrop) avec effet de flou et assombrissement profond.
+/// Vue de fond d'écran obscurci (dimming backdrop) avec effet de flou et assombrissement translucide moderne.
 private class SettingsDimmingBackdropView: NSVisualEffectView {
     var onClick: (() -> Void)?
-    private var tintLayer: CALayer?
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -18,23 +17,10 @@ private class SettingsDimmingBackdropView: NSVisualEffectView {
     }
     
     private func setupEffect() {
-        material = .underWindowBackground
+        appearance = NSAppearance(named: .darkAqua)
+        material = .fullScreenUI
         blendingMode = .behindWindow
         state = .active
-        wantsLayer = true
-        
-        let tint = CALayer()
-        // Voile sombre très doux et subtil (0.20) pour préserver la lisibilité de Serato DJ Pro
-        tint.backgroundColor = NSColor.black.withAlphaComponent(0.20).cgColor
-        tint.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        tint.frame = bounds
-        layer?.addSublayer(tint)
-        self.tintLayer = tint
-    }
-    
-    override func layout() {
-        super.layout()
-        tintLayer?.frame = bounds
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -42,10 +28,19 @@ private class SettingsDimmingBackdropView: NSVisualEffectView {
     }
 }
 
-/// Sous-classe de NSPanel pour gérer l'échappement (Escape) et la fermeture propre
+/// Sous-classe de NSPanel pour gérer l'échappement (Escape), le raccourci Cmd+, et la fermeture propre
 private class SettingsPanel: NSPanel {
     override func cancelOperation(_ sender: Any?) {
         SettingsWindowController.shared.closeWindow()
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags == .command && event.charactersIgnoringModifiers == "," {
+            SettingsWindowController.shared.closeWindow()
+            return
+        }
+        super.keyDown(with: event)
     }
 }
 
@@ -83,6 +78,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         panel.isMovableByWindowBackground = true
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
+        panel.appearance = NSAppearance(named: .darkAqua)
         // Niveau au-dessus du fond obscurci
         panel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 2)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -125,6 +121,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         dimWindow.backgroundColor = .clear
         dimWindow.hasShadow = false
         dimWindow.ignoresMouseEvents = false
+        dimWindow.appearance = NSAppearance(named: .darkAqua)
         // Niveau juste au-dessus des applications hôtes (Serato/Rekordbox à .normal = 0)
         // et strictement en-dessous de la fenêtre principale Recall (élevée à .floating + 1)
         dimWindow.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.normalWindow)) + 1)
@@ -151,15 +148,15 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             totalScreenFrame = totalScreenFrame.union(screen.frame)
         }
         
-        // 2. Affichage et animation du fond obscurci doux
+        // 2. Affichage et animation du fond obscurci translucide et flouté (effet verre dépoli)
         if let dim = dimmingWindow {
             dim.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.normalWindow)) + 1)
             dim.setFrame(totalScreenFrame, display: true)
             dim.alphaValue = 0
             dim.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.2
-                dim.animator().alphaValue = 1.0
+                context.duration = 0.22
+                dim.animator().alphaValue = 0.72
             }
         }
 

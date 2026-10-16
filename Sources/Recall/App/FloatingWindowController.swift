@@ -25,6 +25,15 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     }
     
     public override func sendEvent(_ event: NSEvent) {
+        // Raccourci clavier Cmd+, pour ouvrir directement les Paramètres
+        if event.type == .keyDown {
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if flags == .command && event.charactersIgnoringModifiers == "," {
+                SettingsWindowController.shared.toggle()
+                return
+            }
+        }
+        
         // Intercepte les double-clics (clickCount >= 2) sur les zones déplaçables du fond de l'application
         // pour empêcher macOS d'exécuter l'action système "Double-click a window's title bar to zoom/center"
         if (event.type == .leftMouseDown || event.type == .leftMouseUp) && event.clickCount >= 2 {
@@ -158,6 +167,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.isMovableByWindowBackground = true
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
+        panel.appearance = NSAppearance(named: .darkAqua)
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.backgroundColor = .clear
