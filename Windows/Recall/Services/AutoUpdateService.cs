@@ -94,7 +94,7 @@ namespace Recall.Services
                     var release = JsonSerializer.Deserialize<GitHubRelease>(json);
                     if (release == null || string.IsNullOrWhiteSpace(release.TagName)) return;
 
-                    if (IsVersion(release.TagName, greaterThan: CurrentAppVersion))
+                    if (IsVersionGreaterThan(release.TagName, CurrentAppVersion))
                     {
                         // Trouver l'asset Windows (.zip) en priorité
                         var winAsset = release.Assets.FirstOrDefault(a =>
@@ -148,7 +148,7 @@ namespace Recall.Services
                     return (false, false, "", "", "Impossible d'analyser la version distante.");
                 }
 
-                if (IsVersion(release.TagName, greaterThan: CurrentAppVersion))
+                if (IsVersionGreaterThan(release.TagName, CurrentAppVersion))
                 {
                     var winAsset = release.Assets.FirstOrDefault(a =>
                         a.Name.IndexOf("win", StringComparison.OrdinalIgnoreCase) >= 0 &&
@@ -211,7 +211,7 @@ namespace Recall.Services
                         .ToArray();
         }
 
-        public static bool IsVersion(string remote, bool greaterThan, string current)
+        public static bool IsVersionGreaterThan(string remote, string current)
         {
             var remoteParts = ParseVersionComponents(remote);
             var currentParts = ParseVersionComponents(current);
