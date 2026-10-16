@@ -214,7 +214,18 @@ const translations = {
     // Footer
     "footer-desc": "Compagnon intelligent hors-ligne pour Serato DJ Pro & Pioneer DJ Rekordbox.",
     "footer-rights": "Tous droits réservés. Développé avec passion pour les DJs.",
-    "footer-github-link": "Dépôt GitHub"
+    "footer-github-link": "Dépôt GitHub",
+    "footer-welcome-link": "Le mot de REVR",
+
+    // Welcome Modal : Le mot de REVR
+    "welcome-tag": "Le mot de REVR",
+    "welcome-title": "Pensé par un DJ, pour la communauté",
+    "welcome-p1": "Salut à toutes et à tous, chères et chers collègues DJs,<br><br>J'ai développé cet outil avec une intention claire&nbsp;: <strong>épauler les DJs et absolument pas les remplacer</strong>. L'idée est de soulager ces petits moments d'hésitation qu'on peut toutes et tous traverser lors de nos sets, face à la fatigue ou à un instant de déconcentration.",
+    "welcome-p2": "J'y ai également intégré des fonctionnalités pour nous aider à <strong>sortir plus facilement de nos routines</strong> et explorer de nouvelles idées en plein mix. J'espère sincèrement que ça vous plaira&nbsp;! Si c'est le cas, n'hésitez pas à le partager autour de vous, à vos ami·e·s DJs (débutant·e·s comme confirmé·e·s).",
+    "welcome-p3": "Plus j'aurai de retours, plus je pourrai faire évoluer l'outil à notre image à toutes et à tous&nbsp;! Cœur sur vous et plein d'énergie dans vos futures dates&nbsp;!",
+    "welcome-sig-role": "Artiste DJ & Développeur de Recall",
+    "welcome-cta": "Découvrir Recall",
+    "welcome-dont-show": "Ne plus afficher ce message au démarrage"
   },
   
   en: {
@@ -420,12 +431,29 @@ const translations = {
     // Footer
     "footer-desc": "Smart offline memory copilot for Serato DJ Pro & Pioneer DJ Rekordbox.",
     "footer-rights": "All rights reserved. Built with passion for DJs worldwide.",
-    "footer-github-link": "GitHub Repository"
+    "footer-github-link": "GitHub Repository",
+    "footer-welcome-link": "A Word from REVR",
+
+    // Welcome Modal : A word from REVR
+    "welcome-tag": "A Word from REVR",
+    "welcome-title": "Crafted by a DJ, for the community",
+    "welcome-p1": "Hey everyone, fellow DJs and selectors,<br><br>I built this tool with a clear mission in mind: <strong>to assist DJs, never to replace them</strong>. It is designed to ease those quick moments of hesitation we can all experience during long sets, whether from fatigue or a brief lapse in focus.",
+    "welcome-p2": "I also added helpful tools to make it easier to <strong>break out of our comfort zone routines</strong> and spark fresh mixes on the fly. I truly hope you love it! If you do, feel free to share it with your DJ friends (from beginners to seasoned pros).",
+    "welcome-p3": "The more feedback you share, the better I can improve and evolve Recall to fit our collective needs. Much love to everyone, and best of luck on your upcoming gigs!",
+    "welcome-sig-role": "DJ Artist & Developer of Recall",
+    "welcome-cta": "Explore Recall",
+    "welcome-dont-show": "Don't show this message on startup"
   }
 };
 
 // --- State & Device Language Detection ---
 function getInitialLanguage() {
+  // 0. Check URL query param ?lang=fr or ?lang=en
+  const urlLang = (new URLSearchParams(window.location.search)).get("lang");
+  if (urlLang === "fr" || urlLang === "en") {
+    return urlLang;
+  }
+
   // 1. Check if user previously made an explicit choice
   const saved = localStorage.getItem("recall_lang");
   if (saved === "fr" || saved === "en") {
@@ -537,6 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavbarScroll();
   initMockupTabs();
   initFAQ();
+  initWelcomeModal();
   initDownloadModal();
   initDownloadTracker();
 });
@@ -817,6 +846,95 @@ function sendDownloadEvent(eventData) {
     });
   } catch (err) {
     console.warn("Exception tracker Google Sheet :", err);
+  }
+}
+
+// ==========================================================================
+// Boîte Modale de Bienvenue : Le mot de REVR
+// ==========================================================================
+function openWelcomeModal() {
+  const modal = document.getElementById("welcome-modal");
+  if (!modal) return;
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeWelcomeModal() {
+  const modal = document.getElementById("welcome-modal");
+  const dontShow = document.getElementById("welcome-dont-show-checkbox");
+
+  if (!modal) return;
+
+  if (dontShow && dontShow.checked) {
+    try {
+      localStorage.setItem("recall_welcome_dismissed", "true");
+    } catch (e) {}
+  }
+
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function initWelcomeModal() {
+  const modal = document.getElementById("welcome-modal");
+  const closeBtn = document.getElementById("welcome-close-btn");
+  const confirmBtn = document.getElementById("welcome-confirm-btn");
+  const openLinkFooter = document.getElementById("open-welcome-modal-link");
+  const openLinkMobile = document.getElementById("open-welcome-modal-mobile");
+
+  if (!modal) return;
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeWelcomeModal);
+  }
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", closeWelcomeModal);
+  }
+
+  // Fermeture en cliquant sur l'arrière-plan flouté
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeWelcomeModal();
+    }
+  });
+
+  // Fermeture avec la touche Échap
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("active")) {
+      closeWelcomeModal();
+    }
+  });
+
+  // Liens pour réouvrir manuellement la modale (footer / menu)
+  if (openLinkFooter) {
+    openLinkFooter.addEventListener("click", (e) => {
+      e.preventDefault();
+      openWelcomeModal();
+    });
+  }
+  if (openLinkMobile) {
+    openLinkMobile.addEventListener("click", (e) => {
+      e.preventDefault();
+      openWelcomeModal();
+    });
+  }
+
+  // Affichage automatique à l'ouverture de la landing page
+  let isDismissed = false;
+  try {
+    isDismissed = (localStorage.getItem("recall_welcome_dismissed") === "true");
+  } catch (e) {}
+
+  // Si l'URL contient ?welcome=1 ou #welcome, on force l'ouverture
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceWelcome = urlParams.get("welcome") === "1" || window.location.hash === "#welcome";
+
+  if (!isDismissed || forceWelcome) {
+    setTimeout(() => {
+      openWelcomeModal();
+    }, 450);
   }
 }
 

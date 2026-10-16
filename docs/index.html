@@ -796,6 +796,7 @@
           <li><a href="#compatibility" data-i18n="nav-compatibility">Compatibilité</a></li>
           <li><a href="#download" data-i18n="nav-download">Télécharger</a></li>
           <li><a href="#faq" data-i18n="nav-faq">FAQ</a></li>
+          <li><a href="#welcome" id="open-welcome-modal-link" data-i18n="footer-welcome-link">Le mot de REVR</a></li>
           <li><a href="#mentions-legales" data-i18n="nav-legal">Mentions Légales</a></li>
           <li><a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" data-i18n="footer-github-link">Dépôt GitHub</a></li>
         </ul>
@@ -830,6 +831,7 @@
       <li><a href="#compatibility" class="mobile-nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
       <li><a href="#problem" class="mobile-nav-link" data-i18n="nav-problem">Pourquoi Recall&nbsp;?</a></li>
       <li><a href="#faq" class="mobile-nav-link" data-i18n="nav-faq">FAQ</a></li>
+      <li><a href="#welcome" class="mobile-nav-link" id="open-welcome-modal-mobile" data-i18n="footer-welcome-link">Le mot de REVR</a></li>
     </ul>
 
     <div class="mobile-nav-footer">
@@ -850,6 +852,63 @@
     </div>
   </div>
   <div id="mobile-nav-backdrop" class="mobile-nav-backdrop" aria-hidden="true"></div>
+
+  <!-- Modal de bienvenue : Le mot de REVR -->
+  <div class="welcome-modal-overlay" id="welcome-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="welcome-modal-title">
+    <div class="welcome-modal-card">
+      <button class="modal-close-btn" id="welcome-close-btn" aria-label="Fermer la boîte de dialogue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="welcome-modal-header">
+        <div class="welcome-avatar-wrap">
+          <img src="assets/images/app-icon.png" alt="REVR Recall" class="welcome-avatar-img">
+        </div>
+        <span class="welcome-badge" data-i18n="welcome-tag">Le mot de REVR</span>
+        <h3 class="welcome-modal-title" id="welcome-modal-title" data-i18n="welcome-title">Pensé par un DJ, pour la communauté</h3>
+      </div>
+
+      <div class="welcome-modal-body">
+        <p class="welcome-p" data-i18n="welcome-p1">
+          Salut à toutes et à tous, chères et chers collègues DJs,<br><br>
+          J'ai développé cet outil avec une intention claire&nbsp;: <strong>épauler les DJs et absolument pas les remplacer</strong>. L'idée est de soulager ces petits moments d'hésitation qu'on peut toutes et tous traverser lors de nos sets, face à la fatigue ou à un instant de déconcentration.
+        </p>
+        <p class="welcome-p" data-i18n="welcome-p2">
+          J'y ai également intégré des fonctionnalités pour nous aider à <strong>sortir plus facilement de nos routines</strong> et explorer de nouvelles idées en plein mix. J'espère sincèrement que ça vous plaira&nbsp;! Si c'est le cas, n'hésitez pas à le partager autour de vous, à vos ami·e·s DJs (débutant·e·s comme confirmé·e·s).
+        </p>
+        <p class="welcome-p" data-i18n="welcome-p3">
+          Plus j'aurai de retours, plus je pourrai faire évoluer l'outil à notre image à toutes et à tous&nbsp;! Cœur sur vous et plein d'énergie dans vos futures dates&nbsp;!
+        </p>
+
+        <div class="welcome-signature-block">
+          <div class="welcome-sig-text">
+            <span class="welcome-sig-name">— REVR</span>
+            <span class="welcome-sig-sub" data-i18n="welcome-sig-role">Artiste DJ & Développeur de Recall</span>
+          </div>
+          <div class="welcome-sig-badge">
+            <span class="pulse-indicator"></span> 100% DJ Community
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-modal-footer">
+        <button class="btn-primary welcome-cta-btn" id="welcome-confirm-btn">
+          <span data-i18n="welcome-cta">Découvrir Recall</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+
+        <label class="welcome-checkbox-label">
+          <input type="checkbox" id="welcome-dont-show-checkbox">
+          <span data-i18n="welcome-dont-show">Ne plus afficher ce message au démarrage</span>
+        </label>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal d'instructions après téléchargement direct -->
   <div class="download-modal-overlay" id="download-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
