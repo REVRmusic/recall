@@ -748,11 +748,22 @@ public func fetchActiveDecks() -> ActiveDecksState {
     // MARK: - Recherche de Morceaux dans la Bibliothèque Serato
     
     public func searchTracks(query: String, limit: Int = 30) -> [Track] {
-        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
         guard let db = openDatabase() else { return [] }
         defer { sqlite3_close(db) }
         
-        let safeQuery = escapeSql(query)
+        let tokens = trimmed
+            .split(separator: " ")
+            .map { escapeSql(String($0)) }
+            .filter { !$0.isEmpty }
+        
+        guard !tokens.isEmpty else { return [] }
+        
+        let whereClauses = tokens.map { token in
+            "(name LIKE '%\(token)%' OR artist LIKE '%\(token)%' OR file_name LIKE '%\(token)%')"
+        }.joined(separator: " AND ")
+        
         let sql = """
         SELECT 
             id,
@@ -763,7 +774,7 @@ public func fetchActiveDecks() -> ActiveDecksState {
             ifnull(file_name, ''),
             ifnull(portable_id, '')
         FROM asset
-        WHERE (name LIKE '%\(safeQuery)%' OR artist LIKE '%\(safeQuery)%' OR file_name LIKE '%\(safeQuery)%')
+        WHERE \(whereClauses)
         ORDER BY id DESC
         LIMIT \(limit);
         """
@@ -994,6 +1005,9 @@ public func fetchActiveDecks() -> ActiveDecksState {
         public let id: Int
         public let title: String
         public let artist: String
+        public let bpm: Double
+        public let rawKey: String
+        public let genre: String
         public let fileName: String
         public let startTime: Date
         public let endTime: Date?
@@ -1034,10 +1048,13 @@ public func fetchActiveDecks() -> ActiveDecksState {
             id,
             ifnull(name, ''),
             ifnull(artist, ''),
+            ifnull(bpm, 0.0),
+            ifnull(key, ''),
             ifnull(file_name, ''),
             start_time,
             end_time,
-            played
+            played,
+            ifnull(genre, '')
         FROM history_entry
         WHERE start_time >= \(sinceUnix)
         ORDER BY start_time ASC;
@@ -1052,10 +1069,13 @@ public func fetchActiveDecks() -> ActiveDecksState {
                 let entryId = Int(sqlite3_column_int64(stmt, 0))
                 let name = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
                 let artist = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
-                let fileName = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
-                let startUnix = sqlite3_column_int64(stmt, 4)
-                let endUnix = sqlite3_column_int64(stmt, 5)
-                let playedFlag = Int(sqlite3_column_int(stmt, 6))
+                let bpm = sqlite3_column_double(stmt, 3)
+                let rawKey = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
+                let fileName = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+                let startUnix = sqlite3_column_int64(stmt, 6)
+                let endUnix = sqlite3_column_int64(stmt, 7)
+                let playedFlag = Int(sqlite3_column_int(stmt, 8))
+                let genre = sqlite3_column_text(stmt, 9).map { String(cString: $0) } ?? ""
                 
                 let startDate = Date(timeIntervalSince1970: TimeInterval(startUnix))
                 var endDate: Date? = nil
@@ -1076,6 +1096,9 @@ public func fetchActiveDecks() -> ActiveDecksState {
                     id: entryId,
                     title: cleanTitle,
                     artist: artist,
+                    bpm: bpm,
+                    rawKey: rawKey,
+                    genre: genre,
                     fileName: fileName,
                     startTime: startDate,
                     endTime: endDate,

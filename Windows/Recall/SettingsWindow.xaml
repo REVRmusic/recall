@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Recall - Paramètres"
-        Width="440" Height="520"
+        Width="460" Height="580"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -22,7 +22,13 @@
             <!-- Header -->
             <Grid Grid.Row="0" Margin="0,0,0,12">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="⚙ Paramètres de Recall" FontWeight="Bold" FontSize="14" Foreground="White"/>
+                    <Border Width="24" Height="24" CornerRadius="12" Background="#2614C8B0" Margin="0,0,8,0">
+                        <TextBlock Text="⚙" FontSize="12" FontWeight="Bold" Foreground="#14C8B0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Paramètres Recall" FontWeight="Bold" FontSize="13" Foreground="White" VerticalAlignment="Center"/>
+                    <Border Background="#1C2F3D" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtAppVersionBadge" Text="v1.0.1" FontSize="9" FontWeight="Bold" Foreground="#14C8B0"/>
+                    </Border>
                 </StackPanel>
                 <Button Content="✕" Width="24" Height="24" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
             </Grid>
@@ -30,13 +36,13 @@
             <!-- Content -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <!-- Logiciel DJ -->
+                    <!-- SECTION 1 : Logiciel DJ & Source des données -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Logiciel DJ &amp; Source de données" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
                             <Grid>
                                 <TextBlock Text="Mode de détection" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CmbDjSoftware" HorizontalAlignment="Right" Width="180" Background="#12151A" Foreground="#E5E7EB">
+                                <ComboBox x:Name="CmbDjSoftware" HorizontalAlignment="Right" Width="190">
                                     <ComboBoxItem Content="Détection automatique" Tag="auto" IsSelected="True"/>
                                     <ComboBoxItem Content="Serato DJ Pro" Tag="serato"/>
                                     <ComboBoxItem Content="Pioneer DJ Rekordbox" Tag="rekordbox"/>
@@ -45,7 +51,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Collection Rekordbox XML -->
+                    <!-- SECTION 2 : Fichier Rekordbox XML -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Collection Rekordbox (Fichier XML)" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
@@ -55,13 +61,13 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtRbXmlPath" Background="#12151A" Foreground="#E5E7EB" BorderBrush="#374151" BorderThickness="1" Padding="6,4" FontSize="10"/>
-                                <Button Grid.Column="1" Content="Parcourir..." Margin="6,0,0,0" Padding="8,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnBrowseRbXml_Click"/>
+                                <TextBox x:Name="TxtRbXmlPath" Padding="6,4" FontSize="10"/>
+                                <Button Grid.Column="1" Content="Parcourir..." Margin="6,0,0,0" Padding="10,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnBrowseRbXml_Click"/>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- Base Serato -->
+                    <!-- SECTION 3 : Base Serato master.sqlite -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Base de données Serato DJ Pro" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
@@ -71,20 +77,20 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtDbPath" Background="#12151A" Foreground="#E5E7EB" BorderBrush="#374151" BorderThickness="1" Padding="6,4" FontSize="10"/>
-                                <Button Grid.Column="1" Content="Parcourir..." Margin="6,0,0,0" Padding="8,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnBrowseDb_Click"/>
+                                <TextBox x:Name="TxtDbPath" Padding="6,4" FontSize="10"/>
+                                <Button Grid.Column="1" Content="Parcourir..." Margin="6,0,0,0" Padding="10,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnBrowseDb_Click"/>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- Historique & Algorithme -->
+                    <!-- SECTION 4 : Historique & Algorithme -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Routines &amp; Historique de mix" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,10"/>
 
                             <Grid Margin="0,0,0,8">
                                 <TextBlock Text="Profondeur d'historique" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CmbLookback" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
+                                <ComboBox x:Name="CmbLookback" HorizontalAlignment="Right" Width="140">
                                     <ComboBoxItem Content="30 jours" Tag="30"/>
                                     <ComboBoxItem Content="90 jours" Tag="90"/>
                                     <ComboBoxItem Content="180 jours" Tag="180"/>
@@ -95,7 +101,7 @@
 
                             <Grid Margin="0,0,0,8">
                                 <TextBlock Text="Tolérance BPM (filtre)" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CmbBpmTol" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
+                                <ComboBox x:Name="CmbBpmTol" HorizontalAlignment="Right" Width="140">
                                     <ComboBoxItem Content="± 4 %" Tag="4.0"/>
                                     <ComboBoxItem Content="± 8 % (Recommandé)" Tag="8.0" IsSelected="True"/>
                                     <ComboBoxItem Content="± 10 %" Tag="10.0"/>
@@ -105,7 +111,7 @@
 
                             <Grid>
                                 <TextBlock Text="Nombre max de suggestions" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CmbMaxSug" HorizontalAlignment="Right" Width="130" Background="#12151A" Foreground="#E5E7EB">
+                                <ComboBox x:Name="CmbMaxSug" HorizontalAlignment="Right" Width="140">
                                     <ComboBoxItem Content="15 titres" Tag="15"/>
                                     <ComboBoxItem Content="30 titres (Optimal)" Tag="30" IsSelected="True"/>
                                     <ComboBoxItem Content="50 titres" Tag="50"/>
@@ -114,24 +120,70 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Options d'affichage -->
+                    <!-- SECTION 5 : Options d'affichage -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Affichage &amp; Comportement" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
-                            <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Foreground="#E5E7EB" FontSize="10" Margin="0,0,0,6"/>
-                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Foreground="#E5E7EB" FontSize="10" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Margin="0,0,0,8"/>
+                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Margin="0,0,0,10"/>
                             <Grid Margin="0,2,0,0">
-                                <TextBlock Text="Format des clés" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CmbKeyDisplayMode" HorizontalAlignment="Right" Width="140" Background="#12151A" Foreground="#E5E7EB">
+                                <TextBlock Text="Format des clés musicales" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbKeyDisplayMode" HorizontalAlignment="Right" Width="140">
                                     <ComboBoxItem Content="Camelot (9A)" Tag="0" IsSelected="True"/>
                                     <ComboBoxItem Content="Musicale (Em)" Tag="1"/>
-                                    <ComboBoxItem Content="Combiné" Tag="2"/>
+                                    <ComboBoxItem Content="Combiné (9A • Em)" Tag="2"/>
                                 </ComboBox>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- Suggérer une amélioration -->
+                    <!-- SECTION 6 : Mise à jour de l'application (v1.0.1) -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="Mise à jour du logiciel" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
+                                <TextBlock x:Name="TxtVersionInfo" Text="Version 1.0.1 installée" HorizontalAlignment="Right" FontSize="9.5" Foreground="#9CA3AF"/>
+                            </Grid>
+                            
+                            <TextBlock x:Name="TxtUpdateStatus" Text="Recall recherche automatiquement les mises à jour au démarrage." FontSize="9.5" Foreground="#9CA3AF" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="BtnCheckUpdate" Content="Rechercher une mise à jour" Padding="10,5" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnCheckUpdate_Click" Margin="0,0,8,0"/>
+                                <Button x:Name="BtnDownloadUpdate" Content="Télécharger la mise à jour ↗" Padding="10,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="BtnDownloadUpdate_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 7 : Raccourcis Clavier Windows -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Raccourcis Clavier Système (Hotkeys)" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,6"/>
+                            <TextBlock Text="Contrôlez Recall sans jamais quitter Rekordbox ou Serato du regard :" FontSize="9.5" Foreground="#9CA3AF" Margin="0,0,0,6"/>
+                            
+                            <Grid Margin="0,2">
+                                <TextBlock Text="Afficher / Masquer Recall" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
+                                    <TextBlock Text="Ctrl + Shift + R" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </Grid>
+
+                            <Grid Margin="0,2">
+                                <TextBlock Text="Basculer bandeau compact" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
+                                    <TextBlock Text="Ctrl + Shift + C" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </Grid>
+
+                            <Grid Margin="0,2">
+                                <TextBlock Text="Ouvrir recherche Recall" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
+                                    <TextBlock Text="Ctrl + Shift + F" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 8 : Suggérer une amélioration -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <Grid Margin="0,0,0,4">
@@ -139,11 +191,11 @@
                                 <TextBlock Text="REVR" HorizontalAlignment="Right" FontSize="9" FontWeight="Bold" Foreground="#00F0FF"/>
                             </Grid>
                             <TextBlock Text="Une idée de fonctionnalité ou un retour sur vos sets ? Transmettez vos suggestions directement à REVR." FontSize="9.5" Foreground="#9CA3AF" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                            <Button Content="Faire un retour au développeur (Web) ↗" Padding="8,4" Background="#14C8B0" Foreground="#12151A" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnFeedback_Click"/>
+                            <Button Content="Faire un retour au développeur (Web) ↗" Padding="10,5" Background="#14C8B0" Foreground="#12151A" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Click="BtnFeedback_Click"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Mentions Légales & Confidentialité -->
+                    <!-- SECTION 9 : Mentions Légales & Confidentialité -->
                     <Border Background="#151820" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10">
                         <StackPanel>
                             <TextBlock Text="⚖ Mentions Légales &amp; Confidentialité" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF" Margin="0,0,0,4"/>
@@ -156,8 +208,8 @@
 
             <!-- Footer Actions -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                <Button Content="Réinitialiser" Padding="10,5" Background="Transparent" Foreground="#9CA3AF" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnReset_Click" Margin="0,0,8,0"/>
-                <Button Content="Enregistrer" Padding="14,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSave_Click"/>
+                <Button Content="Réinitialiser" Padding="12,5" Background="Transparent" Foreground="#9CA3AF" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnReset_Click" Margin="0,0,8,0"/>
+                <Button Content="Enregistrer" Padding="16,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSave_Click"/>
             </StackPanel>
         </Grid>
     </Border>

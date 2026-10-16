@@ -45,7 +45,9 @@ namespace Recall.Services
         private static AutoUpdateService? _shared;
         public static AutoUpdateService Shared => _shared ??= new AutoUpdateService();
 
-        private const string CurrentAppVersion = "1.0.0";
+        public const string CurrentAppVersion = "1.0.1";
+        public string Version => CurrentAppVersion;
+
         private const string RepoApiUrl = "https://api.github.com/repos/REVRmusic/recall/releases/latest";
 
         private bool _hasCheckedOnStartup = false;
@@ -114,6 +116,62 @@ namespace Recall.Services
                     // Erreur silencieusement ignorée : l'application DJ ne doit JAMAIS planter au démarrage
                 }
             });
+        }
+
+        /// <summary>
+        /// Recherche manuelle déclenchée depuis les paramètres de l'application
+        /// </summary>
+        public async Task<(bool success, bool hasUpdate, string version, string url, string message)> CheckForUpdatesManualAsync()
+        {
+            try
+            {
+                if (!NetworkInterface.GetIsNetworkAvailable())
+                {
+                    return (false, false, "", "", "Aucune connexion Internet détectée.");
+                }
+
+                using var client = new HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(6);
+                client.DefaultRequestHeaders.Add("User-Agent", $"Recall-Windows/{CurrentAppVersion}");
+                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+
+                var response = await client.GetAsync(RepoApiUrl);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return (false, false, "", "", $"Serveur inaccessible (Code {(int)response.StatusCode}).");
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var release = JsonSerializer.Deserialize<GitHubRelease>(json);
+                if (release == null || string.IsNullOrWhiteSpace(release.TagName))
+                {
+                    return (false, false, "", "", "Impossible d'analyser la version distante.");
+                }
+
+                if (IsVersion(release.TagName, greaterThan: CurrentAppVersion))
+                {
+                    var winAsset = release.Assets.FirstOrDefault(a =>
+                        a.Name.IndexOf("win", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                        a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+
+                    var finalUrl = winAsset?.BrowserDownloadUrl ?? release.HtmlUrl;
+
+                    IsUpdateAvailable = true;
+                    AvailableVersion = release.TagName;
+                    DownloadUrl = finalUrl;
+
+                    return (true, true, release.TagName, finalUrl, $"Nouvelle version {release.TagName} disponible !");
+                }
+                else
+                {
+                    IsUpdateAvailable = false;
+                    return (true, false, release.TagName, "", $"Recall est à jour (v{CurrentAppVersion}).");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, false, "", "", $"Erreur de vérification : {ex.Message}");
+            }
         }
 
         public void OpenDownloadInBrowser()

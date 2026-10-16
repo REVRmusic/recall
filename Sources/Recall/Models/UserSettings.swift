@@ -102,6 +102,32 @@ public class UserSettings: ObservableObject {
     @Published public var cumulateVariantSuggestions: Bool {
         didSet { UserDefaults.standard.set(cumulateVariantSuggestions, forKey: "cumulateVariantSuggestions") }
     }
+    @Published public var includeEnergyBoostInHarmonicFilter: Bool {
+        didSet { UserDefaults.standard.set(includeEnergyBoostInHarmonicFilter, forKey: "includeEnergyBoostInHarmonicFilter") }
+    }
+    @Published public var includeDiagonalInHarmonicFilter: Bool {
+        didSet { UserDefaults.standard.set(includeDiagonalInHarmonicFilter, forKey: "includeDiagonalInHarmonicFilter") }
+    }
+    @Published public var djTheme: DJTheme {
+        didSet { UserDefaults.standard.set(djTheme.rawValue, forKey: "djTheme") }
+    }
+    @Published public var glassOpacity: Double {
+        didSet { UserDefaults.standard.set(glassOpacity, forKey: "glassOpacity") }
+    }
+    @Published public var hotKeyPreset: HotKeyModifierPreset {
+        didSet {
+            UserDefaults.standard.set(hotKeyPreset.rawValue, forKey: "hotKeyPreset")
+            GlobalHotKeyService.shared.updateRegistrations(preset: hotKeyPreset)
+        }
+    }
+    
+    public var accentColor: Color {
+        djTheme.accentColor
+    }
+    
+    public var accentSecondaryColor: Color {
+        djTheme.secondaryColor
+    }
     
     public init() {
         let def = UserDefaults.standard
@@ -125,6 +151,13 @@ public class UserSettings: ObservableObject {
         self.playedTrackStyle = def.string(forKey: "playedTrackStyle") ?? "both"
         self.playedMinDurationSeconds = def.object(forKey: "playedMinDurationSeconds") != nil ? def.integer(forKey: "playedMinDurationSeconds") : 25
         self.cumulateVariantSuggestions = def.object(forKey: "cumulateVariantSuggestions") != nil ? def.bool(forKey: "cumulateVariantSuggestions") : true
+        self.includeEnergyBoostInHarmonicFilter = def.object(forKey: "includeEnergyBoostInHarmonicFilter") != nil ? def.bool(forKey: "includeEnergyBoostInHarmonicFilter") : true
+        self.includeDiagonalInHarmonicFilter = def.object(forKey: "includeDiagonalInHarmonicFilter") != nil ? def.bool(forKey: "includeDiagonalInHarmonicFilter") : true
+        let rawTheme = def.string(forKey: "djTheme") ?? DJTheme.cyanNeon.rawValue
+        self.djTheme = DJTheme(rawValue: rawTheme) ?? .cyanNeon
+        self.glassOpacity = def.object(forKey: "glassOpacity") != nil ? def.double(forKey: "glassOpacity") : 0.96
+        let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.both.rawValue
+        self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .both
     }
     
     public var defaultDatabasePath: String {
@@ -144,6 +177,8 @@ public class UserSettings: ObservableObject {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser.path
         
+        var allCandidates: [String] = []
+        
         // 1. Lire rekordbox3.settings si disponible (pont officiel bridgeImportedLibraryFile)
         let settingsPath = "\(home)/Library/Application Support/Pioneer/rekordbox6/rekordbox3.settings"
         if fm.fileExists(atPath: settingsPath),
@@ -153,31 +188,34 @@ public class UserSettings: ObservableObject {
                let match = regex.firstMatch(in: content, range: NSRange(content.startIndex..., in: content)),
                let range = Range(match.range(at: 1), in: content) {
                 let candidate = String(content[range])
-                if fm.fileExists(atPath: candidate) {
-                    return candidate
-                }
+                allCandidates.append(candidate)
                 let stripped = candidate.replacingOccurrences(of: "/Volumes/Macintosh HD", with: "")
-                if fm.fileExists(atPath: stripped) {
-                    return stripped
-                }
+                allCandidates.append(stripped)
             }
         }
         
         // 2. Emplacements standards de sauvegarde et synchronisation XML Rekordbox
-        let candidates = [
+        allCandidates.append(contentsOf: [
             "\(home)/Documents/rekordbox.xml",
             "\(home)/Documents/Lexicon/rekordbox.xml",
             "\(home)/Documents/Backup Rekordbkox/Collection rekordbox.xml",
             "\(home)/Library/Pioneer/rekordbox/rekordbox.xml"
-        ]
+        ])
         
-        for path in candidates {
+        // Trouver tous les fichiers existants et sélectionner le plus récent
+        var existingCandidates: [(path: String, modDate: Date)] = []
+        var seen = Set<String>()
+        for path in allCandidates {
+            guard !seen.contains(path) else { continue }
+            seen.insert(path)
             if fm.fileExists(atPath: path) {
-                return path
+                let modDate = ((try? fm.attributesOfItem(atPath: path))?[.modificationDate] as? Date) ?? .distantPast
+                existingCandidates.append((path, modDate))
             }
         }
         
-        return nil
+        existingCandidates.sort { $0.modDate > $1.modDate }
+        return existingCandidates.first?.path
     }
     
     public var effectiveRekordboxXmlPath: String {
@@ -217,5 +255,8 @@ public class UserSettings: ObservableObject {
         playedTrackColorHex = "#0FA2FF"
         playedTrackStyle = "both"
         playedMinDurationSeconds = 25
+        hotKeyPreset = .both
+        djTheme = .cyanNeon
+        glassOpacity = 0.96
     }
 }

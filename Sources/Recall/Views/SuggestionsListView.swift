@@ -43,7 +43,7 @@ public struct SuggestionsListView: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white.opacity(0.9))
                     
-                    Text("Démarrez un morceau sur une platine Serato DJ Pro pour faire apparaître vos suggestions d'enchaînement en direct.")
+                    Text(monitor.activeDJSoftware == .rekordbox ? "Démarrez un morceau sur une platine Rekordbox pour faire apparaître vos suggestions d'enchaînement en direct." : "Démarrez un morceau sur une platine Serato DJ Pro pour faire apparaître vos suggestions d'enchaînement en direct.")
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.45))
                         .multilineTextAlignment(.center)

@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 import AppKit
 import ApplicationServices
+import CoreServices
 
 /// État en direct des platines Rekordbox (morceaux chargés, BPM, Tonalité, état de lecture)
 public struct RekordboxActiveDecksState: @unchecked Sendable {
@@ -342,31 +343,163 @@ public class RekordboxService: ObservableObject {
     
     private func harmonicScore(_ rel: HarmonicRelation?) -> Int {
         switch rel {
-        case .exact: return 4
-        case .adjacent: return 3
-        case .relative: return 2
-        case .energyBoost: return 1
+        case .exact: return 6
+        case .adjacent: return 5
+        case .relative: return 4
+        case .semitoneBoost: return 4
+        case .wholeToneBoost: return 3
+        case .diagonal: return 3
+        case .semitoneDrop: return 2
         default: return 0
         }
     }
     
-    /// Recherche rapide de morceaux dans la collection Rekordbox
+    // MARK: - Chemins Musicaux Standards & Métadonnées
+    
+    public static let knownMusicDirs: [String] = {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return [
+            "\(home)/Music/REVR BIBLIOTHEQUE",
+            "\(home)/Music/REVR Morceaux",
+            "\(home)/Music/LAUNCHMACHINE BIBLIOTHEQUE",
+            "\(home)/Music"
+        ]
+    }()
+    
+    public static let commonAudioExts = ["mp3", "wav", "aiff", "flac", "m4a", "aac", "alac", "ogg"]
+    
+    /// Recherche rapide et tolérante de morceaux dans la collection Rekordbox et les dossiers musicaux locaux
     public func searchTracks(query: String, limit: Int = 30) -> [Track] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        loadCollectionIfNeeded()
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return [] }
         
+        let tokens = q
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+            .split(separator: " ")
+            .map { String($0) }
+            .filter { !$0.isEmpty }
+        
+        guard !tokens.isEmpty else { return [] }
+        
         var results: [Track] = []
+        var seenNames = Set<String>()
+        
+        // 1. Recherche dans la collection XML Rekordbox (si disponible)
         for track in tracksList {
-            if track.title.lowercased().contains(q) ||
-               track.artist.lowercased().contains(q) ||
-               track.fileName.lowercased().contains(q) {
+            let searchable = "\(track.title) \(track.artist) \(track.fileName) \(track.displayTitle) \(track.displayArtist)"
+                .folding(options: .diacriticInsensitive, locale: .current)
+                .lowercased()
+            
+            if tokens.allSatisfy({ searchable.contains($0) }) {
                 results.append(track)
+                seenNames.insert(track.fileName.lowercased())
                 if results.count >= limit {
-                    break
+                    return results
                 }
             }
         }
+        
+        // 2. Recherche complémentaire dans les répertoires musicaux locaux
+        // (permet de trouver instantanément les morceaux récents même si le XML n'a pas encore été ré-exporté)
+        if results.count < limit {
+            let localResults = searchLocalMusicFiles(tokens: tokens, limit: limit - results.count, excluding: seenNames)
+            results.append(contentsOf: localResults)
+        }
+        
         return results
+    }
+    
+    private var localFilesCache: [(dir: String, fileName: String)]? = nil
+    private var localFilesCacheDate: Date? = nil
+    
+    private func getCachedLocalFiles() -> [(dir: String, fileName: String)] {
+        if let cache = localFilesCache, let date = localFilesCacheDate, Date().timeIntervalSince(date) < 60 {
+            return cache
+        }
+        let fm = FileManager.default
+        var files: [(dir: String, fileName: String)] = []
+        for dir in Self.knownMusicDirs {
+            guard fm.fileExists(atPath: dir) else { continue }
+            guard let fileNames = try? fm.contentsOfDirectory(atPath: dir) else { continue }
+            for fileName in fileNames {
+                let ext = (fileName as NSString).pathExtension.lowercased()
+                if Self.commonAudioExts.contains(ext) {
+                    files.append((dir, fileName))
+                }
+            }
+        }
+        localFilesCache = files
+        localFilesCacheDate = Date()
+        return files
+    }
+    
+    private func searchLocalMusicFiles(tokens: [String], limit: Int, excluding: Set<String>) -> [Track] {
+        guard !tokens.isEmpty && limit > 0 else { return [] }
+        var localTracks: [Track] = []
+        var seen = excluding
+        
+        let allLocal = getCachedLocalFiles()
+        for item in allLocal {
+            let lowerName = item.fileName.lowercased()
+            guard !seen.contains(lowerName) else { continue }
+            let norm = item.fileName.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+            if tokens.allSatisfy({ norm.contains($0) }) {
+                let fullPath = "\(item.dir)/\(item.fileName)"
+                let parsed = Track.parseSmartArtistAndTitle(rawString: item.fileName)
+                let (mdBpm, mdKey) = readSpotlightAudioMetadata(filePath: fullPath)
+                
+                let track = Track(
+                    id: "local-\(abs(item.fileName.hashValue))",
+                    title: parsed.title,
+                    artist: parsed.artist ?? "",
+                    bpm: mdBpm ?? 0.0,
+                    rawKey: mdKey ?? "",
+                    filePath: fullPath,
+                    fileName: item.fileName,
+                    portableId: fullPath
+                )
+                localTracks.append(track)
+                seen.insert(lowerName)
+                if localTracks.count >= limit {
+                    return localTracks
+                }
+            }
+        }
+        return localTracks
+    }
+    
+    public func resolveLocalAudioFilePath(rawTitle: String, title: String) -> String? {
+        let fm = FileManager.default
+        let candidatesToTry = [rawTitle, title].filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        for dir in Self.knownMusicDirs {
+            guard fm.fileExists(atPath: dir) else { continue }
+            for base in candidatesToTry {
+                for ext in Self.commonAudioExts {
+                    let path = "\(dir)/\(base).\(ext)"
+                    if fm.fileExists(atPath: path) {
+                        return path
+                    }
+                }
+            }
+        }
+        return nil
+    }
+    
+    public func readSpotlightAudioMetadata(filePath: String) -> (bpm: Double?, key: String?) {
+        let url = URL(fileURLWithPath: filePath)
+        guard let mdItem = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL) else {
+            return (nil, nil)
+        }
+        var bpmResult: Double? = nil
+        if let tempoNum = MDItemCopyAttribute(mdItem, kMDItemTempo) as? Double {
+            bpmResult = tempoNum
+        } else if let tempoInt = MDItemCopyAttribute(mdItem, kMDItemTempo) as? Int {
+            bpmResult = Double(tempoInt)
+        }
+        let keyResult = MDItemCopyAttribute(mdItem, kMDItemKeySignature) as? String
+        return (bpmResult, keyResult)
     }
     
     /// Trouve un morceau de la collection Rekordbox par son chemin de fichier ou nom de fichier
@@ -377,6 +510,7 @@ public class RekordboxService: ObservableObject {
         let cleanPath = filePath.lowercased()
         let decodedPath = (filePath.removingPercentEncoding ?? filePath).lowercased()
         
+        // 1. Recherche dans l'index XML en mémoire
         for track in tracksList {
             if let p = track.filePath?.lowercased() {
                 if p == cleanPath || p == decodedPath || (!cleanPath.isEmpty && p.hasSuffix(cleanPath)) || (!cleanFn.isEmpty && p.hasSuffix(cleanFn)) {
@@ -390,6 +524,46 @@ public class RekordboxService: ObservableObject {
                 }
             }
         }
+        
+        // 2. Recherche dans les dossiers musicaux locaux (REVR BIBLIOTHEQUE, etc.)
+        let allLocal = getCachedLocalFiles()
+        for item in allLocal {
+            let lower = item.fileName.lowercased()
+            if (!cleanFn.isEmpty && (lower == cleanFn || lower == decodedFn)) ||
+               (!cleanPath.isEmpty && (item.dir.lowercased() + "/" + lower == cleanPath || item.dir.lowercased() + "/" + lower == decodedPath)) {
+                let fullPath = "\(item.dir)/\(item.fileName)"
+                let parsed = Track.parseSmartArtistAndTitle(rawString: item.fileName)
+                let (mdBpm, mdKey) = readSpotlightAudioMetadata(filePath: fullPath)
+                return Track(
+                    id: "local-\(abs(item.fileName.hashValue))",
+                    title: parsed.title,
+                    artist: parsed.artist ?? "",
+                    bpm: mdBpm ?? 0.0,
+                    rawKey: mdKey ?? "",
+                    filePath: fullPath,
+                    fileName: item.fileName,
+                    portableId: fullPath
+                )
+            }
+        }
+        
+        // 3. Si le chemin physique existe directement sur le disque
+        if !filePath.isEmpty && FileManager.default.fileExists(atPath: filePath) {
+            let fName = (filePath as NSString).lastPathComponent
+            let parsed = Track.parseSmartArtistAndTitle(rawString: fName)
+            let (mdBpm, mdKey) = readSpotlightAudioMetadata(filePath: filePath)
+            return Track(
+                id: "local-\(abs(filePath.hashValue))",
+                title: parsed.title,
+                artist: parsed.artist ?? "",
+                bpm: mdBpm ?? 0.0,
+                rawKey: mdKey ?? "",
+                filePath: filePath,
+                fileName: fName,
+                portableId: filePath
+            )
+        }
+        
         return nil
     }
     
@@ -400,30 +574,73 @@ public class RekordboxService: ObservableObject {
         let cleanArtist = FavoriteCombosService.normalize(artist)
         guard !cleanTitle.isEmpty else { return nil }
         
-        // 1. Correspondance exacte titre + artiste
+        let cleanBaseTitle = FavoriteCombosService.normalize(Track.extractBaseTitle(title))
+        
+        // SCÉNARIO A : L'artiste est renseigné (ex: "doechii")
+        // Règle d'or : On n'accepte QUE les morceaux dont l'artiste concorde !
+        // Interdiction absolue de faire correspondre Doechii avec Soft Cell ou tout autre artiste différent.
         if !cleanArtist.isEmpty {
+            // 1. Correspondance exacte Titre + Artiste
+            for track in tracksList {
+                let aNorm = FavoriteCombosService.normalize(track.displayArtist)
+                guard !aNorm.isEmpty && (aNorm == cleanArtist || aNorm.contains(cleanArtist) || cleanArtist.contains(aNorm)) else {
+                    continue
+                }
+                let tNorm = FavoriteCombosService.normalize(track.displayTitle)
+                if tNorm == cleanTitle {
+                    return track
+                }
+            }
+            
+            // 2. Correspondance Base Titre + Artiste (ex: version remix/edit vs version originale)
+            if cleanBaseTitle.count >= 3 {
+                for track in tracksList {
+                    let aNorm = FavoriteCombosService.normalize(track.displayArtist)
+                    guard !aNorm.isEmpty && (aNorm == cleanArtist || aNorm.contains(cleanArtist) || cleanArtist.contains(aNorm)) else {
+                        continue
+                    }
+                    let candBaseTitle = FavoriteCombosService.normalize(Track.extractBaseTitle(track.displayTitle))
+                    if candBaseTitle == cleanBaseTitle {
+                        return track
+                    }
+                }
+            }
+            
+            // 3. Correspondance Préfixe de Titre + Artiste (ex: "What It Is" avec "What It Is (Soulely Edit)")
+            if cleanBaseTitle.count >= 4 {
+                for track in tracksList {
+                    let aNorm = FavoriteCombosService.normalize(track.displayArtist)
+                    guard !aNorm.isEmpty && (aNorm == cleanArtist || aNorm.contains(cleanArtist) || cleanArtist.contains(aNorm)) else {
+                        continue
+                    }
+                    let tNorm = FavoriteCombosService.normalize(track.displayTitle)
+                    let candBaseTitle = FavoriteCombosService.normalize(Track.extractBaseTitle(track.displayTitle))
+                    if tNorm.hasPrefix(cleanBaseTitle) || cleanTitle.hasPrefix(candBaseTitle) {
+                        return track
+                    }
+                }
+            }
+            
+            // Artiste spécifié mais aucune concordance fiable trouvée dans le XML
+            return nil
+        }
+        
+        // SCÉNARIO B : Aucun artiste n'a été fourni ou détecté
+        // 1. Correspondance exacte du titre complet
+        if cleanTitle.count >= 3 {
             for track in tracksList {
                 let tNorm = FavoriteCombosService.normalize(track.displayTitle)
-                let aNorm = FavoriteCombosService.normalize(track.displayArtist)
-                if tNorm == cleanTitle && (aNorm == cleanArtist || aNorm.contains(cleanArtist) || cleanArtist.contains(aNorm)) {
+                if tNorm == cleanTitle {
                     return track
                 }
             }
         }
         
-        // 2. Correspondance exacte titre
-        for track in tracksList {
-            let tNorm = FavoriteCombosService.normalize(track.displayTitle)
-            if tNorm == cleanTitle {
-                return track
-            }
-        }
-        
-        // 3. Correspondance partielle si titre assez long (ex: remix ou version radio)
-        if cleanTitle.count >= 4 {
+        // 2. Correspondance stricte de la base du titre (au moins 5 caractères)
+        if cleanBaseTitle.count >= 5 {
             for track in tracksList {
-                let tNorm = FavoriteCombosService.normalize(track.displayTitle)
-                if tNorm.contains(cleanTitle) || cleanTitle.contains(tNorm) {
+                let candBaseTitle = FavoriteCombosService.normalize(Track.extractBaseTitle(track.displayTitle))
+                if candBaseTitle == cleanBaseTitle {
                     return track
                 }
             }
@@ -439,12 +656,29 @@ public class RekordboxService: ObservableObject {
         }
         let cleanTitle = FavoriteCombosService.normalize(track.displayTitle)
         let cleanArtist = FavoriteCombosService.normalize(track.displayArtist)
+        let cleanBase = FavoriteCombosService.normalize(Track.extractBaseTitle(track.displayTitle))
         
-        for candidate in tracksList {
-            if FavoriteCombosService.normalize(candidate.displayTitle) == cleanTitle {
-                if cleanArtist.isEmpty || FavoriteCombosService.normalize(candidate.displayArtist) == cleanArtist {
+        // 1. Si artiste présent : recherche avec correspondance d'artiste impérative
+        if !cleanArtist.isEmpty {
+            for candidate in tracksList {
+                let aNorm = FavoriteCombosService.normalize(candidate.displayArtist)
+                guard !aNorm.isEmpty && (aNorm == cleanArtist || aNorm.contains(cleanArtist) || cleanArtist.contains(aNorm)) else {
+                    continue
+                }
+                let tNorm = FavoriteCombosService.normalize(candidate.displayTitle)
+                let candBase = FavoriteCombosService.normalize(Track.extractBaseTitle(candidate.displayTitle))
+                if tNorm == cleanTitle || (cleanBase.count >= 3 && cleanBase == candBase) {
                     return candidate.portableId
                 }
+            }
+            return nil
+        }
+        
+        // 2. Si pas d'artiste
+        for candidate in tracksList {
+            let tNorm = FavoriteCombosService.normalize(candidate.displayTitle)
+            if tNorm == cleanTitle {
+                return candidate.portableId
             }
         }
         return nil
@@ -605,10 +839,12 @@ public class RekordboxService: ObservableObject {
             
             // Enrichissement via la collection Rekordbox XML si disponible
             if let rbFound = findTrack(title: parsed.title, artist: parsed.artist ?? "") {
+                let resolvedTitle = !parsed.title.isEmpty ? parsed.title : rbFound.title
+                let resolvedArtist = (parsed.artist != nil && !parsed.artist!.isEmpty) ? parsed.artist! : rbFound.artist
                 let tr = Track(
                     id: "rb-deck-\(deckNum)-\(rbFound.id)",
-                    title: rbFound.title,
-                    artist: rbFound.artist,
+                    title: resolvedTitle,
+                    artist: resolvedArtist,
                     bpm: bpmVal > 0 ? bpmVal : rbFound.bpm,
                     rawKey: !keyStr.isEmpty ? keyStr : rbFound.rawKey,
                     filePath: rbFound.filePath,
@@ -619,14 +855,26 @@ public class RekordboxService: ObservableObject {
                 return (tr, elapsedSec)
             }
             
+            // Si non trouvé dans le XML, tentative de localiser le fichier audio sur le disque
+            let localPath = resolveLocalAudioFilePath(rawTitle: rawTitle, title: parsed.title)
+            let resolvedFileName = localPath != nil ? (localPath! as NSString).lastPathComponent : rawTitle
+            
+            var finalBpm = bpmVal
+            var finalKey = keyStr
+            if (finalBpm <= 0 || finalKey.isEmpty), let lp = localPath {
+                let (mdBpm, mdKey) = readSpotlightAudioMetadata(filePath: lp)
+                if finalBpm <= 0, let b = mdBpm { finalBpm = b }
+                if finalKey.isEmpty, let k = mdKey { finalKey = k }
+            }
+            
             let tr = Track(
                 id: "rb-deck-\(deckNum)-\(abs(rawTitle.hashValue))",
                 title: parsed.title,
                 artist: parsed.artist ?? "",
-                bpm: bpmVal,
-                rawKey: keyStr,
-                filePath: nil,
-                fileName: rawTitle,
+                bpm: finalBpm,
+                rawKey: finalKey,
+                filePath: localPath,
+                fileName: resolvedFileName,
                 portableId: rawTitle,
                 deck: deckNum
             )
@@ -686,7 +934,9 @@ public class RekordboxService: ObservableObject {
                 title: d1.track.displayTitle,
                 artist: d1.track.artist,
                 fileName: d1.track.fileName,
-                durationSeconds: Double(d1.elapsedSec)
+                durationSeconds: Double(d1.elapsedSec),
+                bpm: d1.track.bpm,
+                rawKey: d1.track.rawKey
             )
         }
         if let d2 = d2Info, d2.elapsedSec >= threshold {
@@ -694,7 +944,9 @@ public class RekordboxService: ObservableObject {
                 title: d2.track.displayTitle,
                 artist: d2.track.artist,
                 fileName: d2.track.fileName,
-                durationSeconds: Double(d2.elapsedSec)
+                durationSeconds: Double(d2.elapsedSec),
+                bpm: d2.track.bpm,
+                rawKey: d2.track.rawKey
             )
         }
         
@@ -750,6 +1002,7 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
                 guard let trackId = attributeDict["TrackID"], !trackId.isEmpty else { return }
                 let name = sanitizeEncoding(attributeDict["Name"] ?? "")
                 let artist = sanitizeEncoding(attributeDict["Artist"] ?? "")
+                let genre = sanitizeEncoding(attributeDict["Genre"] ?? "")
                 let bpm = Double(attributeDict["AverageBpm"] ?? "") ?? 0.0
                 let tonality = attributeDict["Tonality"] ?? ""
                 let location = attributeDict["Location"] ?? ""
@@ -765,7 +1018,8 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
                     rawKey: tonality,
                     filePath: resolvedPath.isEmpty ? nil : resolvedPath,
                     fileName: fileName,
-                    portableId: trackId
+                    portableId: trackId,
+                    genre: genre
                 )
                 
                 tracksById[trackId] = track

@@ -58,7 +58,7 @@ cat << 'EOF' > "$CONTENTS_DIR/Info.plist"
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.0.1</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
@@ -75,13 +75,13 @@ EOF
 echo "APPL????" > "$CONTENTS_DIR/PkgInfo"
 
 # Signature ad-hoc propre du bundle complet pour TCC et Accessibilité macOS
-echo "🔏 Signature de $APP_NAME.app..."
-codesign --force --deep --sign - "$APP_BUNDLE"
+echo "🔏 Signature de $APP_NAME.app avec designated requirement stable..."
+codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' "$APP_BUNDLE"
 
 # Installation optionnelle dans /Applications
 rm -rf /Applications/Recall.app 2>/dev/null || true
 cp -R "$APP_BUNDLE" /Applications/Recall.app 2>/dev/null || true
-codesign --force --deep --sign - /Applications/Recall.app
+codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' /Applications/Recall.app
 
 echo "✅ Recall.app créé avec succès dans :"
 echo "   $APP_BUNDLE"

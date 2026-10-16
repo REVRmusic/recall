@@ -23,6 +23,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         windowController.show()
         NSApp.activate(ignoringOtherApps: true)
         
+        // Enregistrement des raccourcis clavier globaux système (Hotkeys)
+        GlobalHotKeyService.shared.updateRegistrations(preset: UserSettings.shared.hotKeyPreset)
+        
         // Surveillance active
         SeratoMonitorService.shared.startMonitoring()
         
@@ -137,6 +140,26 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         let fileMenuItem = NSMenuItem()
         let fileMenu = NSMenu(title: "Fichier")
         
+        let tracklistItem = NSMenuItem(
+            title: "Générateur de Tracklist…",
+            action: #selector(openTracklistGeneratorAction),
+            keyEquivalent: "T"
+        )
+        tracklistItem.keyEquivalentModifierMask = [.command, .shift]
+        tracklistItem.target = self
+        fileMenu.addItem(tracklistItem)
+        
+        let setRecapItem = NSMenuItem(
+            title: "Statistiques du Mix (Set Recap)…",
+            action: #selector(openSetRecapAction),
+            keyEquivalent: "S"
+        )
+        setRecapItem.keyEquivalentModifierMask = [.command, .shift]
+        setRecapItem.target = self
+        fileMenu.addItem(setRecapItem)
+        
+        fileMenu.addItem(NSMenuItem.separator())
+        
         let closeWindowItem = NSMenuItem(
             title: "Fermer la fenêtre",
             action: #selector(closeWindowAction),
@@ -196,6 +219,31 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         togglePinItem.target = self
         windowMenu.addItem(togglePinItem)
         
+        windowMenu.addItem(NSMenuItem.separator())
+        
+        // Sous-menu Thème DJ
+        let themeSubmenuItem = NSMenuItem(title: "Thème DJ", action: nil, keyEquivalent: "")
+        let themeMenu = NSMenu(title: "Thème DJ")
+        
+        let cyanItem = NSMenuItem(title: "Cyan Neon (Défaut)", action: #selector(setThemeCyanNeonAction), keyEquivalent: "")
+        cyanItem.target = self
+        themeMenu.addItem(cyanItem)
+        
+        let purpleItem = NSMenuItem(title: "Electric Purple", action: #selector(setThemeElectricPurpleAction), keyEquivalent: "")
+        purpleItem.target = self
+        themeMenu.addItem(purpleItem)
+        
+        let amberItem = NSMenuItem(title: "Sunset Amber", action: #selector(setThemeSunsetAmberAction), keyEquivalent: "")
+        amberItem.target = self
+        themeMenu.addItem(amberItem)
+        
+        let greenItem = NSMenuItem(title: "Acid Green", action: #selector(setThemeAcidGreenAction), keyEquivalent: "")
+        greenItem.target = self
+        themeMenu.addItem(greenItem)
+        
+        themeSubmenuItem.submenu = themeMenu
+        windowMenu.addItem(themeSubmenuItem)
+        
         windowMenuItem.submenu = windowMenu
         mainMenu.addItem(windowMenuItem)
         NSApp.windowsMenu = windowMenu
@@ -225,7 +273,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(NSMenuItem.separator())
         
         let websiteItem = NSMenuItem(
-            title: "Site officiel (mixify.fr)",
+            title: "Site officiel",
             action: #selector(openWebsiteAction),
             keyEquivalent: ""
         )
@@ -254,14 +302,20 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
     
+    @objc private func openTracklistGeneratorAction() {
+        TracklistGeneratorWindowController.shared.show()
+    }
+    
+    @objc private func openSetRecapAction() {
+        SetRecapWindowController.shared.show()
+    }
+    
     @objc private func checkForUpdatesAction() {
-        SettingsWindowController.shared.show()
-        AutoUpdateService.shared.checkForUpdatesManually()
-        NSApp.activate(ignoringOtherApps: true)
+        UpdateWindowController.shared.show()
     }
     
     @objc private func openFeedbackWebsiteAction() {
-        if let url = URL(string: "https://mixify.fr/?feedback=1&source=app_macos") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -279,7 +333,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         let response = alert.runModal()
         if response == .alertSecondButtonReturn {
-            if let url = URL(string: "https://mixify.fr") {
+            if let url = URL(string: "https://revrmusic.github.io/recall/") {
                 NSWorkspace.shared.open(url)
             }
         } else if response == .alertThirdButtonReturn {
@@ -290,7 +344,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func closeWindowAction() {
-        if SettingsWindowController.shared.isVisible {
+        if SetRecapWindowController.shared.isVisible {
+            SetRecapWindowController.shared.closeWindow()
+        } else if TracklistGeneratorWindowController.shared.isVisible {
+            TracklistGeneratorWindowController.shared.closeWindow()
+        } else if UpdateWindowController.shared.isVisible {
+            UpdateWindowController.shared.closeWindow()
+        } else if SettingsWindowController.shared.isVisible {
             SettingsWindowController.shared.closeWindow()
         } else {
             FloatingWindowController.shared.window?.orderOut(nil)
@@ -311,8 +371,24 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         FloatingWindowController.shared.updateAlwaysOnTop(UserSettings.shared.alwaysOnTop)
     }
     
+    @objc private func setThemeCyanNeonAction() {
+        UserSettings.shared.djTheme = .cyanNeon
+    }
+    
+    @objc private func setThemeElectricPurpleAction() {
+        UserSettings.shared.djTheme = .electricPurple
+    }
+    
+    @objc private func setThemeSunsetAmberAction() {
+        UserSettings.shared.djTheme = .sunsetAmber
+    }
+    
+    @objc private func setThemeAcidGreenAction() {
+        UserSettings.shared.djTheme = .acidGreen
+    }
+    
     @objc private func openWebsiteAction() {
-        if let url = URL(string: "https://mixify.fr") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -332,6 +408,14 @@ extension AppDelegate: NSMenuItemValidation {
             menuItem.state = UserSettings.shared.isCompactMode ? .on : .off
         } else if menuItem.action == #selector(toggleAlwaysOnTopAction) {
             menuItem.state = UserSettings.shared.alwaysOnTop ? .on : .off
+        } else if menuItem.action == #selector(setThemeCyanNeonAction) {
+            menuItem.state = UserSettings.shared.djTheme == .cyanNeon ? .on : .off
+        } else if menuItem.action == #selector(setThemeElectricPurpleAction) {
+            menuItem.state = UserSettings.shared.djTheme == .electricPurple ? .on : .off
+        } else if menuItem.action == #selector(setThemeSunsetAmberAction) {
+            menuItem.state = UserSettings.shared.djTheme == .sunsetAmber ? .on : .off
+        } else if menuItem.action == #selector(setThemeAcidGreenAction) {
+            menuItem.state = UserSettings.shared.djTheme == .acidGreen ? .on : .off
         }
         return true
     }

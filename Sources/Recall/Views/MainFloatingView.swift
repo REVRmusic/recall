@@ -80,20 +80,19 @@ public struct MainFloatingView: View {
     
     public var body: some View {
         ZStack {
-            // Fond sombre avec verre dépoli ultra moderne épousant rigoureusement tout le cadre
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.darkBg.opacity(0.96))
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(.ultraThinMaterial)
+            // Fond en verre dépoli natif macOS floutant dynamiquement les fenêtres en arrière-plan (Serato, Rekordbox, bureau)
+            VisualEffectBackground(material: .hudWindow, blendingMode: .behindWindow, state: .active)
+                .overlay(
+                    Color.darkBg.opacity(settings.glassOpacity)
                 )
+                .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(
                             LinearGradient(
                                 colors: [
                                     Color.white.opacity(0.20),
-                                    Color.accentCyan.opacity(0.18),
+                                    settings.accentColor.opacity(0.22),
                                     Color.white.opacity(0.06)
                                 ],
                                 startPoint: .topLeading,
@@ -103,7 +102,7 @@ public struct MainFloatingView: View {
                         )
                 )
             
-            // Vue de réception AppKit native assurant 100% de fiabilité lors d'un glisser depuis Serato
+            // Vue de réception AppKit native assurant 100% de fiabilité lors d'un glisser depuis Serato ou Rekordbox
             RecallDropTargetViewRepresentable(
                 onDropURLs: { urls in
                     for url in urls {
@@ -114,6 +113,7 @@ public struct MainFloatingView: View {
                     toPlayService.isDraggingFileOver = isOver
                 }
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             if settings.isCompactMode {
                 // Mode bandeau compact ouvert sur la droite de l'écran
@@ -232,6 +232,9 @@ public struct MainFloatingView: View {
         }
         .sheet(isPresented: $showGuide) {
             GuideSheetView()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .recallTriggerSearch)) { _ in
+            showSearch = true
         }
     }
 }

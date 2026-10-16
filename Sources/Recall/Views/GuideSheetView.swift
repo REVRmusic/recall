@@ -172,16 +172,24 @@ public struct GuideSheetView: View {
                                     desc: "Même tonalité. Transition totalement fluide et imperceptible."
                                 )
                                 bulletPoint(
-                                    boldText: "Parfait (±1, ex: 9A → 8A ou 10A) :",
-                                    desc: "Clé adjacente. Compatibilité harmonique parfaite."
+                                    boldText: "Voisine (±1, ex: 9A → 8A ou 10A) :",
+                                    desc: "Clé adjacente. Compatibilité harmonique naturelle."
                                 )
                                 bulletPoint(
-                                    boldText: "Relatif (A ⇄ B, ex: 9A ⇄ 9B) :",
+                                    boldText: "Relative (A ⇄ B, ex: 9A ⇄ 9B) :",
                                     desc: "Changement de mode Mineur ⇄ Majeur sans dissonance."
                                 )
                                 bulletPoint(
-                                    boldText: "+2 Boost (ex: 9A → 11A) :",
-                                    desc: "Montée d'énergie harmonique pour faire monter l'ambiance."
+                                    boldText: "⚡️ Boost +1/2 Ton (ex: 9A → 4A) :",
+                                    desc: "+1 demi-ton (+7 Camelot) : la montée d'énergie la plus puissante en mix."
+                                )
+                                bulletPoint(
+                                    boldText: "⚡️ Boost +1 Ton (ex: 9A → 11A) :",
+                                    desc: "+1 ton (+2 Camelot) : modulation montante festive et entraînante."
+                                )
+                                bulletPoint(
+                                    boldText: "Diagonale (ex: 9A ⇄ 8B ou 10B) :",
+                                    desc: "Passage modal d'un cran entre Majeur et Mineur."
                                 )
                             }
                         }
@@ -295,6 +303,18 @@ public struct GuideSheetView: View {
                                     boldText: "Bouton Reset en haut ↺ :",
                                     desc: "Cliquez sur l'icône ↺ tout en haut à gauche pour remettre à zéro et démarrer une nouvelle session."
                                 )
+                                bulletPoint(
+                                    boldText: "Générateur de Tracklist (Cmd+Shift+T) :",
+                                    desc: "Exportez à tout moment le sommaire YouTube (00:00 Artiste - Titre), 1001Tracklists, Réseaux sociaux ou playlist M3U8 depuis le menu Fichier ou les Réglages."
+                                )
+                                bulletPoint(
+                                    boldText: "Set Recap & Statistiques (Cmd+Shift+S) :",
+                                    desc: "Consultez en direct vos statistiques de session : durée totale, BPM moyen, tonalité dominante, cadence de mix, enchaînement le plus rapide et top artistes."
+                                )
+                                bulletPoint(
+                                    boldText: "Thèmes DJ & Verre dépoli :",
+                                    desc: "Personnalisez l'ambiance avec 4 thèmes néon (Cyan Neon par défaut, Electric Purple, Sunset Amber, Acid Green) et réglez la transparence du verre dépoli dans les Paramètres (⌘,) ou le menu Fenêtre ➔ Thème DJ."
+                                )
                             }
                             .padding(.top, 2)
                         }
@@ -349,7 +369,7 @@ public struct GuideSheetView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                             
                             Button {
-                                if let url = URL(string: "https://mixify.fr/?feedback=1&source=app_macos") {
+                                if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
                                     NSWorkspace.shared.open(url)
                                 }
                             } label: {

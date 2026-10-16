@@ -315,11 +315,11 @@ public struct SettingsSheetView: View {
                         }
                     }
                     
-                    // SECTION 5 : Format d'affichage des clés Camelot
+                    // SECTION 5 : Harmonie & Clés Camelot
                     settingCard {
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Label {
-                                Text("Format des clés")
+                                Text("Harmonie & Clés Camelot")
                                     .font(.system(size: 11.5, weight: .bold))
                                     .foregroundColor(.white)
                             } icon: {
@@ -336,6 +336,46 @@ public struct SettingsSheetView: View {
                                 ],
                                 selection: $settings.keyDisplayMode
                             )
+                            
+                            Divider()
+                                .background(Color.white.opacity(0.08))
+                                .padding(.vertical, 2)
+                            
+                            HStack {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Sauts d'énergie (Energy Boost)")
+                                        .font(.system(size: 10.5, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.85))
+                                    Text("Inclure les montées +1 demi-ton (+7) et +1 ton (+2)")
+                                        .font(.system(size: 8.5))
+                                        .foregroundColor(.white.opacity(0.45))
+                                }
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: $settings.includeEnergyBoostInHarmonicFilter)
+                                    .toggleStyle(.switch)
+                                    .tint(Color.accentCyan)
+                                    .scaleEffect(0.85)
+                            }
+                            
+                            HStack {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Transitions diagonales modales")
+                                        .font(.system(size: 10.5, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.85))
+                                    Text("Passages entre modes Majeur ⇄ Mineur voisins (ex: 8A ⇄ 9B)")
+                                        .font(.system(size: 8.5))
+                                        .foregroundColor(.white.opacity(0.45))
+                                }
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: $settings.includeDiagonalInHarmonicFilter)
+                                    .toggleStyle(.switch)
+                                    .tint(Color.accentCyan)
+                                    .scaleEffect(0.85)
+                            }
                         }
                     }
                     
@@ -377,7 +417,17 @@ public struct SettingsSheetView: View {
                         }
                     }
                     
-                    // SECTION 6 : Combinaisons mémorisées (Favoris)
+                    // SECTION 6 : Ambiance visuelle (Thèmes DJ & Verre dépoli)
+                    settingCard {
+                        DJThemeSettingsCard()
+                    }
+                    
+                    // SECTION 6.5 : Raccourcis Clavier Globaux (Hotkeys)
+                    settingCard {
+                        HotKeySettingsCard()
+                    }
+                    
+                    // SECTION 7 : Combinaisons mémorisées (Favoris)
                     settingCard {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -729,6 +779,26 @@ public struct SettingsSheetView: View {
                             .padding(.top, 2)
                             
                             SettingActionButton(
+                                icon: "chart.bar.xaxis",
+                                title: "Statistiques du Mix (Set Recap…)"
+                            ) {
+                                SettingsWindowController.shared.closeWindow()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    SetRecapWindowController.shared.show()
+                                }
+                            }
+                            
+                            SettingActionButton(
+                                icon: "list.bullet.rectangle.portrait",
+                                title: "Générateur de Tracklist (YouTube, 1001TL, Réseaux…)"
+                            ) {
+                                SettingsWindowController.shared.closeWindow()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    TracklistGeneratorWindowController.shared.show()
+                                }
+                            }
+                            
+                            SettingActionButton(
                                 icon: "arrow.counterclockwise",
                                 title: "Démarrer une nouvelle session (Reset)"
                             ) {
@@ -853,7 +923,7 @@ public struct SettingsSheetView: View {
                                 icon: "arrow.clockwise",
                                 title: autoUpdate.isChecking ? "Recherche en cours..." : "Rechercher une mise à jour maintenant"
                             ) {
-                                autoUpdate.checkForUpdatesManually()
+                                UpdateWindowController.shared.show()
                             }
                         }
                     }
@@ -892,7 +962,7 @@ public struct SettingsSheetView: View {
                                 icon: "paperplane.fill",
                                 title: "Faire un retour à REVR (Web) ↗"
                             ) {
-                                if let url = URL(string: "https://mixify.fr/?feedback=1&source=app_macos") {
+                                if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
                                     NSWorkspace.shared.open(url)
                                 }
                             }
@@ -1185,6 +1255,8 @@ struct SettingActionButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityIdentifier("setting_btn_\(title)")
         .onHover { isHovered = $0 }
     }
 }

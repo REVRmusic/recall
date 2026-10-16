@@ -179,10 +179,21 @@ public struct DraggableTrackRow: View {
                         }
                         
                         if let rel = track.harmonicRelation, rel.isCompatible, rel != .exact {
-                            Text(rel.badgeText)
-                                .font(.system(size: 6.5, weight: .bold))
-                                .foregroundColor(camelot.color.opacity(0.85))
-                                .lineLimit(1)
+                            HStack(spacing: 1.5) {
+                                if rel.isEnergyBoost {
+                                    Image(systemName: "bolt.fill")
+                                        .font(.system(size: 5.5, weight: .bold))
+                                        .foregroundColor(Color(hex: "#FFB300"))
+                                    Text(rel.badgeText)
+                                        .font(.system(size: 6.5, weight: .heavy))
+                                        .foregroundColor(Color(hex: "#FFB300"))
+                                } else {
+                                    Text(rel.badgeText)
+                                        .font(.system(size: 6.5, weight: .bold))
+                                        .foregroundColor(camelot.color.opacity(0.85))
+                                }
+                            }
+                            .lineLimit(1)
                         }
                     }
                     .padding(.horizontal, 4)
@@ -281,15 +292,19 @@ public struct DraggableTrackRow: View {
             case .exact:
                 tip += " • Même tonalité (harmonie parfaite)"
             case .adjacent:
-                tip += " • Clé adjacente (transition fluide)"
+                tip += " • Clé voisine ±1 (transition fluide)"
             case .relative:
                 tip += " • Clé relative (Majeur ⇄ Mineur)"
-            case .energyBoost:
-                tip += " • +2 Boost d'énergie harmonique"
-            case .energyDrop:
-                tip += " • -2 Descente d'énergie"
+            case .semitoneBoost:
+                tip += " • ⚡️ Energy Boost +1 demi-ton (+7 Camelot) : montée d'énergie explosive"
+            case .wholeToneBoost:
+                tip += " • ⚡️ Energy Boost +1 ton (+2 Camelot) : modulation pop/anthem montante"
+            case .semitoneDrop:
+                tip += " • ❄️ Energy Drop -1 demi-ton (-7 Camelot) : redescente d'énergie"
+            case .diagonal:
+                tip += " • Diagonale modale (voisine Majeur ⇄ Mineur)"
             case .incompatible:
-                tip += " • Clé différente"
+                tip += " • Tonalité différente"
             }
         }
         return tip

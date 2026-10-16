@@ -4,8 +4,17 @@ public extension Color {
     static let darkBg = Color(red: 0.08, green: 0.09, blue: 0.12)
     static let cardBg = Color(red: 0.13, green: 0.14, blue: 0.18)
     static let cardHoverBg = Color(red: 0.18, green: 0.20, blue: 0.25)
-    static let accentCyan = Color(red: 0.0, green: 0.85, blue: 0.90)
-    static let accentBlue = Color(red: 0.20, green: 0.60, blue: 1.0)
+    // Couleurs statiques de référence
+    static let recallCyan = Color(red: 0.0, green: 0.85, blue: 0.90)
+    static let recallBlue = Color(red: 0.20, green: 0.60, blue: 1.0)
+    
+    // Accents dynamiques réactifs synchronisés avec le thème DJ actif choisi par l'utilisateur
+    static var accentCyan: Color {
+        UserSettings.shared.accentColor
+    }
+    static var accentBlue: Color {
+        UserSettings.shared.accentSecondaryColor
+    }
     static let accentPurple = Color(red: 0.65, green: 0.35, blue: 1.0)
     static let accentGreen = Color(red: 0.20, green: 0.85, blue: 0.45)
     static let accentOrange = Color(red: 1.0, green: 0.55, blue: 0.15)

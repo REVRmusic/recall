@@ -1,16 +1,20 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32;
 using Recall.Models;
+using Recall.Services;
 
 namespace Recall
 {
     public partial class SettingsWindow : Window
     {
         private readonly UserSettings _settings = UserSettings.Shared;
+        private readonly AutoUpdateService _autoUpdate = AutoUpdateService.Shared;
 
         public SettingsWindow()
         {
@@ -20,6 +24,7 @@ namespace Recall
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             LoadSettings();
+            CheckInitialUpdateStatus();
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -28,6 +33,53 @@ namespace Recall
             {
                 DragMove();
             }
+        }
+
+        private void CheckInitialUpdateStatus()
+        {
+            TxtVersionInfo.Text = $"Version {_autoUpdate.Version} installée";
+            TxtAppVersionBadge.Text = $"v{_autoUpdate.Version}";
+
+            if (_autoUpdate.IsUpdateAvailable)
+            {
+                TxtUpdateStatus.Text = $"Nouvelle version {_autoUpdate.AvailableVersion} disponible !";
+                TxtUpdateStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#14C8B0"));
+                BtnDownloadUpdate.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                TxtUpdateStatus.Text = $"Recall est à jour (v{_autoUpdate.Version}).";
+                TxtUpdateStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9CA3AF"));
+                BtnDownloadUpdate.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private async void BtnCheckUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            BtnCheckUpdate.IsEnabled = false;
+            TxtUpdateStatus.Text = "Vérification des mises à jour sur GitHub...";
+            TxtUpdateStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9CA3AF"));
+
+            var result = await _autoUpdate.CheckForUpdatesManualAsync();
+
+            BtnCheckUpdate.IsEnabled = true;
+            TxtUpdateStatus.Text = result.message;
+
+            if (result.hasUpdate)
+            {
+                TxtUpdateStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#14C8B0"));
+                BtnDownloadUpdate.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                TxtUpdateStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9CA3AF"));
+                BtnDownloadUpdate.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnDownloadUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            _autoUpdate.OpenDownloadInBrowser();
         }
 
         private void LoadSettings()

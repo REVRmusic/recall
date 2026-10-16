@@ -91,6 +91,9 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
         DispatchQueue.main.async {
             ToPlayService.shared.isDraggingFileOver = false
         }
+        let types = sender.draggingPasteboard.types?.map { $0.rawValue } ?? []
+        let log = "[Recall Drag Operation] types: \(types)\n"
+        try? log.write(toFile: "/tmp/recall_drag_debug.log", atomically: false, encoding: .utf8)
         return ToPlayService.shared.handleDroppedPasteboard(sender.draggingPasteboard, sender: sender)
     }
 }

@@ -29,6 +29,7 @@ public struct Track: Identifiable, Hashable {
     public let fileName: String
     public let portableId: String
     public let deck: String?
+    public let genre: String
     public let playedAt: Date?
     
     // Propriétés spécifiques aux suggestions d'enchaînement
@@ -51,6 +52,7 @@ public struct Track: Identifiable, Hashable {
         fileName: String = "",
         portableId: String = "",
         deck: String? = nil,
+        genre: String = "",
         playedAt: Date? = nil,
         transitionCount: Int = 0,
         matchType: MatchType = .directTransition,
@@ -71,6 +73,7 @@ public struct Track: Identifiable, Hashable {
         self.fileName = fileName
         self.portableId = portableId
         self.deck = deck
+        self.genre = genre
         self.playedAt = playedAt
         self.transitionCount = transitionCount
         self.matchType = matchType

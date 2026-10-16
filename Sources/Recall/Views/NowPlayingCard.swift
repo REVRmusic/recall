@@ -216,7 +216,7 @@ public struct NowPlayingCard: View {
                                 .font(.system(size: 11.5, weight: .bold))
                                 .foregroundColor(.white)
                             
-                            Text("Pour détecter vos platines en direct, cochez Recall dans Réglages Système > Accessibilité.")
+                            Text("Pour détecter vos platines en direct, autorisez Recall dans Réglages Système > Accessibilité (si déjà coché, décochez puis recochez).")
                                 .font(.system(size: 9))
                                 .foregroundColor(.white.opacity(0.65))
                                 .lineLimit(2)
@@ -269,7 +269,7 @@ public struct NowPlayingCard: View {
             }
         }
         .padding(10)
-        .background(Color.cardBg)
+        .background(Color.cardBg.opacity(min(1.0, 0.40 + settings.glassOpacity * 0.55)))
         .cornerRadius(10)
         .overlay(
             RoundedRectangle(cornerRadius: 10)

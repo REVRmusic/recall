@@ -137,27 +137,49 @@ public struct CamelotKey: Hashable, Codable, Equatable {
         }
     }
     
-    /// Évalue la relation harmonique avec une autre clé
+    /// Évalue la relation harmonique avec une autre clé selon la théorie de mixage Camelot avancée
     public func relationship(with other: CamelotKey) -> HarmonicRelation {
         if self == other {
             return .exact
         }
         
-        // Même lettre (A ou B)
-        if self.letter == other.letter {
-            let diff = abs(self.number - other.number)
-            if diff == 1 || diff == 11 {
-                return .adjacent
-            } else if (self.number + 2 - 1) % 12 + 1 == other.number {
-                return .energyBoost
-            } else if (self.number - 2 + 11) % 12 + 1 == other.number {
-                return .energyDrop
-            }
-        }
-        
-        // Clé relative (même chiffre, lettre opposée : ex 9A <-> 9B)
+        // Clé relative directe (ex : 8A <-> 8B, La mineur <-> Do majeur)
         if self.number == other.number && self.letter != other.letter {
             return .relative
+        }
+        
+        let diff = abs(self.number - other.number)
+        
+        // Même mode (Mineur <-> Mineur ou Majeur <-> Majeur)
+        if self.letter == other.letter {
+            // 1. Clé adjacente / voisine (±1 sur la roue, ex: 8A -> 9A ou 8A -> 7A)
+            if diff == 1 || diff == 11 {
+                return .adjacent
+            }
+            
+            // 2. Energy Boost +1 Demi-ton / Half-Step (+7 sur la roue Camelot)
+            // Ex: 8A (Am) -> 3A (Bbm), 9A (Em) -> 4A (Fm), 5B (Eb) -> 12B (E)
+            if (self.number + 7 - 1) % 12 + 1 == other.number {
+                return .semitoneBoost
+            }
+            
+            // 3. Energy Boost +1 Ton entier / Whole-Step (+2 sur la roue Camelot)
+            // Ex: 8A (Am) -> 10A (Bm), 9A (Em) -> 11A (F#m), 8B (C) -> 10B (D)
+            if (self.number + 2 - 1) % 12 + 1 == other.number {
+                return .wholeToneBoost
+            }
+            
+            // 4. Energy Drop -1 Demi-ton (-7 sur la roue = +5)
+            // Ex: 8A (Am) -> 1A (Abm)
+            if (self.number + 5 - 1) % 12 + 1 == other.number {
+                return .semitoneDrop
+            }
+        } else {
+            // Mode opposé (Mineur <-> Majeur)
+            // Transition diagonale modale (ex: 8A -> 9B ou 8A -> 7B)
+            if diff == 1 || diff == 11 {
+                return .diagonal
+            }
         }
         
         return .incompatible
@@ -166,7 +188,7 @@ public struct CamelotKey: Hashable, Codable, Equatable {
     public var isHarmonicallyCompatible: (CamelotKey) -> Bool {
         return { other in
             let rel = self.relationship(with: other)
-            return rel == .exact || rel == .adjacent || rel == .relative || rel == .energyBoost
+            return rel.isCompatible
         }
     }
     
@@ -210,25 +232,59 @@ public struct CamelotKey: Hashable, Codable, Equatable {
     }
 }
 
-public enum HarmonicRelation: String, CaseIterable {
+public enum HarmonicRelation: String, CaseIterable, Codable {
     case exact = "Même clé"
-    case adjacent = "±1 Adjacent"
+    case adjacent = "±1 Voisine"
     case relative = "Relative (Maj/Min)"
-    case energyBoost = "+2 Boost d'énergie"
-    case energyDrop = "-2 Drop d'énergie"
+    case semitoneBoost = "+1 Demi-ton (Boost +7)"
+    case wholeToneBoost = "+1 Ton (Boost +2)"
+    case semitoneDrop = "-1 Demi-ton (Drop -7)"
+    case diagonal = "Diagonale (±1 Maj/Min)"
     case incompatible = "Différente"
     
+    // Alias rétro-compatibles
+    public static var energyBoost: HarmonicRelation { return .wholeToneBoost }
+    public static var energyDrop: HarmonicRelation { return .semitoneDrop }
+    
     public var isCompatible: Bool {
-        return self == .exact || self == .adjacent || self == .relative || self == .energyBoost
+        switch self {
+        case .exact, .adjacent, .relative:
+            return true
+        case .semitoneBoost, .wholeToneBoost:
+            return UserSettings.shared.includeEnergyBoostInHarmonicFilter
+        case .diagonal:
+            return UserSettings.shared.includeDiagonalInHarmonicFilter
+        case .semitoneDrop, .incompatible:
+            return false
+        }
+    }
+    
+    public var isEnergyBoost: Bool {
+        return self == .semitoneBoost || self == .wholeToneBoost
     }
     
     public var badgeText: String {
         switch self {
         case .exact: return "Identique"
-        case .adjacent: return "Parfait"
-        case .relative: return "Relatif"
-        case .energyBoost: return "+2 Boost"
-        case .energyDrop: return "-2 Drop"
+        case .adjacent: return "±1 Pas"
+        case .relative: return "Relative"
+        case .semitoneBoost: return "+1/2 Ton"
+        case .wholeToneBoost: return "+1 Ton"
+        case .semitoneDrop: return "-1/2 Ton"
+        case .diagonal: return "Diagonale"
+        case .incompatible: return ""
+        }
+    }
+    
+    public var shortBadgeText: String {
+        switch self {
+        case .exact: return "="
+        case .adjacent: return "±1"
+        case .relative: return "Rel"
+        case .semitoneBoost: return "+1/2"
+        case .wholeToneBoost: return "+1T"
+        case .semitoneDrop: return "-1/2"
+        case .diagonal: return "Diag"
         case .incompatible: return ""
         }
     }

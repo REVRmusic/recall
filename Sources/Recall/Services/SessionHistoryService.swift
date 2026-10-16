@@ -11,6 +11,9 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
     public let playedAt: Date
     public let durationSeconds: Double
     public let playCount: Int
+    public let bpm: Double
+    public let rawKey: String
+    public let genre: String
     
     public init(
         id: String = UUID().uuidString,
@@ -19,7 +22,10 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         fileName: String = "",
         playedAt: Date = Date(),
         durationSeconds: Double = 0.0,
-        playCount: Int = 1
+        playCount: Int = 1,
+        bpm: Double = 0.0,
+        rawKey: String = "",
+        genre: String = ""
     ) {
         self.id = id
         self.title = title
@@ -28,6 +34,87 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         self.playedAt = playedAt
         self.durationSeconds = durationSeconds
         self.playCount = playCount
+        self.bpm = bpm
+        self.rawKey = rawKey
+        self.genre = genre
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        artist = (try? container.decode(String.self, forKey: .artist)) ?? ""
+        fileName = (try? container.decode(String.self, forKey: .fileName)) ?? ""
+        playedAt = try container.decode(Date.self, forKey: .playedAt)
+        durationSeconds = (try? container.decode(Double.self, forKey: .durationSeconds)) ?? 0.0
+        playCount = (try? container.decode(Int.self, forKey: .playCount)) ?? 1
+        bpm = (try? container.decode(Double.self, forKey: .bpm)) ?? 0.0
+        rawKey = (try? container.decode(String.self, forKey: .rawKey)) ?? ""
+        genre = (try? container.decode(String.self, forKey: .genre)) ?? ""
+    }
+    
+    public var camelotKey: CamelotKey? {
+        return CamelotKey.parse(rawKey)
+    }
+    
+    public var smartParsed: (artist: String?, title: String) {
+        let trimmedArtist = artist.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedArtist.isEmpty &&
+           trimmedArtist.lowercased() != "artiste inconnu" &&
+           trimmedArtist.lowercased() != "unknown artist" &&
+           trimmedArtist.lowercased() != "unknown" {
+            let directTitle = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
+                title.trimmingCharacters(in: .whitespacesAndNewlines) :
+                (!fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
+                    (fileName as NSString).deletingPathExtension : "Morceau inconnu")
+            return (trimmedArtist, directTitle)
+        }
+        
+        let sourceString = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
+            title : (!fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
+                (fileName as NSString).deletingPathExtension : "")
+        
+        return Track.parseSmartArtistAndTitle(rawString: sourceString)
+    }
+    
+    public var displayTitle: String {
+        let parsed = smartParsed
+        if !parsed.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return parsed.title
+        }
+        if !fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return (fileName as NSString).deletingPathExtension
+        }
+        return title.isEmpty ? "Morceau inconnu" : title
+    }
+    
+    public var displayArtist: String {
+        let parsed = smartParsed
+        if let art = parsed.artist, !art.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return art
+        }
+        if !artist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return artist
+        }
+        return ""
+    }
+    
+    public var displayBpm: String {
+        if bpm <= 0 { return "--" }
+        if abs(bpm.rounded() - bpm) < 0.05 {
+            return "\(Int(bpm.rounded()))"
+        }
+        return String(format: "%.1f", bpm)
+    }
+    
+    public var displayKey: String {
+        if let camelot = camelotKey {
+            return camelot.displayText(mode: UserSettings.shared.keyDisplayMode)
+        }
+        if !rawKey.isEmpty {
+            return rawKey
+        }
+        return "--"
     }
 }
 
@@ -117,7 +204,15 @@ public class SessionHistoryService: ObservableObject {
     }
     
     /// Enregistre un morceau confirmé comme ayant été joué pendant la session (utilisé pour Rekordbox et les ajouts directs)
-    public func recordPlayedTrack(title: String, artist: String = "", fileName: String = "", durationSeconds: Double = 30.0) {
+    public func recordPlayedTrack(
+        title: String,
+        artist: String = "",
+        fileName: String = "",
+        durationSeconds: Double = 30.0,
+        bpm: Double = 0.0,
+        rawKey: String = "",
+        genre: String = ""
+    ) {
         let norm = FavoriteCombosService.normalize(title)
         guard !norm.isEmpty else { return }
         
@@ -132,11 +227,14 @@ public class SessionHistoryService: ObservableObject {
             playedTracks[idx] = SessionPlayedTrack(
                 id: existing.id,
                 title: existing.title,
-                artist: existing.artist,
-                fileName: existing.fileName,
+                artist: !artist.isEmpty ? artist : existing.artist,
+                fileName: !fileName.isEmpty ? fileName : existing.fileName,
                 playedAt: now,
                 durationSeconds: max(existing.durationSeconds, durationSeconds),
-                playCount: existing.playCount + 1
+                playCount: existing.playCount + 1,
+                bpm: bpm > 0 ? bpm : existing.bpm,
+                rawKey: !rawKey.isEmpty ? rawKey : existing.rawKey,
+                genre: !genre.isEmpty ? genre : existing.genre
             )
         } else {
             let newPlayed = SessionPlayedTrack(
@@ -146,7 +244,10 @@ public class SessionHistoryService: ObservableObject {
                 fileName: fileName,
                 playedAt: now,
                 durationSeconds: durationSeconds,
-                playCount: 1
+                playCount: 1,
+                bpm: bpm,
+                rawKey: rawKey,
+                genre: genre
             )
             playedTracks.insert(newPlayed, at: 0)
         }
@@ -171,7 +272,7 @@ public class SessionHistoryService: ObservableObject {
             // Un morceau est considéré "JOUÉ" uniquement s'il a tourné pendant au moins thresholdSeconds
             // (ou s'il a le flag 'played == 1' ET au moins playedFlagThreshold de lecture).
             // Les morceaux chargés puis éjectés après une brève pré-écoute au casque sont rejetés.
-            var validPlaysByTitle: [String: (title: String, artist: String, fileName: String, lastTime: Date, maxDuration: Double, count: Int)] = [:]
+            var validPlaysByTitle: [String: (title: String, artist: String, fileName: String, bpm: Double, rawKey: String, genre: String, lastTime: Date, maxDuration: Double, count: Int)] = [:]
             
             for entry in rawEntries {
                 let duration = entry.durationSeconds
@@ -194,12 +295,18 @@ public class SessionHistoryService: ObservableObject {
                     existing.lastTime = max(existing.lastTime, entry.startTime)
                     existing.maxDuration = max(existing.maxDuration, duration)
                     existing.count += 1
+                    if existing.bpm <= 0 && entry.bpm > 0 { existing.bpm = entry.bpm }
+                    if existing.rawKey.isEmpty && !entry.rawKey.isEmpty { existing.rawKey = entry.rawKey }
+                    if existing.genre.isEmpty && !entry.genre.isEmpty { existing.genre = entry.genre }
                     validPlaysByTitle[norm] = existing
                 } else {
                     validPlaysByTitle[norm] = (
                         title: entry.title,
                         artist: entry.artist,
                         fileName: entry.fileName,
+                        bpm: entry.bpm,
+                        rawKey: entry.rawKey,
+                        genre: entry.genre,
                         lastTime: entry.startTime,
                         maxDuration: duration,
                         count: 1
@@ -216,7 +323,10 @@ public class SessionHistoryService: ObservableObject {
                         fileName: val.fileName,
                         playedAt: val.lastTime,
                         durationSeconds: val.maxDuration,
-                        playCount: val.count
+                        playCount: val.count,
+                        bpm: val.bpm,
+                        rawKey: val.rawKey,
+                        genre: val.genre
                     )
                 }
                 .sorted { $0.playedAt > $1.playedAt }

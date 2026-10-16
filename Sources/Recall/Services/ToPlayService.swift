@@ -480,10 +480,14 @@ public class ToPlayService: ObservableObject {
             harmonicBonus = 0.020
         case .relative:
             harmonicBonus = 0.018
-        case .energyBoost:
+        case .semitoneBoost:
+            harmonicBonus = 0.017
+        case .wholeToneBoost:
+            harmonicBonus = 0.015
+        case .diagonal:
             harmonicBonus = 0.012
-        case .energyDrop:
-            harmonicBonus = 0.006
+        case .semitoneDrop:
+            harmonicBonus = 0.008
         case .incompatible, .none:
             harmonicBonus = 0.0
         }
@@ -637,19 +641,30 @@ public class ToPlayService: ObservableObject {
             let promiseQueue = OperationQueue()
             promiseQueue.qualityOfService = .userInitiated
             
-            var matchedImmediately = false
             for receiver in receivers {
                 // Correspondance ultra-rapide immédiate via les noms de fichiers promis
                 for promisedName in receiver.fileNames {
                     if let rbTrack = RekordboxService.shared.findTrackByFile(filePath: "", fileName: promisedName) {
                         _ = addTrack(rbTrack)
-                        matchedImmediately = true
                         addedAny = true
                     } else {
                         let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
                         if let sTrack = seratoService.findTrackByFile(filePath: "", fileName: promisedName) {
                             _ = addTrack(sTrack)
-                            matchedImmediately = true
+                            addedAny = true
+                        } else {
+                            // Création visuelle instantanée pour réactivité UI immédiate (sub-milliseconde)
+                            let parsed = Track.parseSmartArtistAndTitle(rawString: (promisedName as NSString).deletingPathExtension)
+                            let provisionalTrack = Track(
+                                title: parsed.title,
+                                artist: parsed.artist ?? "",
+                                bpm: 0.0,
+                                rawKey: "",
+                                filePath: nil,
+                                fileName: promisedName,
+                                portableId: promisedName
+                            )
+                            _ = addTrack(provisionalTrack)
                             addedAny = true
                         }
                     }
@@ -661,12 +676,13 @@ public class ToPlayService: ObservableObject {
                         if let error = error {
                             print("[Recall] Erreur réception file promise Rekordbox: \(error.localizedDescription)")
                         } else {
-                            self?.addTrack(fromURL: fileURL, isSilentIfAlreadyPresent: matchedImmediately)
+                            self?.addTrack(fromURL: fileURL, isSilentIfAlreadyPresent: true)
                         }
                     }
                 }
             }
-            if addedAny { return true }
+            // CRUCIAL : TOUJOURS renvoyer true pour confirmer le drop à macOS et Rekordbox
+            return true
         }
         
         // 6. Promesses de fichiers historiques pour compatibilité rétroactive
@@ -680,18 +696,31 @@ public class ToPlayService: ObservableObject {
                         if addTrack(fromURL: fileURL) {
                             addedAny = true
                         }
-                    } else if let rbTrack = RekordboxService.shared.findTrackByFile(filePath: "", fileName: name) {
+                    } else if let rbTrack = RekordboxService.shared.findTrackByFile(filePath: fileURL.path, fileName: name) {
                         _ = addTrack(rbTrack)
                         addedAny = true
                     } else {
                         let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
-                        if let sTrack = seratoService.findTrackByFile(filePath: "", fileName: name) {
+                        if let sTrack = seratoService.findTrackByFile(filePath: fileURL.path, fileName: name) {
                             _ = addTrack(sTrack)
+                            addedAny = true
+                        } else {
+                            let parsed = Track.parseSmartArtistAndTitle(rawString: (name as NSString).deletingPathExtension)
+                            let provisionalTrack = Track(
+                                title: parsed.title,
+                                artist: parsed.artist ?? "",
+                                bpm: 0.0,
+                                rawKey: "",
+                                filePath: fileURL.path,
+                                fileName: name,
+                                portableId: fileURL.path
+                            )
+                            _ = addTrack(provisionalTrack)
                             addedAny = true
                         }
                     }
                 }
-                if addedAny { return true }
+                return true
             }
         }
         
@@ -764,23 +793,40 @@ public class ToPlayService: ObservableObject {
         var added = false
         
         // 1. Désérialisation Plist (format binaire ou XML Apple)
-        if let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
-            if let tracksDict = plist["Tracks"] as? [String: [String: Any]] {
-                for (_, trackInfo) in tracksDict {
-                    if let location = trackInfo["Location"] as? String, let url = URL(string: location) {
-                        let fileURL = URL(fileURLWithPath: url.path)
-                        if addTrack(fromURL: fileURL) {
+        if let rawObj = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) {
+            if let plist = rawObj as? [String: Any] {
+                if let tracksDict = plist["Tracks"] as? [String: [String: Any]] {
+                    for (_, trackInfo) in tracksDict {
+                        if let location = trackInfo["Location"] as? String, let url = URL(string: location) {
+                            let fileURL = URL(fileURLWithPath: url.path)
+                            if addTrack(fromURL: fileURL) {
+                                added = true
+                                continue
+                            }
+                        }
+                        let title = trackInfo["Name"] as? String ?? ""
+                        let artist = trackInfo["Artist"] as? String ?? ""
+                        if !title.isEmpty && lookupAndAddTrack(title: title, artist: artist) {
                             added = true
-                            continue
                         }
                     }
-                    let title = trackInfo["Name"] as? String ?? ""
-                    let artist = trackInfo["Artist"] as? String ?? ""
-                    if !title.isEmpty && lookupAndAddTrack(title: title, artist: artist) {
-                        added = true
+                } else if let tracksList = plist["Tracks"] as? [[String: Any]] {
+                    for trackInfo in tracksList {
+                        if let location = trackInfo["Location"] as? String, let url = URL(string: location) {
+                            let fileURL = URL(fileURLWithPath: url.path)
+                            if addTrack(fromURL: fileURL) {
+                                added = true
+                                continue
+                            }
+                        }
+                        let title = trackInfo["Name"] as? String ?? ""
+                        let artist = trackInfo["Artist"] as? String ?? ""
+                        if !title.isEmpty && lookupAndAddTrack(title: title, artist: artist) {
+                            added = true
+                        }
                     }
                 }
-            } else if let tracksList = plist["Tracks"] as? [[String: Any]] {
+            } else if let tracksList = rawObj as? [[String: Any]] {
                 for trackInfo in tracksList {
                     if let location = trackInfo["Location"] as? String, let url = URL(string: location) {
                         let fileURL = URL(fileURLWithPath: url.path)
@@ -798,10 +844,18 @@ public class ToPlayService: ObservableObject {
             }
         }
         
-        // 2. Détection de snippets XML Rekordbox (<TRACK ... Location="file://..." Name="..." Artist="..." />)
-        if let stringContent = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .ascii) {
-            if stringContent.contains("<TRACK") {
-                let pattern = "<TRACK[^>]+>"
+        // 2. Décodage texte multi-encodages (UTF-8, UTF-16, Latin-1, ASCII)
+        let stringCandidate = String(data: data, encoding: .utf8) ??
+                             String(data: data, encoding: .utf16) ??
+                             String(data: data, encoding: .utf16LittleEndian) ??
+                             String(data: data, encoding: .utf16BigEndian) ??
+                             String(data: data, encoding: .isoLatin1) ??
+                             String(data: data, encoding: .ascii)
+        
+        if let stringContent = stringCandidate {
+            // Détection de snippets XML Rekordbox (<TRACK ... Location="file://..." Name="..." Artist="..." />)
+            if stringContent.range(of: "<track", options: .caseInsensitive) != nil {
+                let pattern = "(?i)<TRACK[^>]+>"
                 if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
                     let nsString = stringContent as NSString
                     let matches = regex.matches(in: stringContent, options: [], range: NSRange(location: 0, length: nsString.length))
@@ -826,19 +880,34 @@ public class ToPlayService: ObservableObject {
             }
             
             // 3. Scanner de secours pour URI file:// encodé dans le buffer
-            if !added {
-                let pattern = "file://[^<\"\r\n]+"
-                if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-                    let nsString = stringContent as NSString
-                    let matches = regex.matches(in: stringContent, options: [], range: NSRange(location: 0, length: nsString.length))
-                    for match in matches {
-                        let matchedStr = nsString.substring(with: match.range)
-                        if let decoded = matchedStr.removingPercentEncoding, let url = URL(string: matchedStr) {
-                            let path = url.path.isEmpty ? decoded.replacingOccurrences(of: "file://localhost", with: "").replacingOccurrences(of: "file://", with: "") : url.path
-                            let fileURL = URL(fileURLWithPath: path)
+            let fileUriPattern = "file://[^<\"'\\r\\n\\t]+"
+            if let regex = try? NSRegularExpression(pattern: fileUriPattern, options: []) {
+                let nsString = stringContent as NSString
+                let matches = regex.matches(in: stringContent, options: [], range: NSRange(location: 0, length: nsString.length))
+                for match in matches {
+                    let matchedStr = nsString.substring(with: match.range)
+                    if let decoded = matchedStr.removingPercentEncoding {
+                        let cleanDecoded = decoded.replacingOccurrences(of: "file://localhost", with: "").replacingOccurrences(of: "file://", with: "")
+                        let fileURL = URL(fileURLWithPath: cleanDecoded)
+                        if FileManager.default.fileExists(atPath: fileURL.path) {
                             if addTrack(fromURL: fileURL) {
                                 added = true
                             }
+                        }
+                    }
+                }
+            }
+            
+            // 4. Scanner universel de chemins de fichiers audio bruts (/Users/...)
+            let rawPathPattern = #"(/Users/[^\x00\r\n\t\"\']+\.(?:mp3|wav|aif|aiff|flac|m4a|aac))"#
+            if let regex = try? NSRegularExpression(pattern: rawPathPattern, options: [.caseInsensitive]) {
+                let nsString = stringContent as NSString
+                let matches = regex.matches(in: stringContent, options: [], range: NSRange(location: 0, length: nsString.length))
+                for match in matches {
+                    let path = nsString.substring(with: match.range)
+                    if FileManager.default.fileExists(atPath: path) {
+                        if addTrack(fromURL: URL(fileURLWithPath: path)) {
+                            added = true
                         }
                     }
                 }
@@ -849,7 +918,7 @@ public class ToPlayService: ObservableObject {
     }
     
     private static func extractAttribute(_ attr: String, from tag: String) -> String {
-        let pattern = "\(attr)=\"([^\"]*)\""
+        let pattern = "(?i)\(attr)=\"([^\"]*)\""
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
               let match = regex.firstMatch(in: tag, options: [], range: NSRange(location: 0, length: tag.utf16.count)),
               match.numberOfRanges > 1 else { return "" }

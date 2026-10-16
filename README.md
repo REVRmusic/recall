@@ -154,8 +154,31 @@ L'exécutable autonome optimisé est généré directement dans `Windows\build-w
 
 ### 8. 🪟 Interface Flottante & Bandeau Compact 78 px (`Always-on-top`)
 - Se positionne discrètement au-dessus de Serato sans jamais gêner les platines ou les crates.
-- Verre dépoli translucide moderne (*frosted glass vibrancy* / `.ultraThinMaterial`).
+- Verre dépoli translucide moderne natif (`NSVisualEffectView` avec flou d'arrière-plan réglable de 20% à 100%).
 - Bouton de réduction en **Bandeau Compact (78 px)** affichant le Top Match en cours d'un simple coup d'œil.
+
+### 9. ⌨️ Raccourcis Clavier Globaux Système (Hotkeys)
+- Contrôlez Recall sans jamais quitter Rekordbox ou Serato DJ Pro des yeux :
+  - `⌘ + ⇧ + R` / `⌥ + ⌘ + R` : **Afficher / Masquer Recall** instantanément.
+  - `⌘ + ⇧ + C` / `⌥ + ⌘ + C` : **Basculer entre vue normale et bandeau compact**.
+  - `⌘ + ⇧ + F` / `⌥ + ⌘ + F` : **Ouvrir la recherche Recall** par-dessus votre logiciel DJ.
+- **Préréglage anti-conflit garanti** : Sous Serato, `⌘⇧F` et `⌘⇧R` étant réservés par le crate browser, le mode `⌥⌘` (Cmd + Option) est 100% libre et évite tout conflit !
+
+### 10. 📊 Récapitulatif de Set & Statistiques de Fin de Mix
+- **Durée réelle de mix** : Le chrono ne démarre qu'au moment précis où votre premier morceau est joué (zéro décompte à vide).
+- **Genre Musical Dominant & Top Genres** : Analyse automatique des tags de vos morceaux joués avec répartition visuelle en pourcentages.
+- **Métriques clés** : Morceaux joués, transitions uniques enchaînées, tempo moyen (BPM).
+- **Export 1-clic** : Copie instantanée de la synthèse formatée pour vos réseaux sociaux et tracklists.
+
+### 11. 🎨 Ambiance Visuelle & Thèmes DJ
+- 4 palettes néon conçues pour la nuit et les cabines de DJ : **Cyan Neon**, **Purple Haze**, **Amber Sunset**, **Lime Club**.
+- Curseur de translucidité étendu (20% à 100%) avec flou d'arrière-plan dynamique.
+
+### 12. 📝 Générateur de Tracklists 1-Clic
+- Export immédiat minuté et formaté compatible 1001Tracklists, Mixcloud, SoundCloud et YouTube.
+
+### 13. 🚀 Mises à Jour Automatiques & Détection Intégrée
+- Détection fluide au lancement (sans ralentissement) et bouton de vérification manuelle dans les paramètres sous macOS et Windows.
 
 ---
 
