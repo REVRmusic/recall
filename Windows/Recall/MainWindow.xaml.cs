@@ -14,6 +14,7 @@ namespace Recall
     public partial class MainWindow : Window
     {
         private readonly SeratoMonitorService _monitor = SeratoMonitorService.Shared;
+        private readonly SessionHistoryService _history = SessionHistoryService.Shared;
         private readonly UserSettings _settings = UserSettings.Shared;
 
         private const double MinNormalHeight = 227.0;
@@ -29,6 +30,7 @@ namespace Recall
         {
             InitializeComponent();
             _monitor.PropertyChanged += Monitor_PropertyChanged;
+            _history.PropertyChanged += History_PropertyChanged;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -70,19 +72,51 @@ namespace Recall
             if (Top + Height > workArea.Bottom) Top = workArea.Bottom - Height;
         }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control &&
+                (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+            {
+                if (e.Key == Key.F)
+                {
+                    BtnSearch_Click(sender, e);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.S)
+                {
+                    BtnStats_Click(sender, e);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.C)
+                {
+                    SetCompactMode(!_settings.IsCompactMode);
+                    e.Handled = true;
+                }
+            }
+        }
+
         private void Monitor_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Dispatcher.Invoke(UpdateUI);
+        }
+
+        private void History_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             Dispatcher.Invoke(UpdateUI);
         }
 
         private void UpdateUI()
         {
-            TxtSessionCount.Text = _monitor.PlayedCount.ToString();
+            TxtSessionCount.Text = _history.PlayedCount.ToString();
 
             // Morceau en cours
             var current = _monitor.CurrentTrack;
             if (current != null)
             {
+                DotNowStatus.Fill = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+                TxtNowStatus.Text = "EN COURS";
+                TxtNowStatus.Foreground = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+
                 TxtNowTitle.Text = current.DisplayTitle;
                 TxtNowArtist.Text = current.DisplayArtist;
                 TxtNowKey.Text = current.DisplayKey;
@@ -95,26 +129,55 @@ namespace Recall
                         var color = (Color)ColorConverter.ConvertFromString(current.CamelotKey.ColorHex);
                         BadgeNowKey.BorderBrush = new SolidColorBrush(color);
                         TxtNowKey.Foreground = new SolidColorBrush(color);
+                        VinylMacaron.Background = new SolidColorBrush(color);
                     }
-                    catch { }
+                    catch
+                    {
+                        BadgeNowKey.BorderBrush = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+                        TxtNowKey.Foreground = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+                        VinylMacaron.Background = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+                    }
+                }
+                else
+                {
+                    BadgeNowKey.BorderBrush = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+                    TxtNowKey.Foreground = new SolidColorBrush(Color.FromRgb(20, 200, 176));
+                    VinylMacaron.Background = new SolidColorBrush(Color.FromRgb(20, 200, 176));
                 }
 
+                // Vérifier si la combinaison actuelle est déjà en favori
+                bool isFavoriteCombo = false;
+                if (_monitor.Deck1Track != null && _monitor.Deck2Track != null)
+                {
+                    isFavoriteCombo = FavoriteCombosService.Shared.IsComboFavorite(_monitor.Deck1Track, _monitor.Deck2Track);
+                }
+
+                TxtSaveComboIcon.Text = isFavoriteCombo ? "♥ " : "♡ ";
+                TxtSaveComboLabel.Text = isFavoriteCombo ? "Combo en favoris" : "Sauvegarder ce combo";
                 BtnSaveCombo.Visibility = Visibility.Visible;
             }
             else
             {
+                DotNowStatus.Fill = new SolidColorBrush(Color.FromRgb(156, 163, 175));
+                TxtNowStatus.Text = "EN ATTENTE";
+                TxtNowStatus.Foreground = new SolidColorBrush(Color.FromRgb(156, 163, 175));
+
                 if (_monitor.ActiveDJSoftware == "rekordbox")
                 {
-                    TxtNowTitle.Text = _monitor.IsRekordboxConnected ? "Aucun morceau sélectionné" : "En attente de Rekordbox...";
-                    TxtNowArtist.Text = _monitor.IsRekordboxConnected ? "Recherchez un morceau dans Rekordbox" : "Ouvrez Pioneer DJ Rekordbox pour démarrer";
+                    TxtNowTitle.Text = _monitor.IsRekordboxConnected ? "Aucun morceau en lecture" : "En attente de Rekordbox...";
+                    TxtNowArtist.Text = _monitor.IsRekordboxConnected ? "Lancez un morceau dans Rekordbox" : "Ouvrez Pioneer DJ Rekordbox pour démarrer";
                 }
                 else
                 {
-                    TxtNowTitle.Text = _monitor.IsSeratoConnected ? "Platine vide" : "En attente de Serato DJ Pro...";
-                    TxtNowArtist.Text = _monitor.IsSeratoConnected ? "Chargez un morceau" : "Ouvrez Serato DJ Pro pour démarrer";
+                    TxtNowTitle.Text = _monitor.IsSeratoConnected ? "Platines en attente" : "En attente de Serato DJ Pro...";
+                    TxtNowArtist.Text = _monitor.IsSeratoConnected ? "Lancez un morceau sur Deck 1 ou 2" : "Ouvrez Serato DJ Pro pour démarrer";
                 }
+
                 TxtNowKey.Text = "--";
                 TxtNowBpm.Text = "-- BPM";
+                BadgeNowKey.BorderBrush = new SolidColorBrush(Color.FromRgb(55, 65, 81));
+                TxtNowKey.Foreground = new SolidColorBrush(Color.FromRgb(156, 163, 175));
+                VinylMacaron.Background = new SolidColorBrush(Color.FromRgb(55, 65, 81));
                 BtnSaveCombo.Visibility = Visibility.Collapsed;
             }
 
@@ -134,7 +197,7 @@ namespace Recall
 
                 ListSuggestions.ItemsSource = toPlayList;
                 TxtMatchCount.Text = $"{toPlayList.Count} sélec";
-                ChkFilterToPlay.Content = toPlayList.Count > 0 ? $"Sélec ({toPlayList.Count})" : "Sélec";
+                ChkFilterToPlay.Content = toPlayList.Count > 0 ? $"★ Sélec ({toPlayList.Count})" : "★ Sélec";
 
                 var topToPlay = toPlayList.FirstOrDefault();
                 if (topToPlay != null)
@@ -156,9 +219,9 @@ namespace Recall
             {
                 // Liste des suggestions
                 ListSuggestions.ItemsSource = _monitor.Suggestions;
-                TxtMatchCount.Text = $"{_monitor.Suggestions.Count} matchs";
+                TxtMatchCount.Text = $"{_monitor.Suggestions.Count} match{(_monitor.Suggestions.Count > 1 ? "s" : "")}";
                 int toPlayTotal = ToPlayService.Shared.GetTracks().Count;
-                ChkFilterToPlay.Content = toPlayTotal > 0 ? $"Sélec ({toPlayTotal})" : "Sélec";
+                ChkFilterToPlay.Content = toPlayTotal > 0 ? $"★ Sélec ({toPlayTotal})" : "★ Sélec";
 
                 // Vue compacte
                 var topSuggestion = _monitor.Suggestions.FirstOrDefault();
@@ -177,6 +240,9 @@ namespace Recall
                     TxtCompactBpm.Text = current != null ? $"{current.DisplayBpm} BPM" : "-- BPM";
                 }
             }
+
+            // Always On Top Pin
+            BtnPin.Foreground = new SolidColorBrush(_settings.AlwaysOnTop ? Color.FromRgb(20, 200, 176) : Color.FromRgb(156, 163, 175));
         }
 
         private void ApplySettingsToUI()
@@ -228,12 +294,63 @@ namespace Recall
         private void BtnExpand_Click(object sender, RoutedEventArgs e) => SetCompactMode(false);
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
+        private void BtnSearch_Click(object sender, RoutedEventArgs e)
+        {
+            var searchWnd = new SearchWindow { Owner = this };
+            searchWnd.ShowDialog();
+            UpdateUI();
+        }
+
+        private void BtnStats_Click(object sender, RoutedEventArgs e)
+        {
+            var statsWnd = new SetRecapWindow { Owner = this };
+            statsWnd.ShowDialog();
+            UpdateUI();
+        }
+
+        private void BtnGuide_Click(object sender, RoutedEventArgs e)
+        {
+            var guideWnd = new GuideWindow { Owner = this };
+            guideWnd.ShowDialog();
+        }
+
+        private void BtnPin_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.AlwaysOnTop = !_settings.AlwaysOnTop;
+            _settings.Save();
+            Topmost = _settings.AlwaysOnTop;
+            BtnPin.Foreground = new SolidColorBrush(_settings.AlwaysOnTop ? Color.FromRgb(20, 200, 176) : Color.FromRgb(156, 163, 175));
+        }
+
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
             var settingsWnd = new SettingsWindow { Owner = this };
             settingsWnd.ShowDialog();
             ApplySettingsToUI();
             _monitor.RefreshSuggestions();
+        }
+
+        private void BtnSessionReset_Click(object sender, RoutedEventArgs e)
+        {
+            var res = MessageBox.Show(this, "Démarrer un nouveau mix et réinitialiser les statistiques du set ?", "Nouveau Set Recall", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (res == MessageBoxResult.Yes)
+            {
+                _history.ResetSession();
+                _monitor.RefreshSuggestions();
+                UpdateUI();
+            }
+        }
+
+        private void BtnSessionReset_RightClick(object sender, MouseButtonEventArgs e)
+        {
+            BtnStats_Click(sender, e);
+        }
+
+        private void BtnClearManual_Click(object sender, RoutedEventArgs e)
+        {
+            _monitor.ClearManualOverride();
+            BtnClearManual.Visibility = Visibility.Collapsed;
+            UpdateUI();
         }
 
         private void DeckRadio_Checked(object sender, RoutedEventArgs e)
@@ -283,9 +400,36 @@ namespace Recall
                 FavoriteCombosService.Shared.ToggleCombo(_monitor.Deck1Track, _monitor.Deck2Track);
                 UpdateUI();
             }
+            else if (_monitor.CurrentTrack != null)
+            {
+                var top = _monitor.Suggestions.FirstOrDefault();
+                if (top != null)
+                {
+                    FavoriteCombosService.Shared.ToggleCombo(_monitor.CurrentTrack, top);
+                    UpdateUI();
+                }
+            }
         }
 
-        // ==================== GLISSER-DÉPOSER NATIF VERS SERATO DJ PRO ====================
+        private void ToggleFavorite_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListSuggestions.SelectedItem is Track track && _monitor.CurrentTrack != null)
+            {
+                FavoriteCombosService.Shared.ToggleCombo(_monitor.CurrentTrack, track);
+                _monitor.RefreshSuggestions();
+                UpdateUI();
+            }
+        }
+
+        private void OpenInExplorer_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListSuggestions.SelectedItem is Track track && !string.IsNullOrEmpty(track.FilePath) && File.Exists(track.FilePath))
+            {
+                Process.Start("explorer.exe", $"/select,\"{track.FilePath}\"");
+            }
+        }
+
+        // ==================== GLISSER-DÉPOSER NATIF VERS SERATO DJ PRO / REKORDBOX ====================
         private void ListSuggestions_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && sender is ListView lv && lv.SelectedItem is Track track)

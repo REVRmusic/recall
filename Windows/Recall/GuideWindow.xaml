@@ -1,0 +1,164 @@
+<Window x:Class="Recall.GuideWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Recall - Guide &amp; Légende"
+        Width="460" Height="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <Border CornerRadius="12" Background="#161A22" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+        <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header -->
+                <RowDefinition Height="*" />    <!-- Content -->
+                <RowDefinition Height="Auto" /> <!-- Footer -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="24" Height="24" CornerRadius="12" Background="#2614C8B0" Margin="0,0,8,0">
+                        <TextBlock Text="?" FontSize="13" FontWeight="Bold" Foreground="#14C8B0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="Guide &amp; Légende Recall" FontWeight="Bold" FontSize="13" Foreground="White"/>
+                        <TextBlock Text="Comprendre les indicateurs et les suggestions" FontSize="9.5" Foreground="#9CA3AF"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="✕" Width="24" Height="24" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
+            </Grid>
+
+            <!-- Scrollable Guide Content -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- SECTION 1 : Compteurs d'enchaînements -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🔥" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Compteurs d'enchaînements" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Border Background="#1E3A5F" BorderBrush="#14C8B0" BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="0,0,4,0">
+                                        <TextBlock Text="2x" FontSize="9" FontWeight="Bold" Foreground="#14C8B0"/>
+                                    </Border>
+                                    <Border Background="#3D280A" BorderBrush="#FF9F43" BorderThickness="1" CornerRadius="3" Padding="4,1">
+                                        <TextBlock Text="🔥 7x" FontSize="9" FontWeight="Bold" Foreground="#FF9F43"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Ce chiffre indique le nombre exact de fois où vous avez enchaîné ce morceau juste après le morceau actuellement en cours lors de vos sets réels." FontSize="10" Foreground="#D1D5DB" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Badge cyan (1x, 2x) : Enchaînement déjà réalisé et validé dans une session passée." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Flamme orange (🔥 3x+) : Vos routines favorites, jouées plusieurs fois en live." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 2 : Combos Favoris -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="❤️" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Combos Favoris &amp; Coups de cœur" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                                </StackPanel>
+                                <Border Background="#33FF5252" BorderBrush="#FF5252" BorderThickness="1" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="❤️ FAV" FontSize="9" FontWeight="Bold" Foreground="#FF7675"/>
+                                </Border>
+                            </Grid>
+                            <TextBlock Text="Enregistrez instantanément les associations réussies entre deux morceaux pour les retrouver facilement :" FontSize="10" Foreground="#D1D5DB" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Bouton Sauvegarder ce combo : Cliquez sur le bouton rose de la carte active." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Cœur en bout de ligne : Cliquez sur l'icône cœur à gauche du titre dans la liste." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Filtre [Favs] : Isolez vos coups de cœur d'un simple clic." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 3 : Roue de Camelot -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="☯" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Harmonie musicale &amp; Roue Camelot" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                                </StackPanel>
+                                <Border Background="#2E1C3D" BorderBrush="#C471ED" BorderThickness="1" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="8A (Am)" FontSize="9" FontWeight="Bold" Foreground="#C471ED"/>
+                                </Border>
+                            </Grid>
+                            <TextBlock Text="Recall respecte les règles de mix harmonique pour des transitions parfaites :" FontSize="10" Foreground="#D1D5DB" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Identique (ex: 8A → 8A) : Même tonalité, transition parfaitement fluide." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Voisine (±1, ex: 8A → 7A ou 9A) : Clé adjacente naturelle." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Relative (A ⇄ B, ex: 8A ⇄ 8B) : Passage Mineur ⇄ Majeur sans dissonance." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• ⚡ Boost +1/2 Ton (ex: 8A → 3A) : Montée d'énergie explosive en club (+7 Camelot)." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• ⚡ Boost +1 Ton (ex: 8A → 10A) : Modulation montante festive (+2 Camelot)." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 4 : BPM & Écart -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⏱" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="BPM &amp; Écart de tempo" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                                </StackPanel>
+                                <Border Background="#16382C" BorderBrush="#00E676" BorderThickness="1" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="128.0 (+2.0)" FontSize="9" FontWeight="Bold" Foreground="#00E676"/>
+                                </Border>
+                            </Grid>
+                            <TextBlock Text="• Vert (0 à ±3 BPM) : Calage immédiat sans distorsion audible." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Orange (±3 à ±8 BPM) : Écart modéré, nécessite un pitch-shift progressif." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Filtre BPM : Gère automatiquement le double/demi-tempo (ex: 75 ⇄ 150 BPM)." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 5 : Glisser-Déposer -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="✋" FontSize="12" Margin="0,0,6,0"/>
+                                <TextBlock Text="Glisser-Déposer universel" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                            </StackPanel>
+                            <TextBlock Text="1. Cliquez sur n'importe quel morceau suggéré dans Recall." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="2. Glissez-le vers la platine de Serato DJ Pro ou Rekordbox." FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="3. Relâchez : Le morceau se charge instantanément sur la platine !" FontSize="9.5" Foreground="#9CA3AF" Margin="4,1"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 6 : Statistiques & Tracklist -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📊" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Statistiques du Set (Set Recap)" FontWeight="Bold" FontSize="11.5" Foreground="White"/>
+                                </StackPanel>
+                                <Border Background="#2614C8B0" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="LIVE" FontSize="9" FontWeight="Bold" Foreground="#14C8B0"/>
+                                </Border>
+                            </Grid>
+                            <TextBlock Text="Ouvrez à tout moment la fenêtre des statistiques (bouton 📊 dans l'en-tête ou Ctrl+Shift+S) pour consulter la durée réelle de votre set, vos morceaux joués, BPM moyen, top genres et top artistes." FontSize="9.5" Foreground="#9CA3AF" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 7 : 100% Hors-Ligne -->
+                    <Border Background="#151820" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="🔒 100% Hors-Ligne &amp; Respect de votre bibliothèque" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                            <TextBlock Text="Recall fonctionne exclusivement en local et en lecture seule. Aucune donnée n'est altérée ou transmise vers l'extérieur." FontSize="9" Foreground="#6B7280" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <Button Content="Fermer" Padding="16,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

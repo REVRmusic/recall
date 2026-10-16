@@ -1,0 +1,92 @@
+<Window x:Class="Recall.SearchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Recall - Rechercher un morceau"
+        Width="400" Height="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Loaded="Window_Loaded">
+
+    <Border CornerRadius="12" Background="#161A22" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+        <Grid Margin="14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Header -->
+                <RowDefinition Height="Auto" /> <!-- Search Box -->
+                <RowDefinition Height="*" />    <!-- Results -->
+                <RowDefinition Height="Auto" /> <!-- Footer -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="24" Height="24" CornerRadius="12" Background="#2614C8B0" Margin="0,0,8,0">
+                        <TextBlock Text="🔍" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock x:Name="TxtHeaderTitle" Text="Rechercher dans la bibliothèque" FontWeight="Bold" FontSize="12.5" Foreground="White"/>
+                        <TextBlock Text="Sélectionnez un morceau pour afficher ses suggestions" FontSize="9.5" Foreground="#9CA3AF"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="✕" Width="24" Height="24" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
+            </Grid>
+
+            <!-- Search Box -->
+            <Border Grid.Row="1" Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="7" Padding="6,4" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="🔍" FontSize="11" Foreground="#14C8B0" VerticalAlignment="Center" Margin="4,0,6,0"/>
+                    <TextBox Grid.Column="1" x:Name="TxtSearch" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="11" VerticalAlignment="Center" TextChanged="TxtSearch_TextChanged"/>
+                    <Button Grid.Column="2" x:Name="BtnClear" Content="✕" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Padding="4,0" Cursor="Hand" Visibility="Collapsed" Click="BtnClear_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Results List -->
+            <Grid Grid.Row="2">
+                <TextBlock x:Name="TxtEmptyState" Text="Tapez au moins 2 lettres pour lancer la recherche..." Foreground="#6B7280" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+
+                <ListView x:Name="ListResults" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="ListResults_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="6" Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" Margin="0,2" Padding="8,5" Cursor="Hand">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" FontSize="11" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DisplayArtist}" FontSize="9.5" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                                        <Border Background="#2214C8B0" BorderBrush="{Binding KeyColorHex}" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="0,0,4,0">
+                                            <TextBlock Text="{Binding DisplayKey}" FontSize="9" FontWeight="Bold" Foreground="{Binding KeyColorHex}"/>
+                                        </Border>
+                                        <Border Background="#242B38" CornerRadius="4" Padding="4,1">
+                                            <TextBlock Text="{Binding DisplayBpm, StringFormat='{}{0} BPM'}" FontSize="9" FontWeight="SemiBold" Foreground="#E5E7EB"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- Footer -->
+            <Grid Grid.Row="3" Margin="0,10,0,0">
+                <TextBlock x:Name="TxtResultsCount" Text="" FontSize="9.5" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                <Button Content="Fermer" HorizontalAlignment="Right" Padding="14,4" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnClose_Click"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

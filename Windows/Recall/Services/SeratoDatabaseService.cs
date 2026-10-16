@@ -397,5 +397,171 @@ namespace Recall.Services
 
             return null;
         }
+
+        public List<Track> SearchTracks(string query, int limit = 30)
+        {
+            var results = new List<Track>();
+            string trimmed = (query ?? "").Trim();
+            if (trimmed.Length < 2) return results;
+
+            using var connection = OpenDatabase();
+            if (connection == null) return results;
+
+            try
+            {
+                var tokens = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (tokens.Length == 0) return results;
+
+                var whereParts = new List<string>();
+                using var cmd = connection.CreateCommand();
+
+                for (int i = 0; i < tokens.Length; i++)
+                {
+                    string pName = $"@p{i}";
+                    whereParts.Add($"(name LIKE {pName} OR artist LIKE {pName} OR file_name LIKE {pName})");
+                    cmd.Parameters.AddWithValue(pName, $"%{tokens[i]}%");
+                }
+
+                string whereClause = string.Join(" AND ", whereParts);
+                cmd.CommandText = $@"
+                    SELECT id, ifnull(name, ''), ifnull(artist, ''), ifnull(bpm, 0.0), ifnull(key, ''), ifnull(file_name, ''), ifnull(portable_id, '')
+                    FROM asset
+                    WHERE {whereClause}
+                    ORDER BY id DESC
+                    LIMIT {limit};";
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    int assetId = reader.GetInt32(0);
+                    string title = reader.GetString(1);
+                    string artist = reader.GetString(2);
+                    double bpm = reader.GetDouble(3);
+                    string key = reader.GetString(4);
+                    string fn = reader.GetString(5);
+                    string pid = reader.GetString(6);
+
+                    string? resolved = ResolveAudioFilePath(pid, fn);
+
+                    results.Add(new Track
+                    {
+                        AssetId = assetId,
+                        Title = string.IsNullOrEmpty(title) ? Path.GetFileNameWithoutExtension(fn) : title,
+                        Artist = artist,
+                        Bpm = bpm,
+                        RawKey = key,
+                        CamelotKey = CamelotKey.Parse(key),
+                        FilePath = resolved,
+                        FileName = fn,
+                        PortableId = pid
+                    });
+                }
+            }
+            catch { }
+
+            return results;
+        }
+
+        public class RawSessionEntry
+        {
+            public int Id { get; set; }
+            public string Title { get; set; } = "";
+            public string Artist { get; set; } = "";
+            public double Bpm { get; set; }
+            public string RawKey { get; set; } = "";
+            public string Genre { get; set; } = "";
+            public string FileName { get; set; } = "";
+            public DateTime StartTime { get; set; }
+            public DateTime? EndTime { get; set; }
+            public double DurationSeconds { get; set; }
+            public bool IsCurrentlyPlaying { get; set; }
+            public int PlayedFlag { get; set; }
+        }
+
+        public List<RawSessionEntry> FetchSessionEntries(DateTime since)
+        {
+            var entries = new List<RawSessionEntry>();
+            using var connection = OpenDatabase();
+            if (connection == null) return entries;
+
+            long sinceUnix = ((DateTimeOffset)since.ToUniversalTime()).ToUnixTimeSeconds();
+            long nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = $@"
+                    SELECT id, ifnull(name, ''), ifnull(artist, ''), ifnull(bpm, 0.0), ifnull(key, ''), ifnull(file_name, ''),
+                           start_time, end_time, played, ifnull(genre, '')
+                    FROM history_entry
+                    WHERE start_time >= {sinceUnix}
+                    ORDER BY start_time ASC;";
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string name = reader.GetString(1);
+                    string artist = reader.GetString(2);
+                    double bpm = reader.GetDouble(3);
+                    string key = reader.GetString(4);
+                    string fn = reader.GetString(5);
+                    long startUnix = reader.IsDBNull(6) ? 0 : reader.GetInt64(6);
+                    long endUnix = reader.IsDBNull(7) ? 0 : reader.GetInt64(7);
+                    int played = reader.IsDBNull(8) ? 0 : reader.GetInt32(8);
+                    string genre = reader.GetString(9);
+
+                    DateTime startDate = DateTimeOffset.FromUnixTimeSeconds(startUnix).LocalDateTime;
+                    DateTime? endDate = endUnix > startUnix ? DateTimeOffset.FromUnixTimeSeconds(endUnix).LocalDateTime : null;
+                    double duration = endUnix > startUnix ? (double)(endUnix - startUnix) : Math.Max(0.0, nowUnix - startUnix);
+                    bool isCurrent = endUnix <= startUnix;
+
+                    string cleanTitle = !string.IsNullOrEmpty(name) ? name : Path.GetFileNameWithoutExtension(fn);
+
+                    entries.Add(new RawSessionEntry
+                    {
+                        Id = id,
+                        Title = cleanTitle,
+                        Artist = artist,
+                        Bpm = bpm,
+                        RawKey = key,
+                        Genre = genre,
+                        FileName = fn,
+                        StartTime = startDate,
+                        EndTime = endDate,
+                        DurationSeconds = duration,
+                        IsCurrentlyPlaying = isCurrent,
+                        PlayedFlag = played
+                    });
+                }
+            }
+            catch { }
+
+            return entries;
+        }
+
+        public DateTime? FetchLatestSessionStartTime()
+        {
+            using var connection = OpenDatabase();
+            if (connection == null) return null;
+
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT start_time FROM history_session ORDER BY id DESC LIMIT 1;";
+                var obj = cmd.ExecuteScalar();
+                if (obj != null && obj != DBNull.Value)
+                {
+                    long startUnix = Convert.ToInt64(obj);
+                    if (startUnix > 0)
+                    {
+                        return DateTimeOffset.FromUnixTimeSeconds(startUnix).LocalDateTime;
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
     }
 }

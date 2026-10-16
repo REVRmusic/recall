@@ -16,6 +16,7 @@
         ShowInTaskbar="True"
         Icon="Resources/AppIcon.ico"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        KeyDown="Window_KeyDown"
         Loaded="Window_Loaded"
         AllowDrop="True"
         DragEnter="Window_DragEnter"
@@ -24,47 +25,113 @@
         Drop="Window_Drop">
 
     <Window.Resources>
-        <!-- Styles pour les boutons -->
-        <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#222834" />
-            <Setter Property="Foreground" Value="#E5E7EB" />
-            <Setter Property="BorderBrush" Value="#374151" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="6,2" />
-            <Setter Property="Cursor" Value="Hand" />
+        <!-- Boutons circulaires modernes style macOS pour l'en-tête -->
+        <Style x:Key="HeaderCircleBtnStyle" TargetType="Button">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Background" Value="#1C222E"/>
+            <Setter Property="Foreground" Value="#C5CDD9"/>
+            <Setter Property="BorderBrush" Value="#2A3344"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                CornerRadius="11">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2D3748"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2D3748" />
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
-        <Style x:Key="FilterChipStyle" TargetType="CheckBox">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="#9CA3AF" />
+        <!-- Bouton Fermer circulaire avec survol rouge -->
+        <Style x:Key="HeaderCloseBtnStyle" TargetType="Button">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Background" Value="#1C222E"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="BorderBrush" Value="#2A3344"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="border" Background="#1E232D" BorderBrush="#374151" BorderThickness="1" CornerRadius="5" Padding="6,3">
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="11">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E53935"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FF5252"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Bouton Réduire / Déplier pilule -->
+        <Style x:Key="CollapsePillBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#2214C8B0"/>
+            <Setter Property="Foreground" Value="#14C8B0"/>
+            <Setter Property="BorderBrush" Value="#6614C8B0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="7,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="9.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3314C8B0"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#14C8B0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Sélecteur de Platine Deck Pills (AUTO, DECK 1, DECK 2) sans puce ronde -->
+        <Style x:Key="DeckPillStyle" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="8.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="#1E232D" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="4" Padding="5,2">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1E3A5F"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#0FA2FF"/>
-                                <Setter Property="Foreground" Value="#0FA2FF"/>
+                                <Setter TargetName="border" Property="Background" Value="#1C384A"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#14C8B0"/>
+                                <Setter Property="Foreground" Value="#14C8B0"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
@@ -75,13 +142,97 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ToPlayChipStyle" TargetType="CheckBox">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="#9CA3AF" />
+        <!-- Filtre Pilule BPM (Cyan) -->
+        <Style x:Key="FilterChipBpmStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
-                        <Border x:Name="border" Background="#1E232D" BorderBrush="#374151" BorderThickness="1" CornerRadius="5" Padding="6,3">
+                        <Border x:Name="border" Background="#1A202A" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="5" Padding="6,3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#15394A"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#14C8B0"/>
+                                <Setter Property="Foreground" Value="#14C8B0"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Filtre Pilule Harmonie (Violet) -->
+        <Style x:Key="FilterChipHarmonieStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="border" Background="#1A202A" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="5" Padding="6,3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2A1E3D"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#C471ED"/>
+                                <Setter Property="Foreground" Value="#C471ED"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Filtre Pilule Favoris (Rouge) -->
+        <Style x:Key="FilterChipFavsStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="border" Background="#1A202A" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="5" Padding="6,3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3D1B1B"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FF5252"/>
+                                <Setter Property="Foreground" Value="#FF7675"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Filtre Pilule Sélec (Or) -->
+        <Style x:Key="FilterChipToPlayStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="border" Background="#1A202A" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="5" Padding="6,3">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -98,9 +249,90 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Style Bouton Compteur Session -->
+        <Style x:Key="SessionPillBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1C2F3D"/>
+            <Setter Property="BorderBrush" Value="#264D6B"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="6,1.5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#254359"/>
+                                <Setter TargetName="b" Property="BorderBrush" Value="#14C8B0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style Bouton Sauvegarde Combo -->
+        <Style x:Key="SaveComboBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#26FF5252"/>
+            <Setter Property="BorderBrush" Value="#FF5252"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#FF7675"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="0,4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#3DFF5252"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style Bouton Manuel Clear -->
+        <Style x:Key="ManualClearBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#3D280A"/>
+            <Setter Property="Foreground" Value="#FF9F43"/>
+            <Setter Property="BorderBrush" Value="#FF9F43"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="5,1.5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style des lignes de ListView (supprime le bleu Windows par défaut) -->
+        <Style TargetType="ListViewItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <Border CornerRadius="14" Background="#F012151A" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+    <Border CornerRadius="14" Background="#F2101318" BorderBrush="#2AFFFFFF" BorderThickness="1" ClipToBounds="True">
         <Grid>
             <!-- ==================== VUE NORMALE ==================== -->
             <Grid x:Name="NormalViewGrid" Visibility="Visible">
@@ -111,42 +343,49 @@
                     <RowDefinition Height="*" />    <!-- Suggestions List -->
                 </Grid.RowDefinitions>
 
-                <!-- 1. En-tête (Logo, Compteur, Actions) -->
-                <Grid Grid.Row="0" Margin="12,10,12,6">
+                <!-- 1. En-tête (Logo, Compteur de Session cliquable, Actions style macOS) -->
+                <Grid Grid.Row="0" Margin="10,8,10,6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
+                    <!-- Gauche : Logo + Compteur de Session -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Logo Recall Vinyl -->
-                        <Ellipse Width="18" Height="18" Fill="#14C8B0" VerticalAlignment="Center">
-                            <Ellipse.Effect>
-                                <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#14C8B0" Opacity="0.5"/>
-                            </Ellipse.Effect>
-                        </Ellipse>
-                        <TextBlock Text="Recall" FontWeight="Bold" FontSize="14" Foreground="White" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                        
-                        <!-- Compteur Session -->
-                        <Border Background="#1C2F3D" BorderBrush="#254B68" BorderThickness="1" CornerRadius="10" Margin="8,0,0,0" Padding="6,1" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="↺ " FontSize="10" Foreground="#14C8B0" FontWeight="Bold"/>
-                                <TextBlock x:Name="TxtSessionCount" Text="0" FontSize="10" Foreground="#14C8B0" FontWeight="Bold"/>
-                            </StackPanel>
+                        <!-- Vinyle Recall avec effet de halo -->
+                        <Border Width="20" Height="20" CornerRadius="10" Background="#14C8B0" VerticalAlignment="Center">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#14C8B0" Opacity="0.55"/>
+                            </Border.Effect>
+                            <TextBlock Text="●" FontSize="11" Foreground="#101318" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+
+                        <TextBlock Text="Recall" FontWeight="Bold" FontSize="13" Foreground="White" Margin="6,0,0,0" VerticalAlignment="Center"/>
+
+                        <!-- Bouton Compteur / Reset de Session (Clic = Reset, Clic Droit = Stats) -->
+                        <Button x:Name="BtnSessionReset" Margin="8,0,0,0" Style="{StaticResource SessionPillBtnStyle}" Click="BtnSessionReset_Click" MouseRightButtonUp="BtnSessionReset_RightClick" ToolTip="Démarrer un nouveau mix (clic gauche) / Statistiques du set (clic droit)">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="↺ " FontSize="9" Foreground="#14C8B0" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtSessionCount" Text="0" FontSize="9" Foreground="#14C8B0" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
-                    <!-- Boutons En-tête Droite -->
+                    <!-- Droite : Actions Circulaires & Réduire -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="BtnCollapse" Content="→ Réduire" Style="{StaticResource ActionButtonStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact" Margin="0,0,4,0"/>
-                        <Button x:Name="BtnSettings" Content="⚙" Style="{StaticResource ActionButtonStyle}" Click="BtnSettings_Click" ToolTip="Paramètres et conformité" Margin="0,0,4,0"/>
-                        <Button x:Name="BtnClose" Content="✕" Style="{StaticResource ActionButtonStyle}" Click="BtnClose_Click" ToolTip="Fermer Recall" />
+                        <Button x:Name="BtnCollapse" Content="→ Réduire" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact (Ctrl+Shift+C)" Margin="0,0,4,0"/>
+                        <Button x:Name="BtnSearch" Content="🔍" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSearch_Click" ToolTip="Rechercher un morceau dans la bibliothèque (Ctrl+Shift+F)" Margin="0,0,3,0"/>
+                        <Button x:Name="BtnStats" Content="📊" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnStats_Click" ToolTip="Statistiques du mix - Set Recap (Ctrl+Shift+S)" Margin="0,0,3,0"/>
+                        <Button x:Name="BtnGuide" Content="?" FontSize="10" FontWeight="Bold" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnGuide_Click" ToolTip="Guide et légende des symboles" Margin="0,0,3,0"/>
+                        <Button x:Name="BtnPin" Content="📌" FontSize="9" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnPin_Click" ToolTip="Toujours au premier plan (Always on top)" Margin="0,0,3,0"/>
+                        <Button x:Name="BtnSettings" Content="⚙" FontSize="10" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSettings_Click" ToolTip="Paramètres et conformité" Margin="0,0,3,0"/>
+                        <Button x:Name="BtnClose" Content="✕" FontSize="9" FontWeight="Bold" Style="{StaticResource HeaderCloseBtnStyle}" Click="BtnClose_Click" ToolTip="Fermer Recall" />
                     </StackPanel>
                 </Grid>
 
-                <!-- 2. Carte Now Playing (Deck 1 / Deck 2) -->
-                <Border Grid.Row="1" Background="#1A1E26" BorderBrush="#2A303C" BorderThickness="1" CornerRadius="8" Margin="10,2,10,6" Padding="10">
+                <!-- 2. Carte Now Playing (Deck 1 / Deck 2) avec Vinyle Réaliste -->
+                <Border Grid.Row="1" Background="#161B23" BorderBrush="#252C3A" BorderThickness="1" CornerRadius="9" Margin="10,2,10,6" Padding="10">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -156,19 +395,21 @@
 
                         <!-- Sélecteur DECK & Statut -->
                         <Grid Grid.Row="0" Margin="0,0,0,6">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="6" Height="6" Fill="#14C8B0" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                <TextBlock Text="EN COURS" FontSize="9" FontWeight="Bold" Foreground="#14C8B0" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="DotNowStatus" Width="6" Height="6" Fill="#14C8B0" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="TxtNowStatus" Text="EN COURS" FontSize="8.5" FontWeight="Bold" Foreground="#14C8B0" VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <RadioButton x:Name="RbAuto" Content="AUTO" IsChecked="True" GroupName="DeckGroup" Foreground="#9CA3AF" FontSize="9" Checked="DeckRadio_Checked" Margin="0,0,6,0"/>
-                                <RadioButton x:Name="RbDeck1" Content="DECK 1" GroupName="DeckGroup" Foreground="#9CA3AF" FontSize="9" Checked="DeckRadio_Checked" Margin="0,0,6,0"/>
-                                <RadioButton x:Name="RbDeck2" Content="DECK 2" GroupName="DeckGroup" Foreground="#9CA3AF" FontSize="9" Checked="DeckRadio_Checked"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Button x:Name="BtnClearManual" Content="MANUEL ✕" Visibility="Collapsed" Style="{StaticResource ManualClearBtnStyle}" FontSize="8" FontWeight="Bold" Click="BtnClearManual_Click" Margin="0,0,5,0"/>
+
+                                <RadioButton x:Name="RbAuto" Content="AUTO" IsChecked="True" GroupName="DeckGroup" Style="{StaticResource DeckPillStyle}" Checked="DeckRadio_Checked" Margin="0,0,4,0"/>
+                                <RadioButton x:Name="RbDeck1" Content="DECK 1" GroupName="DeckGroup" Style="{StaticResource DeckPillStyle}" Checked="DeckRadio_Checked" Margin="0,0,4,0"/>
+                                <RadioButton x:Name="RbDeck2" Content="DECK 2" GroupName="DeckGroup" Style="{StaticResource DeckPillStyle}" Checked="DeckRadio_Checked"/>
                             </StackPanel>
                         </Grid>
 
-                        <!-- Titre, Artiste, Key & BPM -->
+                        <!-- Titre, Artiste, Vinyle avec Macaron & Badges -->
                         <Grid Grid.Row="1">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -176,80 +417,101 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <Ellipse Width="32" Height="32" Fill="#242B38" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <!-- Vinyle Réaliste 34x34 avec macaron coloré Camelot -->
+                            <Border Width="34" Height="34" CornerRadius="17" Background="#0C0E12" BorderBrush="#2AFFFFFF" BorderThickness="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <Grid>
+                                    <!-- Sillon vinyle -->
+                                    <Border Width="24" Height="24" CornerRadius="12" BorderBrush="#15FFFFFF" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <!-- Macaron central coloré selon la clé -->
+                                    <Border x:Name="VinylMacaron" Width="12" Height="12" CornerRadius="6" Background="#14C8B0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <!-- Trou central -->
+                                        <Border Width="4" Height="4" CornerRadius="2" Background="#0C0E12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Name="TxtNowTitle" Text="En attente de Serato DJ Pro..." FontWeight="Bold" FontSize="12" Foreground="White" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock x:Name="TxtNowArtist" Text="Lancez un morceau" FontSize="11" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="TxtNowArtist" Text="Lancez un morceau sur Deck 1 ou 2" FontSize="10.5" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" Margin="0,1.5,0,0"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                <Border x:Name="BadgeNowKey" Background="#3314C8B0" BorderBrush="#14C8B0" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right">
-                                    <TextBlock x:Name="TxtNowKey" Text="--" FontSize="11" FontWeight="Bold" Foreground="#14C8B0"/>
+                                <Border x:Name="BadgeNowKey" Background="#2614C8B0" BorderBrush="#14C8B0" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Right">
+                                    <TextBlock x:Name="TxtNowKey" Text="--" FontSize="10.5" FontWeight="Bold" Foreground="#14C8B0"/>
                                 </Border>
-                                <Border Background="#222834" CornerRadius="4" Padding="4,1" Margin="0,4,0,0" HorizontalAlignment="Right">
-                                    <TextBlock x:Name="TxtNowBpm" Text="-- BPM" FontSize="10" FontWeight="SemiBold" Foreground="#E5E7EB"/>
+                                <Border Background="#1F2633" CornerRadius="4" Padding="5,1.5" Margin="0,3,0,0" HorizontalAlignment="Right">
+                                    <TextBlock x:Name="TxtNowBpm" Text="-- BPM" FontSize="9.5" FontWeight="SemiBold" Foreground="#E5E7EB"/>
                                 </Border>
                             </StackPanel>
                         </Grid>
 
                         <!-- Bouton Sauvegarder ce combo -->
-                        <Button Grid.Row="2" x:Name="BtnSaveCombo" Margin="0,8,0,0" Background="#33FF5252" BorderBrush="#FF5252" BorderThickness="1" Foreground="#FF7675" FontWeight="Bold" FontSize="10" Padding="0,4" Cursor="Hand" Click="BtnSaveCombo_Click">
+                        <Button Grid.Row="2" x:Name="BtnSaveCombo" Margin="0,8,0,0" Style="{StaticResource SaveComboBtnStyle}" Click="BtnSaveCombo_Click">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="♡ " FontWeight="Bold"/>
-                                <TextBlock Text="Sauvegarder ce combo"/>
+                                <TextBlock x:Name="TxtSaveComboIcon" Text="♡ " FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtSaveComboLabel" Text="Sauvegarder ce combo"/>
                             </StackPanel>
                         </Button>
                     </Grid>
                 </Border>
 
-                <!-- 3. Barre de Filtres Compacte -->
-                <Grid Grid.Row="2" Margin="10,0,10,6">
+                <!-- 3. Barre de Filtres avec Icônes & Compteur -->
+                <Grid Grid.Row="2" Margin="10,0,10,5">
                     <StackPanel Orientation="Horizontal">
-                        <CheckBox x:Name="ChkFilterBpm" Content="BPM ±8%" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
-                        <CheckBox x:Name="ChkFilterHarmonie" Content="Harmonie" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
-                        <CheckBox x:Name="ChkFilterFavs" Content="Favs" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
-                        <CheckBox x:Name="ChkFilterToPlay" Content="Sélec" Style="{StaticResource ToPlayChipStyle}" Click="FilterChanged"/>
+                        <CheckBox x:Name="ChkFilterBpm" Content="⏱ BPM ±8%" Style="{StaticResource FilterChipBpmStyle}" Click="FilterChanged" Margin="0,0,5,0"/>
+                        <CheckBox x:Name="ChkFilterHarmonie" Content="☯ Harmonie" Style="{StaticResource FilterChipHarmonieStyle}" Click="FilterChanged" Margin="0,0,5,0"/>
+                        <CheckBox x:Name="ChkFilterFavs" Content="❤️ Favs" Style="{StaticResource FilterChipFavsStyle}" Click="FilterChanged" Margin="0,0,5,0"/>
+                        <CheckBox x:Name="ChkFilterToPlay" Content="★ Sélec" Style="{StaticResource FilterChipToPlayStyle}" Click="FilterChanged"/>
                     </StackPanel>
 
-                    <TextBlock x:Name="TxtMatchCount" Text="0 matchs" FontSize="10" FontWeight="SemiBold" Foreground="#9CA3AF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    <Border Background="#1C222E" BorderBrush="#2A3344" BorderThickness="1" CornerRadius="5" Padding="5,2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock x:Name="TxtMatchCount" Text="0 match" FontSize="9.5" FontWeight="SemiBold" Foreground="#9CA3AF"/>
+                    </Border>
                 </Grid>
 
-                <!-- 4. Liste des Suggestions -->
+                <!-- 4. Liste des Suggestions Modernisée (Parité macOS) -->
                 <ListView Grid.Row="3" x:Name="ListSuggestions" Background="Transparent" BorderThickness="0" Margin="6,0,6,6"
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                           PreviewMouseMove="ListSuggestions_PreviewMouseMove"
                           MouseDoubleClick="ListSuggestions_MouseDoubleClick">
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="6" Background="#161B22" BorderBrush="#252B37" BorderThickness="1" Margin="0,2" Padding="6,4">
+                            <Border x:Name="RowBorder" CornerRadius="6" Background="#151A22" BorderBrush="#222834" BorderThickness="1" Margin="0,1.5" Padding="7,4">
                                 <Border.ContextMenu>
                                     <ContextMenu>
+                                        <MenuItem Header="❤️ Ajouter / Retirer des favoris" Click="ToggleFavorite_Click"/>
                                         <MenuItem Header="🗑 Retirer de la sélec" Click="DeleteToPlay_Click" />
+                                        <MenuItem Header="📁 Afficher dans l'Explorateur" Click="OpenInExplorer_Click" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="22" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="20" /> <!-- Rang / Flame -->
+                                        <ColumnDefinition Width="*" />  <!-- Titre & Artiste -->
+                                        <ColumnDefinition Width="Auto" /> <!-- Badges -->
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Index / Statut -->
-                                    <TextBlock Text="{Binding TransitionCount, StringFormat='{}{0}x'}" FontSize="10" FontWeight="Bold" Foreground="#FF9F43" VerticalAlignment="Center"/>
+                                    <!-- Index / Transition Count -->
+                                    <TextBlock Text="{Binding TransitionCount, StringFormat='{}{0}x'}" FontSize="9.5" FontWeight="Bold" Foreground="#FF9F43" VerticalAlignment="Center"/>
 
                                     <!-- Titre & Artiste -->
-                                    <StackPanel Grid.Column="1" Margin="4,0,4,0" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="1" Margin="4,0,6,0" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" FontSize="11" Foreground="White" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding DisplayArtist}" FontSize="9.5" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DisplayArtist}" FontSize="9" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
                                     </StackPanel>
 
-                                    <!-- Key & BPM -->
+                                    <!-- Badges d'état & Clé & BPM -->
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border CornerRadius="4" BorderThickness="1" BorderBrush="#55FFFFFF" Padding="4,1" Background="#222834" Margin="0,0,4,0">
+                                        <!-- Badge Joué dans la session -->
+                                        <!-- Clé Camelot avec couleur authentique -->
+                                        <Border CornerRadius="4" BorderThickness="1" BorderBrush="{Binding KeyColorHex}" Padding="4,1" Background="#1C212E" Margin="0,0,4,0">
                                             <TextBlock Text="{Binding DisplayKey}" FontSize="9" FontWeight="Bold" Foreground="{Binding KeyColorHex}"/>
                                         </Border>
-                                        <TextBlock Text="{Binding DisplayBpm}" FontSize="9.5" FontWeight="SemiBold" Foreground="#E5E7EB" VerticalAlignment="Center"/>
+
+                                        <!-- BPM -->
+                                        <Border CornerRadius="4" Background="#1F2532" Padding="4,1">
+                                            <TextBlock Text="{Binding DisplayBpm}" FontSize="9" FontWeight="SemiBold" Foreground="#E5E7EB"/>
+                                        </Border>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -268,8 +530,10 @@
 
                 <!-- Logo & #1 match -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="16" Height="16" Fill="#14C8B0" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <Border Background="#2214C8B0" CornerRadius="3" Padding="4,1" VerticalAlignment="Center">
+                    <Border Width="16" Height="16" CornerRadius="8" Background="#14C8B0" VerticalAlignment="Center" Margin="0,0,6,0">
+                        <TextBlock Text="●" FontSize="9" Foreground="#101318" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#2614C8B0" CornerRadius="3" Padding="4,1" VerticalAlignment="Center">
                         <TextBlock Text="#1" FontSize="9" FontWeight="Black" Foreground="#14C8B0"/>
                     </Border>
                 </StackPanel>
@@ -277,7 +541,7 @@
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,8,0">
                     <TextBlock x:Name="TxtCompactTitle" Text="Aucune suggestion" FontWeight="Bold" FontSize="11" Foreground="White" TextTrimming="CharacterEllipsis"/>
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock x:Name="TxtCompactArtist" Text="Artiste" FontSize="9.5" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="TxtCompactArtist" Text="Artiste" FontSize="9" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" Margin="0,0,6,0"/>
                         <TextBlock x:Name="TxtCompactKey" Text="--" FontSize="9" FontWeight="Bold" Foreground="#14C8B0" Margin="0,0,6,0"/>
                         <TextBlock x:Name="TxtCompactBpm" Text="-- BPM" FontSize="9" Foreground="#E5E7EB"/>
                     </StackPanel>
@@ -285,8 +549,8 @@
 
                 <!-- Actions Déplier & Fermer -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BtnExpand" Content="← Déplier" Style="{StaticResource ActionButtonStyle}" Click="BtnExpand_Click" ToolTip="Déplier la fenêtre Recall" Margin="0,0,4,0"/>
-                    <Button Content="✕" Style="{StaticResource ActionButtonStyle}" Click="BtnClose_Click"/>
+                    <Button x:Name="BtnExpand" Content="← Déplier" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnExpand_Click" ToolTip="Déplier la fenêtre Recall" Margin="0,0,4,0"/>
+                    <Button Content="✕" Style="{StaticResource HeaderCloseBtnStyle}" Click="BtnClose_Click"/>
                 </StackPanel>
             </Grid>
 
