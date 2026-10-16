@@ -58,9 +58,9 @@ function setupSheetsIfNeeded(ss) {
 
     var kpis = [
       ["Métrique", "Total", "Description"],
-      ["Total Téléchargements Réels", '=NB.SI(\'Téléchargements\'!E2:E; "*Téléchargement*")', "Nombre total de clics sur les fichiers d'installation (.dmg, .zip)"],
-      ["Téléchargements macOS", '=NB.SI.ENS(\'Téléchargements\'!B2:B; "*macOS*"; \'Téléchargements\'!E2:E; "*Téléchargement*")', "Total des téléchargements version Mac"],
-      ["Téléchargements Windows", '=NB.SI.ENS(\'Téléchargements\'!B2:B; "*Windows*"; \'Téléchargements\'!E2:E; "*Téléchargement*")', "Total des téléchargements version PC Windows"],
+      ["Total Téléchargements Réels", '=NB.SI(\'Téléchargements\'!E2:E; "*direct*")', "Nombre total de téléchargements réels de fichiers (.dmg, .zip)"],
+      ["Téléchargements macOS", '=NB.SI.ENS(\'Téléchargements\'!B2:B; "*macOS*"; \'Téléchargements\'!E2:E; "*direct*")', "Total des téléchargements version Mac"],
+      ["Téléchargements Windows", '=NB.SI.ENS(\'Téléchargements\'!B2:B; "*Windows*"; \'Téléchargements\'!E2:E; "*direct*")', "Total des téléchargements version PC Windows"],
       ["Clics d'Intention (Hero / Nav)", '=NB.SI(\'Téléchargements\'!E2:E; "*Intention*")', "Visiteurs ayant cliqué sur les boutons d'appel à l'action"],
       ["Total Tous Événements", '=MAX(0; NBVAL(\'Téléchargements\'!A2:A) - 1)', "Volume global de signaux collectés"],
       ["Dernier Événement", '=SI(NBVAL(\'Téléchargements\'!A2:A)>1; TEXTE(MAX(\'Téléchargements\'!A2:A); "AAAA-MM-JJ HH:mm:ss"); "Aucun")', "Horodatage de la dernière action"]
@@ -92,7 +92,7 @@ function handleRequest(params) {
       var eventType = String(data[i][4] || "").toLowerCase();
       var platform = String(data[i][1] || "").toLowerCase();
 
-      if (eventType.indexOf("téléchargement") !== -1 || eventType.indexOf("download") !== -1) {
+      if (eventType.indexOf("direct") !== -1 || (eventType.indexOf("téléchargement") !== -1 && eventType.indexOf("intention") === -1)) {
         totalDownloads++;
         if (platform.indexOf("mac") !== -1) macDownloads++;
         if (platform.indexOf("win") !== -1) winDownloads++;

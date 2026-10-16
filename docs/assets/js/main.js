@@ -143,8 +143,8 @@ const translations = {
     "dl-subtitle": "Téléchargez la version officielle 1.0.0 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
     "dl-mac-title": "macOS",
     "dl-mac-specs": "macOS 12.0+ Monterey, Ventura, Sonoma, Sequoia (Universal Apple Silicon M1-M4 & Intel)",
-    "dl-mac-btn": "Télécharger Recall.dmg",
-    "dl-mac-zip": "Télécharger au format .zip",
+    "dl-mac-btn": "Télécharger Recall.dmg (Recommandé)",
+    "dl-mac-zip": "Format .zip (Option alternative)",
     "dl-win-title": "Windows",
     "dl-win-specs": "Windows 10 & 11 (64-bit x64, .NET 8 WPF)",
     "dl-win-btn": "Télécharger Recall-Windows.zip",
@@ -325,8 +325,8 @@ const translations = {
     "dl-subtitle": "Download the official v1.0.0 release for macOS or Windows. No sign-up required, install and mix.",
     "dl-mac-title": "macOS",
     "dl-mac-specs": "macOS 12.0+ Monterey, Ventura, Sonoma, Sequoia (Universal Apple Silicon M1-M4 & Intel)",
-    "dl-mac-btn": "Download Recall.dmg",
-    "dl-mac-zip": "Download as .zip",
+    "dl-mac-btn": "Download Recall.dmg (Recommended)",
+    "dl-mac-zip": "Format .zip (Alternative option)",
     "dl-win-title": "Windows",
     "dl-win-specs": "Windows 10 & 11 (64-bit x64, .NET 8 WPF)",
     "dl-win-btn": "Download Recall-Windows.zip",
@@ -620,16 +620,30 @@ function initMockupTabs() {
 // ==========================================================================
 // Tracker de Téléchargements Google Sheets
 // ==========================================================================
+let lastDownloadTrackerTime = 0;
+let lastDownloadTrackerFile = "";
+
 function sendDownloadEvent(eventData) {
+  const now = Date.now();
+  const file = eventData.file || "Recall.dmg";
+
+  // Protection Anti-Double Clic / Debounce : ignore les clics rapprochés (< 3s)
+  if (now - lastDownloadTrackerTime < 3000 && lastDownloadTrackerFile === file) {
+    console.log("⏳ [Recall Tracker] Clic ignoré (anti-double comptabilisation)");
+    return;
+  }
+  lastDownloadTrackerTime = now;
+  lastDownloadTrackerFile = file;
+
   const url = localStorage.getItem("recall_tracker_url") || 
               (new URLSearchParams(window.location.search)).get("tracker_url") || 
               GOOGLE_SHEET_TRACKER_URL;
 
   const payload = {
     platform: eventData.platform || "macOS",
-    file: eventData.file || "Recall.dmg",
+    file: file,
     version: "1.0.0",
-    event: eventData.event || "Téléchargement direct",
+    event: "Téléchargement direct",
     location: eventData.location || "Section Téléchargement",
     site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
     browser_lang: navigator.language || "",
@@ -677,97 +691,18 @@ function sendDownloadEvent(eventData) {
 }
 
 function initDownloadTracker() {
-  // 1. Bouton Carte Téléchargement macOS (.dmg)
-  const macCardBtn = document.querySelector(".download-btn.primary");
-  if (macCardBtn) {
-    macCardBtn.addEventListener("click", () => {
-      sendDownloadEvent({
-        platform: "macOS",
-        file: "Recall.dmg",
-        event: "Téléchargement direct",
-        location: "Carte macOS (.dmg)"
-      });
-    });
-  }
-
-  // 2. Lien Format .zip macOS
-  const macZipBtn = document.querySelector(".download-subtext-link");
-  if (macZipBtn) {
-    macZipBtn.addEventListener("click", () => {
-      sendDownloadEvent({
-        platform: "macOS",
-        file: "Recall-macOS.zip",
-        event: "Téléchargement direct",
-        location: "Lien Zip macOS"
-      });
-    });
-  }
-
-  // 3. Bouton Carte Téléchargement Windows (.zip)
-  const winCardBtn = document.querySelector(".download-btn.secondary");
-  if (winCardBtn) {
-    winCardBtn.addEventListener("click", () => {
-      sendDownloadEvent({
-        platform: "Windows",
-        file: "Recall-Windows.zip",
-        event: "Téléchargement direct",
-        location: "Carte Windows (.zip)"
-      });
-    });
-  }
-
-  // 4. Boutons d'action dans le Hero (défilement vers #download)
-  const heroMacBtn = document.querySelector(".hero-actions .btn-primary");
-  if (heroMacBtn) {
-    heroMacBtn.addEventListener("click", () => {
-      sendDownloadEvent({
-        platform: "macOS",
-        file: "Recall.dmg",
-        event: "Intention de téléchargement",
-        location: "Hero Header macOS"
-      });
-    });
-  }
-
-  const heroWinBtn = document.querySelector(".hero-actions .btn-secondary");
-  if (heroWinBtn) {
-    heroWinBtn.addEventListener("click", () => {
-      sendDownloadEvent({
-        platform: "Windows",
-        file: "Recall-Windows.zip",
-        event: "Intention de téléchargement",
-        location: "Hero Header Windows"
-      });
-    });
-  }
-
-  // 5. Boutons CTA de la barre de navigation (desktop et tiroir mobile)
-  document.querySelectorAll(".btn-nav-download").forEach(btn => {
+  // Attache un écouteur UNIQUE exclusivement sur les vrais liens de téléchargement de fichier
+  document.querySelectorAll("[data-track-download]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const isMobile = btn.classList.contains("mobile-cta");
       sendDownloadEvent({
-        platform: "Multi",
-        file: "Section Téléchargement",
-        event: "Intention de téléchargement",
-        location: isMobile ? "Menu Mobile Navigation" : "Barre de Navigation Haute"
+        platform: btn.getAttribute("data-track-download") || "macOS",
+        file: btn.getAttribute("data-track-file") || "Recall.dmg",
+        location: btn.getAttribute("data-track-location") || "Section Téléchargement"
       });
     });
   });
 
-  // 6. Support pour tout élément personnalisé doté de [data-track-download]
-  document.querySelectorAll("[data-track-download]").forEach(el => {
-    if (el === macCardBtn || el === winCardBtn || el === macZipBtn) return;
-    el.addEventListener("click", () => {
-      sendDownloadEvent({
-        platform: el.getAttribute("data-track-download") || "macOS",
-        file: el.getAttribute("data-track-file") || "Recall",
-        event: el.getAttribute("data-track-event") || "Téléchargement direct",
-        location: el.getAttribute("data-track-location") || "Bouton personnalisé"
-      });
-    });
-  });
-
-  // 7. Chargement optionnel des statistiques en direct
+  // Chargement optionnel des statistiques en direct
   loadDownloadStats();
 }
 
