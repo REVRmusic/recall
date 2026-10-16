@@ -203,7 +203,7 @@ public class ToPlayService: ObservableObject {
     
     /// Ajoute un morceau directement depuis un objet Track
     @discardableResult
-    public func addTrack(_ track: Track) -> Bool {
+    public func addTrack(_ track: Track, isSilentIfAlreadyPresent: Bool = false) -> Bool {
         let normTitle = FavoriteCombosService.normalize(track.displayTitle)
         
         // Si le morceau est déjà présent, on le déplace en tête de liste
@@ -211,6 +211,13 @@ public class ToPlayService: ObservableObject {
             FavoriteCombosService.normalize($0.displayTitle) == normTitle ||
             (!track.fileName.isEmpty && !$0.fileName.isEmpty && FavoriteCombosService.normalize($0.fileName) == FavoriteCombosService.normalize(track.fileName))
         }) {
+            if isSilentIfAlreadyPresent {
+                if tracks[existingIndex].filePath == nil, let p = track.filePath {
+                    tracks[existingIndex].filePath = p
+                    saveToDisk()
+                }
+                return true
+            }
             let existing = tracks.remove(at: existingIndex)
             tracks.insert(existing, at: 0)
             saveToDisk()
@@ -237,23 +244,35 @@ public class ToPlayService: ObservableObject {
     
     /// Ajoute un morceau depuis une URL de fichier local (glisser depuis Serato, Rekordbox ou Finder)
     @discardableResult
-    public func addTrack(fromURL url: URL) -> Bool {
+    public func addTrack(fromURL url: URL, isSilentIfAlreadyPresent: Bool = false) -> Bool {
         guard url.isFileURL else { return false }
         let filePath = url.path
         let fileName = url.lastPathComponent
         
-        // 1. Recherche prioritaire dans la base SQLite de Serato (métadonnées précises Serato)
-        let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
-        if let seratoTrack = seratoService.findTrackByFile(filePath: filePath, fileName: fileName) {
-            return addTrack(seratoTrack)
+        // 1. Recherche prioritaire selon le mode logiciel actif
+        if UserSettings.shared.djSoftwareMode == .rekordbox {
+            // Priorité Rekordbox XML
+            if let rekordboxTrack = RekordboxService.shared.findTrackByFile(filePath: filePath, fileName: fileName) {
+                return addTrack(rekordboxTrack, isSilentIfAlreadyPresent: isSilentIfAlreadyPresent)
+            }
+            // Secours Serato SQLite
+            let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
+            if let seratoTrack = seratoService.findTrackByFile(filePath: filePath, fileName: fileName) {
+                return addTrack(seratoTrack, isSilentIfAlreadyPresent: isSilentIfAlreadyPresent)
+            }
+        } else {
+            // Priorité Serato SQLite (par défaut ou mode Serato)
+            let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
+            if let seratoTrack = seratoService.findTrackByFile(filePath: filePath, fileName: fileName) {
+                return addTrack(seratoTrack, isSilentIfAlreadyPresent: isSilentIfAlreadyPresent)
+            }
+            // Secours Rekordbox XML
+            if let rekordboxTrack = RekordboxService.shared.findTrackByFile(filePath: filePath, fileName: fileName) {
+                return addTrack(rekordboxTrack, isSilentIfAlreadyPresent: isSilentIfAlreadyPresent)
+            }
         }
         
-        // 2. Recherche dans la collection Rekordbox XML
-        if let rekordboxTrack = RekordboxService.shared.findTrackByFile(filePath: filePath, fileName: fileName) {
-            return addTrack(rekordboxTrack)
-        }
-        
-        // 3. Ajout immédiat avec analyse intelligente du nom de fichier
+        // 2. Ajout immédiat avec analyse intelligente du nom de fichier
         let parsed = Track.parseSmartArtistAndTitle(rawString: (fileName as NSString).deletingPathExtension)
         let initialTrack = Track(
             title: parsed.title,
@@ -265,7 +284,7 @@ public class ToPlayService: ObservableObject {
             portableId: filePath
         )
         
-        addTrack(initialTrack)
+        addTrack(initialTrack, isSilentIfAlreadyPresent: isSilentIfAlreadyPresent)
         
         // 4. Enrichissement asynchrone moderne des métadonnées ID3 via AVURLAsset
         Task {
@@ -321,6 +340,43 @@ public class ToPlayService: ObservableObject {
         }
         
         return true
+    }
+    
+    /// Recherche et ajoute un morceau selon son Titre et son Artiste (résolution Rekordbox / Serato)
+    @discardableResult
+    public func lookupAndAddTrack(title: String, artist: String = "") -> Bool {
+        let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanTitle.isEmpty else { return false }
+        
+        if UserSettings.shared.djSoftwareMode == .rekordbox {
+            if let rbTrack = RekordboxService.shared.findTrack(title: cleanTitle, artist: artist) {
+                return addTrack(rbTrack)
+            }
+            let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
+            if let sTrack = seratoService.findTrackByTitleArtist(title: cleanTitle, artist: artist) {
+                return addTrack(sTrack)
+            }
+        } else {
+            let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
+            if let sTrack = seratoService.findTrackByTitleArtist(title: cleanTitle, artist: artist) {
+                return addTrack(sTrack)
+            }
+            if let rbTrack = RekordboxService.shared.findTrack(title: cleanTitle, artist: artist) {
+                return addTrack(rbTrack)
+            }
+        }
+        
+        // Morceau virtuel si absent des bases locales
+        let track = Track(
+            title: cleanTitle,
+            artist: artist,
+            bpm: 0.0,
+            rawKey: "",
+            filePath: nil,
+            fileName: "",
+            portableId: UUID().uuidString
+        )
+        return addTrack(track)
     }
     
     /// Met à jour les métadonnées après chargement asynchrone des tags ID3
@@ -482,11 +538,299 @@ public class ToPlayService: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Types et Gestionnaires Universels de Glisser-Déposer (Serato & Rekordbox)
+    
+    public static var universalDragTypes: [NSPasteboard.PasteboardType] {
+        var types: [NSPasteboard.PasteboardType] = [
+            .fileURL,
+            NSPasteboard.PasteboardType("NSFilenamesPboardType"),
+            NSPasteboard.PasteboardType("public.file-url"),
+            NSPasteboard.PasteboardType("com.apple.pasteboard.promised-file-url"),
+            NSPasteboard.PasteboardType("com.apple.pasteboard.promised-file-content-type"),
+            NSPasteboard.PasteboardType("com.apple.NSFilePromiseItemMetaData"),
+            NSPasteboard.PasteboardType("NSFilesPromisePboardType"),
+            NSPasteboard.PasteboardType("CorePasteboardFlavorType 0x6974756E"),
+            NSPasteboard.PasteboardType("itun"),
+            NSPasteboard.PasteboardType("com.apple.itunes.metadata"),
+            NSPasteboard.PasteboardType("com.apple.itunes.pboard"),
+            .string,
+            NSPasteboard.PasteboardType("public.utf8-plain-text"),
+            NSPasteboard.PasteboardType("public.tabular-text"),
+            NSPasteboard.PasteboardType("com.pioneer.rekordbox.track")
+        ]
+        for promiseType in NSFilePromiseReceiver.readableDraggedTypes {
+            let pbType = NSPasteboard.PasteboardType(promiseType)
+            if !types.contains(pbType) {
+                types.append(pbType)
+            }
+        }
+        return types
+    }
+    
+    public static func canHandle(pasteboard: NSPasteboard) -> Bool {
+        guard let types = pasteboard.types, !types.isEmpty else { return false }
+        let registered = Set(universalDragTypes)
+        if types.contains(where: { registered.contains($0) }) {
+            return true
+        }
+        for type in types {
+            let raw = type.rawValue.lowercased()
+            if raw.contains("promise") || raw.contains("file") || raw.contains("audio") || raw.contains("track") || raw.contains("itun") {
+                return true
+            }
+        }
+        return false
+    }
+    
+    /// Traite l'ensemble des éléments déposés depuis le presse-papier macOS (Serato, Rekordbox, Finder)
+    @discardableResult
+    public func handleDroppedPasteboard(_ pasteboard: NSPasteboard, sender: NSDraggingInfo? = nil) -> Bool {
+        var addedAny = false
+        
+        // 1. Objets NSURL natifs (Serato DJ Pro / Finder)
+        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty {
+            for url in urls where url.isFileURL {
+                if addTrack(fromURL: url) {
+                    addedAny = true
+                }
+            }
+            if addedAny { return true }
+        }
+        
+        // 2. Format historique NSFilenamesPboardType (Serato DJ Pro)
+        if let files = pasteboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String], !files.isEmpty {
+            for file in files {
+                let url = URL(fileURLWithPath: file)
+                if addTrack(fromURL: url) {
+                    addedAny = true
+                }
+            }
+            if addedAny { return true }
+        }
+        
+        // 3. Chaîne d'URL directe public.file-url
+        if let str = pasteboard.string(forType: NSPasteboard.PasteboardType("public.file-url")), let url = URL(string: str), url.isFileURL {
+            if addTrack(fromURL: url) {
+                return true
+            }
+        }
+        
+        // 4. Promesses de fichiers modernes macOS / JUCE Rekordbox (NSFilePromiseReceiver)
+        if let receivers = pasteboard.readObjects(forClasses: [NSFilePromiseReceiver.self], options: nil) as? [NSFilePromiseReceiver], !receivers.isEmpty {
+            let dropDir = FileManager.default.temporaryDirectory.appendingPathComponent("RecallDrops", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dropDir, withIntermediateDirectories: true)
+            
+            for receiver in receivers {
+                // Correspondance ultra-rapide immédiate via les noms de fichiers promis
+                for promisedName in receiver.fileNames {
+                    if let rbTrack = RekordboxService.shared.findTrackByFile(filePath: "", fileName: promisedName) {
+                        _ = addTrack(rbTrack)
+                        addedAny = true
+                    } else {
+                        let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
+                        if let sTrack = seratoService.findTrackByFile(filePath: "", fileName: promisedName) {
+                            _ = addTrack(sTrack)
+                            addedAny = true
+                        }
+                    }
+                }
+                
+                // Réception physique asynchrone en tâche de fond pour extraction ID3 si besoin
+                receiver.receivePromisedFiles(atDestination: dropDir, options: [:], operationQueue: .main) { [weak self] fileURL, error in
+                    if let error = error {
+                        print("[Recall] Erreur réception file promise Rekordbox: \(error.localizedDescription)")
+                    } else {
+                        self?.addTrack(fromURL: fileURL, isSilentIfAlreadyPresent: true)
+                    }
+                }
+            }
+            return true
+        }
+        
+        // 5. Promesses de fichiers historiques pour compatibilité rétroactive
+        if let sender = sender {
+            let dropDir = FileManager.default.temporaryDirectory.appendingPathComponent("RecallDrops", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dropDir, withIntermediateDirectories: true)
+            if #unavailable(macOS 10.13) {
+                if let legacyNames = sender.namesOfPromisedFilesDropped(atDestination: dropDir), !legacyNames.isEmpty {
+                    for name in legacyNames {
+                        let fileURL = dropDir.appendingPathComponent(name)
+                        if addTrack(fromURL: fileURL) {
+                            addedAny = true
+                        }
+                    }
+                    if addedAny { return true }
+                }
+            }
+        }
+        
+        // 6. Format d'export Rekordbox / iTunes CorePasteboardFlavorType 0x6974756E
+        let itunTypes = [
+            NSPasteboard.PasteboardType("CorePasteboardFlavorType 0x6974756E"),
+            NSPasteboard.PasteboardType("itun"),
+            NSPasteboard.PasteboardType("com.apple.itunes.metadata"),
+            NSPasteboard.PasteboardType("com.apple.itunes.pboard")
+        ]
+        for itunType in itunTypes {
+            if let data = pasteboard.data(forType: itunType) {
+                if parseItunData(data) {
+                    addedAny = true
+                    break
+                }
+            }
+        }
+        if addedAny { return true }
+        
+        // 7. Parcours de tous les pasteboardItems pour URLs ou chemins de fichiers
+        if let items = pasteboard.pasteboardItems {
+            for item in items {
+                for type in item.types {
+                    if let str = item.string(forType: type) {
+                        if str.hasPrefix("file://") {
+                            if let u = URL(string: str) {
+                                let local = URL(fileURLWithPath: u.path)
+                                if addTrack(fromURL: local) {
+                                    addedAny = true
+                                }
+                            }
+                        } else if str.hasPrefix("/") && FileManager.default.fileExists(atPath: str) {
+                            if addTrack(fromURL: URL(fileURLWithPath: str)) {
+                                addedAny = true
+                            }
+                        }
+                    }
+                }
+            }
+            if addedAny { return true }
+        }
+        
+        // 8. Texte brut ou texte tabulaire
+        let textTypes: [NSPasteboard.PasteboardType] = [
+            NSPasteboard.PasteboardType("public.tabular-text"),
+            .string,
+            NSPasteboard.PasteboardType("public.utf8-plain-text")
+        ]
+        for tType in textTypes {
+            if let text = pasteboard.string(forType: tType), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if parseDroppedText(text) {
+                    addedAny = true
+                    break
+                }
+            }
+        }
+        
+        return addedAny
+    }
+    
+    /// Décode les données de métadonnées du format iTunes / Rekordbox (0x6974756E)
+    private func parseItunData(_ data: Data) -> Bool {
+        var added = false
+        if let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
+            if let tracksDict = plist["Tracks"] as? [String: [String: Any]] {
+                for (_, trackInfo) in tracksDict {
+                    if let location = trackInfo["Location"] as? String, let url = URL(string: location) {
+                        let fileURL = URL(fileURLWithPath: url.path)
+                        if addTrack(fromURL: fileURL) {
+                            added = true
+                            continue
+                        }
+                    }
+                    let title = trackInfo["Name"] as? String ?? ""
+                    let artist = trackInfo["Artist"] as? String ?? ""
+                    if !title.isEmpty && lookupAndAddTrack(title: title, artist: artist) {
+                        added = true
+                    }
+                }
+            } else if let tracksList = plist["Tracks"] as? [[String: Any]] {
+                for trackInfo in tracksList {
+                    if let location = trackInfo["Location"] as? String, let url = URL(string: location) {
+                        let fileURL = URL(fileURLWithPath: url.path)
+                        if addTrack(fromURL: fileURL) {
+                            added = true
+                            continue
+                        }
+                    }
+                    let title = trackInfo["Name"] as? String ?? ""
+                    let artist = trackInfo["Artist"] as? String ?? ""
+                    if !title.isEmpty && lookupAndAddTrack(title: title, artist: artist) {
+                        added = true
+                    }
+                }
+            }
+        }
+        
+        // Scanner de secours pour URI file:// encodé dans le buffer
+        if !added, let stringContent = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .ascii) {
+            let pattern = "file://[^<\"\r\n]+"
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                let nsString = stringContent as NSString
+                let matches = regex.matches(in: stringContent, options: [], range: NSRange(location: 0, length: nsString.length))
+                for match in matches {
+                    let matchedStr = nsString.substring(with: match.range)
+                    if let decoded = matchedStr.removingPercentEncoding, let url = URL(string: matchedStr) {
+                        let path = url.path.isEmpty ? decoded.replacingOccurrences(of: "file://localhost", with: "").replacingOccurrences(of: "file://", with: "") : url.path
+                        let fileURL = URL(fileURLWithPath: path)
+                        if addTrack(fromURL: fileURL) {
+                            added = true
+                        }
+                    }
+                }
+            }
+        }
+        
+        return added
+    }
+    
+    /// Parse une chaîne de texte déposée (chemins de fichiers ou colonnes tabulaires Rekordbox)
+    private func parseDroppedText(_ text: String) -> Bool {
+        var added = false
+        let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if trimmed.hasPrefix("file://") {
+                if let url = URL(string: trimmed) {
+                    let fileURL = URL(fileURLWithPath: url.path)
+                    if addTrack(fromURL: fileURL) {
+                        added = true
+                        continue
+                    }
+                }
+            } else if trimmed.hasPrefix("/") && FileManager.default.fileExists(atPath: trimmed) {
+                if addTrack(fromURL: URL(fileURLWithPath: trimmed)) {
+                    added = true
+                    continue
+                }
+            }
+            
+            let columns = trimmed.components(separatedBy: "\t").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if columns.count >= 2 {
+                if lookupAndAddTrack(title: columns[0], artist: columns[1]) {
+                    added = true
+                    continue
+                }
+                if lookupAndAddTrack(title: columns[1], artist: columns[0]) {
+                    added = true
+                    continue
+                }
+            } else if columns.count == 1 {
+                let parsed = Track.parseSmartArtistAndTitle(rawString: columns[0])
+                if lookupAndAddTrack(title: parsed.title, artist: parsed.artist ?? "") {
+                    added = true
+                    continue
+                }
+            }
+        }
+        
+        return added
+    }
 }
 
 // MARK: - Composant Natif AppKit de Destination de Glisser-Déposer
 
-/// Vue AppKit native dédiée à la réception absolue des glisser-déposer de morceaux depuis Serato DJ Pro
+/// Vue AppKit native dédiée à la réception absolue des glisser-déposer de morceaux depuis Serato DJ Pro & Pioneer DJ Rekordbox
 public final class RecallDropTargetNSView: NSView {
     public var onDropURLs: (([URL]) -> Void)?
     public var onDraggingChanged: ((Bool) -> Void)?
@@ -502,22 +846,11 @@ public final class RecallDropTargetNSView: NSView {
     }
     
     private func setupDragTypes() {
-        registerForDraggedTypes([
-            .fileURL,
-            NSPasteboard.PasteboardType("NSFilenamesPboardType"),
-            NSPasteboard.PasteboardType("public.file-url")
-        ])
-    }
-    
-    private func canHandle(pasteboard: NSPasteboard) -> Bool {
-        guard let types = pasteboard.types else { return false }
-        return types.contains(.fileURL) ||
-               types.contains(NSPasteboard.PasteboardType("NSFilenamesPboardType")) ||
-               types.contains(NSPasteboard.PasteboardType("public.file-url"))
+        registerForDraggedTypes(ToPlayService.universalDragTypes)
     }
     
     public override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if canHandle(pasteboard: sender.draggingPasteboard) {
+        if ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) {
             onDraggingChanged?(true)
             return .copy
         }
@@ -525,7 +858,7 @@ public final class RecallDropTargetNSView: NSView {
     }
     
     public override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        return canHandle(pasteboard: sender.draggingPasteboard) ? .copy : []
+        return ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) ? .copy : []
     }
     
     public override func draggingExited(_ sender: NSDraggingInfo?) {
@@ -538,10 +871,15 @@ public final class RecallDropTargetNSView: NSView {
     
     public override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         onDraggingChanged?(false)
-        let urls = extractURLs(from: sender.draggingPasteboard)
-        guard !urls.isEmpty else { return false }
-        onDropURLs?(urls)
-        return true
+        let handled = ToPlayService.shared.handleDroppedPasteboard(sender.draggingPasteboard, sender: sender)
+        if !handled {
+            let urls = extractURLs(from: sender.draggingPasteboard)
+            if !urls.isEmpty {
+                onDropURLs?(urls)
+                return true
+            }
+        }
+        return handled
     }
     
     private func extractURLs(from pasteboard: NSPasteboard) -> [URL] {

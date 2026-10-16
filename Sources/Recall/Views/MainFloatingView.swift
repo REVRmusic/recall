@@ -226,9 +226,6 @@ public struct MainFloatingView: View {
             maxHeight: FloatingWindowController.maxHeight
         )
         .ignoresSafeArea() // Indispensable pour que le fond sombre englobe les traffic lights macOS
-        .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: $toPlayService.isDraggingFileOver) { providers in
-            return toPlayService.handleDroppedProviders(providers)
-        }
         .sheet(isPresented: $showSearch) {
             ManualSearchSheetView()
                 .environmentObject(monitor)

@@ -331,16 +331,62 @@ public class RekordboxService: ObservableObject {
     public func findTrackByFile(filePath: String, fileName: String) -> Track? {
         loadCollectionIfNeeded()
         let cleanFn = fileName.lowercased()
+        let decodedFn = (fileName.removingPercentEncoding ?? fileName).lowercased()
         let cleanPath = filePath.lowercased()
+        let decodedPath = (filePath.removingPercentEncoding ?? filePath).lowercased()
         
         for track in tracksList {
-            if let p = track.filePath?.lowercased(), p == cleanPath {
-                return track
+            if let p = track.filePath?.lowercased() {
+                if p == cleanPath || p == decodedPath || (!cleanPath.isEmpty && p.hasSuffix(cleanPath)) || (!cleanFn.isEmpty && p.hasSuffix(cleanFn)) {
+                    return track
+                }
             }
-            if !track.fileName.isEmpty && track.fileName.lowercased() == cleanFn {
+            if !track.fileName.isEmpty {
+                let tFn = track.fileName.lowercased()
+                if tFn == cleanFn || tFn == decodedFn {
+                    return track
+                }
+            }
+        }
+        return nil
+    }
+    
+    /// Trouve un morceau de la collection Rekordbox par son titre et son artiste
+    public func findTrack(title: String, artist: String = "") -> Track? {
+        loadCollectionIfNeeded()
+        let cleanTitle = FavoriteCombosService.normalize(title)
+        let cleanArtist = FavoriteCombosService.normalize(artist)
+        guard !cleanTitle.isEmpty else { return nil }
+        
+        // 1. Correspondance exacte titre + artiste
+        if !cleanArtist.isEmpty {
+            for track in tracksList {
+                let tNorm = FavoriteCombosService.normalize(track.displayTitle)
+                let aNorm = FavoriteCombosService.normalize(track.displayArtist)
+                if tNorm == cleanTitle && (aNorm == cleanArtist || aNorm.contains(cleanArtist) || cleanArtist.contains(aNorm)) {
+                    return track
+                }
+            }
+        }
+        
+        // 2. Correspondance exacte titre
+        for track in tracksList {
+            let tNorm = FavoriteCombosService.normalize(track.displayTitle)
+            if tNorm == cleanTitle {
                 return track
             }
         }
+        
+        // 3. Correspondance partielle si titre assez long (ex: remix ou version radio)
+        if cleanTitle.count >= 4 {
+            for track in tracksList {
+                let tNorm = FavoriteCombosService.normalize(track.displayTitle)
+                if tNorm.contains(cleanTitle) || cleanTitle.contains(tNorm) {
+                    return track
+                }
+            }
+        }
+        
         return nil
     }
     

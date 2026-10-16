@@ -915,6 +915,79 @@ public func fetchActiveDecks() -> ActiveDecksState {
         return nil
     }
     
+    /// Trouve un morceau dans la base Serato par son titre et son artiste (pour glisser-déposer sans chemin direct)
+    public func findTrackByTitleArtist(title: String, artist: String = "") -> Track? {
+        guard let db = openDatabase() else { return nil }
+        defer { sqlite3_close(db) }
+        
+        let safeTitle = escapeSql(title)
+        let safeArtist = escapeSql(artist)
+        guard !safeTitle.isEmpty else { return nil }
+        
+        let sql: String
+        if !safeArtist.isEmpty {
+            sql = """
+            SELECT 
+                id,
+                ifnull(name, ''),
+                ifnull(artist, ''),
+                ifnull(bpm, 0.0),
+                ifnull(key, ''),
+                ifnull(file_name, ''),
+                ifnull(portable_id, '')
+            FROM asset
+            WHERE (name = '\(safeTitle)' OR file_name LIKE '%\(safeTitle)%')
+              AND (artist = '\(safeArtist)' OR artist LIKE '%\(safeArtist)%')
+            ORDER BY (CASE WHEN name = '\(safeTitle)' THEN 1 ELSE 2 END)
+            LIMIT 1;
+            """
+        } else {
+            sql = """
+            SELECT 
+                id,
+                ifnull(name, ''),
+                ifnull(artist, ''),
+                ifnull(bpm, 0.0),
+                ifnull(key, ''),
+                ifnull(file_name, ''),
+                ifnull(portable_id, '')
+            FROM asset
+            WHERE (name = '\(safeTitle)' OR file_name LIKE '%\(safeTitle)%')
+            ORDER BY (CASE WHEN name = '\(safeTitle)' THEN 1 ELSE 2 END)
+            LIMIT 1;
+            """
+        }
+        
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                let assetId = Int(sqlite3_column_int64(stmt, 0))
+                let t = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+                let a = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
+                let bpm = sqlite3_column_double(stmt, 3)
+                let key = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
+                let fn = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+                let pid = sqlite3_column_text(stmt, 6).map { String(cString: $0) } ?? ""
+                sqlite3_finalize(stmt)
+                
+                let resolvedPath = resolveTrackFilePath(portableId: pid, fileName: fn)
+                
+                return Track(
+                    assetId: assetId,
+                    title: t.isEmpty ? title : t,
+                    artist: a.isEmpty ? artist : a,
+                    bpm: bpm,
+                    rawKey: key,
+                    filePath: resolvedPath,
+                    fileName: fn,
+                    portableId: pid
+                )
+            }
+            sqlite3_finalize(stmt)
+        }
+        return nil
+    }
+    
     // MARK: - Suivi de la Session en Cours (Morceaux Déjà Joués)
     
     public struct RawSessionEntry {

@@ -65,11 +65,7 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     // MARK: - Réception Globale du Glisser-Déposer Serato / Rekordbox / Finder
     
     public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        let pboard = sender.draggingPasteboard
-        if let types = pboard.types,
-           types.contains(.fileURL) ||
-           types.contains(NSPasteboard.PasteboardType("NSFilenamesPboardType")) ||
-           types.contains(NSPasteboard.PasteboardType("public.file-url")) {
+        if ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) {
             DispatchQueue.main.async {
                 ToPlayService.shared.isDraggingFileOver = true
             }
@@ -79,7 +75,7 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     }
     
     public func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        return .copy
+        return ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) ? .copy : []
     }
     
     public func draggingExited(_ sender: NSDraggingInfo?) {
@@ -98,26 +94,7 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
         DispatchQueue.main.async {
             ToPlayService.shared.isDraggingFileOver = false
         }
-        let pboard = sender.draggingPasteboard
-        var urls: [URL] = []
-        if let list = pboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !list.isEmpty {
-            urls.append(contentsOf: list.filter { $0.isFileURL })
-        }
-        if urls.isEmpty, let files = pboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String] {
-            for f in files {
-                urls.append(URL(fileURLWithPath: f))
-            }
-        }
-        if urls.isEmpty, let str = pboard.string(forType: .fileURL), let u = URL(string: str) {
-            urls.append(u)
-        }
-        guard !urls.isEmpty else { return false }
-        for url in urls {
-            DispatchQueue.main.async {
-                ToPlayService.shared.addTrack(fromURL: url)
-            }
-        }
-        return true
+        return ToPlayService.shared.handleDroppedPasteboard(sender.draggingPasteboard, sender: sender)
     }
 }
 
@@ -188,11 +165,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
-        panel.registerForDraggedTypes([
-            .fileURL,
-            NSPasteboard.PasteboardType("NSFilenamesPboardType"),
-            NSPasteboard.PasteboardType("public.file-url")
-        ])
+        panel.registerForDraggedTypes(ToPlayService.universalDragTypes)
         
         // Supprime complètement les boutons ronds standard de macOS pour libérer le coin supérieur gauche pour le logo Recall
         panel.standardWindowButton(.closeButton)?.isHidden = true
