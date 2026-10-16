@@ -21,6 +21,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Surveillance active
         SeratoMonitorService.shared.startMonitoring()
+        
+        // Recherche de mise à jour automatique au démarrage (uniquement si connecté à Internet)
+        AutoUpdateService.shared.checkForUpdatesOnStartup()
     }
     
     public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

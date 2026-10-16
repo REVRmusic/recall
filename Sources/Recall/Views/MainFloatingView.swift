@@ -5,6 +5,7 @@ public struct MainFloatingView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
     @EnvironmentObject var settings: UserSettings
     @ObservedObject var toPlayService: ToPlayService = .shared
+    @ObservedObject var autoUpdateService: AutoUpdateService = .shared
     
     @State private var showSearch: Bool = false
     @State private var showGuide: Bool = false
@@ -124,6 +125,13 @@ public struct MainFloatingView: View {
                         showSearch: $showSearch,
                         showGuide: $showGuide
                     )
+                    
+                    // Notification discrète si une nouvelle version est disponible
+                    if autoUpdateService.isUpdateAvailable && autoUpdateService.showUpdateBanner,
+                       let release = autoUpdateService.availableUpdate {
+                        UpdateBannerView(release: release)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
                     
                     // Carte unifiée du morceau en cours de lecture avec sélecteurs de Deck
                     NowPlayingCard()

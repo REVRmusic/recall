@@ -7,6 +7,7 @@ public struct SettingsSheetView: View {
     @ObservedObject private var favService = FavoriteCombosService.shared
     @ObservedObject private var sessionService = SessionHistoryService.shared
     @ObservedObject private var rbService = RekordboxService.shared
+    @ObservedObject private var autoUpdate = AutoUpdateService.shared
     @Environment(\.dismiss) var dismiss
     @State private var showGuideFromSettings: Bool = false
     
@@ -774,6 +775,88 @@ public struct SettingsSheetView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    
+                    // SECTION : Mises à jour du logiciel Recall
+                    settingCard {
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(Color.accentCyan)
+                                    
+                                    Text("Mises à jour du logiciel")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Spacer()
+                                
+                                // Badge version actuelle
+                                Text("v\(autoUpdate.currentAppVersion)")
+                                    .font(.system(size: 9.5, weight: .heavy, design: .rounded))
+                                    .foregroundColor(Color.accentCyan)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.accentCyan.opacity(0.18))
+                                    .cornerRadius(4)
+                            }
+                            
+                            // État de la mise à jour
+                            if autoUpdate.isUpdateAvailable, let release = autoUpdate.availableUpdate {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(Color.accentCyan)
+                                    
+                                    Text("Version \(release.tagName) disponible !")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.white)
+                                    
+                                    Spacer()
+                                    
+                                    Button {
+                                        autoUpdate.openDownload()
+                                    } label: {
+                                        Text("Télécharger (DMG)")
+                                            .font(.system(size: 9.5, weight: .heavy))
+                                            .foregroundColor(.black)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 3.5)
+                                            .background(Color.accentCyan)
+                                            .cornerRadius(4)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(7)
+                                .background(Color.accentCyan.opacity(0.12))
+                                .cornerRadius(6)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(Color.accentCyan.opacity(0.4), lineWidth: 0.8)
+                                )
+                            } else {
+                                Text("Recall vérifie automatiquement les nouvelles versions au démarrage si l'ordinateur est connecté à Internet.")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.white.opacity(0.60))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            
+                            if let status = autoUpdate.manualCheckStatus {
+                                Text(status)
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundColor(autoUpdate.isUpdateAvailable ? Color.accentCyan : .white.opacity(0.70))
+                            }
+                            
+                            // Bouton vérifier manuellement
+                            SettingActionButton(
+                                icon: "arrow.clockwise",
+                                title: autoUpdate.isChecking ? "Recherche en cours..." : "Rechercher une mise à jour maintenant"
+                            ) {
+                                autoUpdate.checkForUpdatesManually()
+                            }
+                        }
+                    }
                     
                     // SECTION 9 : Mentions Légales & Confidentialité
                     settingCard {
