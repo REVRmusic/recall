@@ -1,8 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct MainFloatingView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
     @EnvironmentObject var settings: UserSettings
+    @ObservedObject var toPlayService: ToPlayService = .shared
     
     @State private var showSearch: Bool = false
     @State private var showGuide: Bool = false
@@ -50,6 +52,31 @@ public struct MainFloatingView: View {
         return list
     }
     
+    /// Nombre de morceaux à jouer affichés en tenant compte des filtres harmoniques/BPM
+    private var displayedToPlayCount: Int {
+        var list = toPlayService.toTrackList(referenceTrack: monitor.currentTrack)
+        if settings.isHarmonicFilterActive, monitor.currentTrack != nil {
+            list = list.filter { $0.harmonicRelation?.isCompatible == true }
+        }
+        if settings.isBpmFilterActive, let currentBpm = monitor.currentTrack?.bpm, currentBpm > 0 {
+            let tolPercent = settings.bpmTolerancePercent / 100.0
+            list = list.filter { track in
+                guard track.bpm > 0 else { return false }
+                let ratio1 = track.bpm / currentBpm
+                if abs(ratio1 - 1.0) <= tolPercent { return true }
+                let ratio2 = (track.bpm / 2.0) / currentBpm
+                if abs(ratio2 - 1.0) <= tolPercent { return true }
+                let ratio3 = (track.bpm * 2.0) / currentBpm
+                if abs(ratio3 - 1.0) <= tolPercent { return true }
+                return false
+            }
+        }
+        if settings.hidePlayedTracks {
+            list = list.filter { !$0.isPlayedInSession }
+        }
+        return list.count
+    }
+    
     public var body: some View {
         ZStack {
             // Fond sombre avec verre dépoli ultra moderne épousant rigoureusement tout le cadre
@@ -75,6 +102,18 @@ public struct MainFloatingView: View {
                         )
                 )
             
+            // Vue de réception AppKit native assurant 100% de fiabilité lors d'un glisser depuis Serato
+            RecallDropTargetViewRepresentable(
+                onDropURLs: { urls in
+                    for url in urls {
+                        toPlayService.addTrack(fromURL: url)
+                    }
+                },
+                onDraggingChanged: { isOver in
+                    toPlayService.isDraggingFileOver = isOver
+                }
+            )
+            
             if settings.isCompactMode {
                 // Mode bandeau compact ouvert sur la droite de l'écran
                 BandeauCompactView()
@@ -91,15 +130,77 @@ public struct MainFloatingView: View {
                     
                     // Barre de filtres en 1 seule ligne ultra compacte
                     FilterBarView(
-                        suggestionsCount: filteredSuggestions.count
+                        suggestionsCount: settings.isToPlayFilterActive ? displayedToPlayCount : filteredSuggestions.count
                     )
                     
-                    // Liste des suggestions réelles d'enchaînement
-                    SuggestionsListView(
-                        suggestions: filteredSuggestions,
-                        isLoading: monitor.isLoading
-                    )
+                    // Liste des suggestions réelles ou Liste des morceaux à jouer selon le filtre actif
+                    if settings.isToPlayFilterActive {
+                        ToPlayListView()
+                    } else {
+                        SuggestionsListView(
+                            suggestions: filteredSuggestions,
+                            isLoading: monitor.isLoading
+                        )
+                    }
                 }
+            }
+            
+            // Overlay visuel lors du survol d'un glisser de morceau audio
+            if toPlayService.isDraggingFileOver {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.accentCyan.opacity(0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .strokeBorder(
+                                Color.accentCyan,
+                                style: StrokeStyle(lineWidth: 2, dash: [6, 4])
+                            )
+                    )
+                    .overlay(
+                        VStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 32, weight: .semibold))
+                                .foregroundColor(Color.accentCyan)
+                            Text("Ajouter aux morceaux à jouer")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("Déposez le fichier pour le préparer")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.white.opacity(0.75))
+                        }
+                    )
+                    .transition(.opacity)
+                    .zIndex(90)
+            }
+            
+            // Toast flottant de confirmation d'ajout
+            if let toast = toPlayService.toastMessage {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(Color(hex: "#00E676"))
+                            .font(.system(size: 11, weight: .bold))
+                        Text(toast)
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(hex: "#1A1A22").opacity(0.96))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(hex: "#00E676").opacity(0.4), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.55), radius: 6, x: 0, y: 3)
+                    )
+                    .padding(.bottom, 12)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(95)
             }
             
             // Modale de confirmation de combo favori
@@ -117,6 +218,9 @@ public struct MainFloatingView: View {
             maxHeight: FloatingWindowController.maxHeight
         )
         .ignoresSafeArea() // Indispensable pour que le fond sombre englobe les traffic lights macOS
+        .onDrop(of: [UTType.fileURL, UTType.audio], isTargeted: $toPlayService.isDraggingFileOver) { providers in
+            return toPlayService.handleDroppedProviders(providers)
+        }
         .sheet(isPresented: $showSearch) {
             ManualSearchSheetView()
                 .environmentObject(monitor)

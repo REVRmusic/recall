@@ -69,6 +69,9 @@ public class UserSettings: ObservableObject {
     @Published public var isFavoritesFilterActive: Bool {
         didSet { UserDefaults.standard.set(isFavoritesFilterActive, forKey: "isFavoritesFilterActive") }
     }
+    @Published public var isToPlayFilterActive: Bool {
+        didSet { UserDefaults.standard.set(isToPlayFilterActive, forKey: "isToPlayFilterActive") }
+    }
     @Published public var minTransitionsCount: Int {
         didSet { UserDefaults.standard.set(minTransitionsCount, forKey: "minTransitionsCount") }
     }
@@ -111,6 +114,7 @@ public class UserSettings: ObservableObject {
         self.isBpmFilterActive = def.bool(forKey: "isBpmFilterActive")
         self.isHarmonicFilterActive = def.bool(forKey: "isHarmonicFilterActive")
         self.isFavoritesFilterActive = def.bool(forKey: "isFavoritesFilterActive")
+        self.isToPlayFilterActive = def.bool(forKey: "isToPlayFilterActive")
         self.minTransitionsCount = def.object(forKey: "minTransitionsCount") != nil ? def.integer(forKey: "minTransitionsCount") : 1
         self.alwaysOnTop = def.object(forKey: "alwaysOnTop") != nil ? def.bool(forKey: "alwaysOnTop") : true
         self.keyDisplayMode = def.integer(forKey: "keyDisplayMode")

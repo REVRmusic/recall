@@ -327,6 +327,23 @@ public class RekordboxService: ObservableObject {
         return results
     }
     
+    /// Trouve un morceau de la collection Rekordbox par son chemin de fichier ou nom de fichier
+    public func findTrackByFile(filePath: String, fileName: String) -> Track? {
+        loadCollectionIfNeeded()
+        let cleanFn = fileName.lowercased()
+        let cleanPath = filePath.lowercased()
+        
+        for track in tracksList {
+            if let p = track.filePath?.lowercased(), p == cleanPath {
+                return track
+            }
+            if !track.fileName.isEmpty && track.fileName.lowercased() == cleanFn {
+                return track
+            }
+        }
+        return nil
+    }
+    
     /// Résout l'identifiant Rekordbox correspondant à un morceau (par ID direct ou titre/artiste)
     private func resolveTrackId(for track: Track) -> String? {
         if let existing = tracksById[track.portableId] {

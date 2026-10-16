@@ -855,6 +855,66 @@ public func fetchActiveDecks() -> ActiveDecksState {
         return nil
     }
     
+    // MARK: - Recherche d'un Morceau par Fichier (Drag & Drop)
+    
+    public func findTrackByFile(filePath: String, fileName: String) -> Track? {
+        guard let db = openDatabase() else { return nil }
+        defer { sqlite3_close(db) }
+        
+        let safeFileName = escapeSql(fileName)
+        let cleanPath = filePath.hasPrefix("/") ? String(filePath.dropFirst()) : filePath
+        let safePortable = escapeSql(cleanPath)
+        let safeFilePath = escapeSql(filePath)
+        
+        let sql = """
+        SELECT 
+            id,
+            ifnull(name, ''),
+            ifnull(artist, ''),
+            ifnull(bpm, 0.0),
+            ifnull(key, ''),
+            ifnull(file_name, ''),
+            ifnull(portable_id, '')
+        FROM asset
+        WHERE file_name = '\(safeFileName)'
+           OR portable_id = '\(safePortable)'
+           OR portable_id = '\(safeFilePath)'
+           OR '\(safeFilePath)' LIKE '%' || portable_id
+        ORDER BY (CASE WHEN file_name = '\(safeFileName)' THEN 1 ELSE 2 END)
+        LIMIT 1;
+        """
+        
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                let assetId = Int(sqlite3_column_int64(stmt, 0))
+                let title = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+                let artist = sqlite3_column_text(stmt, 2).map { String(cString: $0) } ?? ""
+                let bpm = sqlite3_column_double(stmt, 3)
+                let key = sqlite3_column_text(stmt, 4).map { String(cString: $0) } ?? ""
+                let fn = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
+                let pid = sqlite3_column_text(stmt, 6).map { String(cString: $0) } ?? ""
+                sqlite3_finalize(stmt)
+                
+                let resolvedPath = resolveTrackFilePath(portableId: pid, fileName: fn) ?? (FileManager.default.fileExists(atPath: filePath) ? filePath : nil)
+                
+                return Track(
+                    assetId: assetId,
+                    title: title.isEmpty ? (fileName as NSString).deletingPathExtension : title,
+                    artist: artist,
+                    bpm: bpm,
+                    rawKey: key,
+                    filePath: resolvedPath,
+                    fileName: fn.isEmpty ? fileName : fn,
+                    portableId: pid
+                )
+            }
+            sqlite3_finalize(stmt)
+        }
+        
+        return nil
+    }
+    
     // MARK: - Suivi de la Session en Cours (Morceaux Déjà Joués)
     
     public struct RawSessionEntry {

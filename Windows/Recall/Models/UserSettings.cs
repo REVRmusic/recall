@@ -17,6 +17,7 @@ namespace Recall.Models
         public bool IsBpmFilterActive { get; set; } = false;
         public bool IsHarmonicFilterActive { get; set; } = false;
         public bool IsFavoritesFilterActive { get; set; } = false;
+        public bool IsToPlayFilterActive { get; set; } = false;
         public int MinTransitionsCount { get; set; } = 1;
         public bool AlwaysOnTop { get; set; } = true;
         public bool IsCompactMode { get; set; } = false;

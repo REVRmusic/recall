@@ -5,11 +5,36 @@ import AppKit
 public struct BandeauCompactView: View {
     @EnvironmentObject var monitor: SeratoMonitorService
     @EnvironmentObject var settings: UserSettings
+    @ObservedObject var toPlayService: ToPlayService = .shared
     
     public init() {}
     
     /// Premier match suggéré pour le morceau en cours (selon les filtres actifs)
     private var topSuggestion: Track? {
+        if settings.isToPlayFilterActive {
+            var list = toPlayService.toTrackList(referenceTrack: monitor.currentTrack)
+            if settings.isHarmonicFilterActive, monitor.currentTrack != nil {
+                list = list.filter { $0.harmonicRelation?.isCompatible == true }
+            }
+            if settings.isBpmFilterActive, let currentBpm = monitor.currentTrack?.bpm, currentBpm > 0 {
+                let tolPercent = settings.bpmTolerancePercent / 100.0
+                list = list.filter { track in
+                    guard track.bpm > 0 else { return false }
+                    let ratio1 = track.bpm / currentBpm
+                    if abs(ratio1 - 1.0) <= tolPercent { return true }
+                    let ratio2 = (track.bpm / 2.0) / currentBpm
+                    if abs(ratio2 - 1.0) <= tolPercent { return true }
+                    let ratio3 = (track.bpm * 2.0) / currentBpm
+                    if abs(ratio3 - 1.0) <= tolPercent { return true }
+                    return false
+                }
+            }
+            if settings.hidePlayedTracks {
+                list = list.filter { !$0.isPlayedInSession }
+            }
+            return list.first
+        }
+        
         var list = settings.isFavoritesFilterActive ? monitor.favoriteSuggestions : monitor.historySuggestions
         
         if settings.isHarmonicFilterActive {
@@ -46,12 +71,12 @@ public struct BandeauCompactView: View {
             VStack(alignment: .leading, spacing: 2) {
                 if let match = topSuggestion {
                     HStack(spacing: 4) {
-                        Text("#1")
+                        Text(settings.isToPlayFilterActive ? "#1 À JOUER" : "#1")
                             .font(.system(size: 8.5, weight: .black, design: .rounded))
-                            .foregroundColor(Color.accentCyan)
+                            .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : Color.accentCyan)
                             .padding(.horizontal, 3.5)
                             .padding(.vertical, 0.5)
-                            .background(Color.accentCyan.opacity(0.2))
+                            .background((settings.isToPlayFilterActive ? Color(hex: "#FFB300") : Color.accentCyan).opacity(0.2))
                             .cornerRadius(3)
                             .fixedSize(horizontal: true, vertical: false)
                         
@@ -153,6 +178,15 @@ public struct BandeauCompactView: View {
                             .background(Color.white.opacity(0.08))
                             .cornerRadius(2.5)
                             .fixedSize(horizontal: true, vertical: false)
+                    }
+                } else if settings.isToPlayFilterActive {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Aucun morceau à jouer")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundColor(Color(hex: "#FFB300"))
+                        Text("Glissez un morceau ici")
+                            .font(.system(size: 8.5))
+                            .foregroundColor(.white.opacity(0.45))
                     }
                 } else if monitor.currentTrack != nil {
                     VStack(alignment: .leading, spacing: 1) {
@@ -268,6 +302,28 @@ public struct BandeauCompactView: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 54)
+        .overlay(
+            Group {
+                if toPlayService.isDraggingFileOver {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.accentCyan.opacity(0.20))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .strokeBorder(Color.accentCyan, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                        )
+                        .overlay(
+                            HStack(spacing: 5) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(Color.accentCyan)
+                                Text("Ajouter aux morceaux à jouer")
+                                    .font(.system(size: 9.5, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        )
+                }
+            }
+        )
     }
 }
 

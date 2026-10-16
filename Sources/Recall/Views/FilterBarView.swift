@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct FilterBarView: View {
     @EnvironmentObject var settings: UserSettings
+    @ObservedObject var toPlayService: ToPlayService = .shared
     let suggestionsCount: Int
     
     public init(suggestionsCount: Int) {
@@ -37,21 +38,39 @@ public struct FilterBarView: View {
                 title: "Favs",
                 shortTitle: "Fav",
                 icon: "heart.fill",
-                isActive: settings.isFavoritesFilterActive,
+                isActive: settings.isFavoritesFilterActive && !settings.isToPlayFilterActive,
                 accentColor: Color(hex: "#FF5252")
             ) {
+                if settings.isToPlayFilterActive {
+                    settings.isToPlayFilterActive = false
+                }
                 settings.isFavoritesFilterActive.toggle()
+            }
+            
+            // Filtre / Onglet Morceaux À Jouer
+            filterTogglePill(
+                title: toPlayService.tracks.isEmpty ? "À Jouer" : "À Jouer (\(toPlayService.tracks.count))",
+                shortTitle: toPlayService.tracks.isEmpty ? "À jouer" : "\(toPlayService.tracks.count) à jouer",
+                icon: "bookmark.fill",
+                isActive: settings.isToPlayFilterActive,
+                accentColor: Color(hex: "#FFB300")
+            ) {
+                settings.isToPlayFilterActive.toggle()
             }
             
             Spacer(minLength: 4)
             
             // Compteur de résultats
+            let countLabel = settings.isToPlayFilterActive ?
+                (suggestionsCount > 1 ? "à jouer" : "à jouer") :
+                (suggestionsCount > 1 ? "matchs" : "match")
+            
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 3) {
                     Text("\(suggestionsCount)")
                         .font(.system(size: 9.5, weight: .bold, design: .rounded))
-                        .foregroundColor(.white.opacity(0.65))
-                    Text(suggestionsCount > 1 ? "matchs" : "match")
+                        .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : .white.opacity(0.65))
+                    Text(countLabel)
                         .font(.system(size: 8.5, weight: .semibold))
                         .foregroundColor(.white.opacity(0.40))
                 }
@@ -62,7 +81,7 @@ public struct FilterBarView: View {
                 
                 Text("\(suggestionsCount)")
                     .font(.system(size: 9.5, weight: .bold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.55))
+                    .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : .white.opacity(0.55))
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2.5)
                     .background(Color.white.opacity(0.05))

@@ -388,6 +388,29 @@ namespace Recall.Services
             }
         }
 
+        public Track? FindTrackByFile(string filePath, string fileName)
+        {
+            LoadCollectionIfNeeded();
+            string cleanFn = (fileName ?? "").ToLowerInvariant();
+            string cleanPath = (filePath ?? "").ToLowerInvariant();
+
+            lock (_tracksById)
+            {
+                foreach (var track in _tracksList)
+                {
+                    if (!string.IsNullOrEmpty(track.FilePath) && track.FilePath.ToLowerInvariant() == cleanPath)
+                    {
+                        return track;
+                    }
+                    if (!string.IsNullOrEmpty(track.FileName) && track.FileName.ToLowerInvariant() == cleanFn)
+                    {
+                        return track;
+                    }
+                }
+            }
+            return null;
+        }
+
         private string? ResolveTrackId(Track track)
         {
             if (_tracksById.ContainsKey(track.PortableId)) return track.PortableId;

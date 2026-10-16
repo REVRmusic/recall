@@ -349,5 +349,53 @@ namespace Recall.Services
 
             return null;
         }
+
+        public Track? FindTrackByFile(string filePath, string fileName)
+        {
+            using var connection = OpenDatabase();
+            if (connection == null) return null;
+
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT id, ifnull(name, ''), ifnull(artist, ''), ifnull(bpm, 0.0), ifnull(key, ''), ifnull(file_name, ''), ifnull(portable_id, '')
+                    FROM asset
+                    WHERE file_name = @fileName OR portable_id = @filePath OR portable_id = @fileName
+                    LIMIT 1;";
+                cmd.Parameters.AddWithValue("@fileName", fileName);
+                cmd.Parameters.AddWithValue("@filePath", filePath);
+
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    int assetId = reader.GetInt32(0);
+                    string title = reader.GetString(1);
+                    string artist = reader.GetString(2);
+                    double bpm = reader.GetDouble(3);
+                    string key = reader.GetString(4);
+                    string fn = reader.GetString(5);
+                    string pid = reader.GetString(6);
+
+                    string? resolved = ResolveAudioFilePath(pid, fn) ?? (File.Exists(filePath) ? filePath : null);
+
+                    return new Track
+                    {
+                        AssetId = assetId,
+                        Title = string.IsNullOrEmpty(title) ? Path.GetFileNameWithoutExtension(fileName) : title,
+                        Artist = artist,
+                        Bpm = bpm,
+                        RawKey = key,
+                        CamelotKey = CamelotKey.Parse(key),
+                        FilePath = resolved,
+                        FileName = string.IsNullOrEmpty(fn) ? fileName : fn,
+                        PortableId = pid
+                    };
+                }
+            }
+            catch { }
+
+            return null;
+        }
     }
 }

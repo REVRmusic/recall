@@ -3,7 +3,7 @@ import AppKit
 import SwiftUI
 
 /// Panneau flottant Recall spécialisé désactivant tout comportement système indésirable lors d'un double-clic
-public final class RecallFloatingPanel: NSPanel {
+public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     public override func zoom(_ sender: Any?) {
         // Bloque le zoom et recentrage automatique de macOS
     }
@@ -36,6 +36,64 @@ public final class RecallFloatingPanel: NSPanel {
             }
         }
         super.sendEvent(event)
+    }
+    
+    // MARK: - Réception Globale du Glisser-Déposer Serato / Rekordbox / Finder
+    
+    public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        let pboard = sender.draggingPasteboard
+        if let types = pboard.types,
+           types.contains(.fileURL) ||
+           types.contains(NSPasteboard.PasteboardType("NSFilenamesPboardType")) ||
+           types.contains(NSPasteboard.PasteboardType("public.file-url")) {
+            DispatchQueue.main.async {
+                ToPlayService.shared.isDraggingFileOver = true
+            }
+            return .copy
+        }
+        return []
+    }
+    
+    public func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        return .copy
+    }
+    
+    public func draggingExited(_ sender: NSDraggingInfo?) {
+        DispatchQueue.main.async {
+            ToPlayService.shared.isDraggingFileOver = false
+        }
+    }
+    
+    public func draggingEnded(_ sender: NSDraggingInfo) {
+        DispatchQueue.main.async {
+            ToPlayService.shared.isDraggingFileOver = false
+        }
+    }
+    
+    public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        DispatchQueue.main.async {
+            ToPlayService.shared.isDraggingFileOver = false
+        }
+        let pboard = sender.draggingPasteboard
+        var urls: [URL] = []
+        if let list = pboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !list.isEmpty {
+            urls.append(contentsOf: list.filter { $0.isFileURL })
+        }
+        if urls.isEmpty, let files = pboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String] {
+            for f in files {
+                urls.append(URL(fileURLWithPath: f))
+            }
+        }
+        if urls.isEmpty, let str = pboard.string(forType: .fileURL), let u = URL(string: str) {
+            urls.append(u)
+        }
+        guard !urls.isEmpty else { return false }
+        for url in urls {
+            DispatchQueue.main.async {
+                ToPlayService.shared.addTrack(fromURL: url)
+            }
+        }
+        return true
     }
 }
 
@@ -105,6 +163,11 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
+        panel.registerForDraggedTypes([
+            .fileURL,
+            NSPasteboard.PasteboardType("NSFilenamesPboardType"),
+            NSPasteboard.PasteboardType("public.file-url")
+        ])
         
         // Supprime complètement les boutons ronds standard de macOS pour libérer le coin supérieur gauche pour le logo Recall
         panel.standardWindowButton(.closeButton)?.isHidden = true

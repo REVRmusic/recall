@@ -16,7 +16,12 @@
         ShowInTaskbar="True"
         Icon="Resources/AppIcon.ico"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        AllowDrop="True"
+        DragEnter="Window_DragEnter"
+        DragLeave="Window_DragLeave"
+        DragOver="Window_DragOver"
+        Drop="Window_Drop">
 
     <Window.Resources>
         <!-- Styles pour les boutons -->
@@ -60,6 +65,30 @@
                                 <Setter TargetName="border" Property="Background" Value="#1E3A5F"/>
                                 <Setter TargetName="border" Property="BorderBrush" Value="#0FA2FF"/>
                                 <Setter Property="Foreground" Value="#0FA2FF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ToPlayChipStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#9CA3AF" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="border" Background="#1E232D" BorderBrush="#374151" BorderThickness="1" CornerRadius="5" Padding="6,3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3D2E0A"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FFB300"/>
+                                <Setter Property="Foreground" Value="#FFB300"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#4B5563"/>
@@ -179,7 +208,8 @@
                     <StackPanel Orientation="Horizontal">
                         <CheckBox x:Name="ChkFilterBpm" Content="BPM ±8%" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
                         <CheckBox x:Name="ChkFilterHarmonie" Content="Harmonie" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
-                        <CheckBox x:Name="ChkFilterFavs" Content="Favs" Style="{StaticResource FilterChipStyle}" Click="FilterChanged"/>
+                        <CheckBox x:Name="ChkFilterFavs" Content="Favs" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
+                        <CheckBox x:Name="ChkFilterToPlay" Content="À Jouer" Style="{StaticResource ToPlayChipStyle}" Click="FilterChanged"/>
                     </StackPanel>
 
                     <TextBlock x:Name="TxtMatchCount" Text="0 matchs" FontSize="10" FontWeight="SemiBold" Foreground="#9CA3AF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -193,6 +223,11 @@
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Border CornerRadius="6" Background="#161B22" BorderBrush="#252B37" BorderThickness="1" Margin="0,2" Padding="6,4">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="🗑 Supprimer de la liste à jouer" Click="DeleteToPlay_Click" />
+                                    </ContextMenu>
+                                </Border.ContextMenu>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="22" />
@@ -254,6 +289,17 @@
                     <Button Content="✕" Style="{StaticResource ActionButtonStyle}" Click="BtnClose_Click"/>
                 </StackPanel>
             </Grid>
+
+            <!-- Overlay Visuel de Glisser-Déposer -->
+            <Border x:Name="DropOverlay" Background="#DD10141D" CornerRadius="14" Visibility="Collapsed" IsHitTestVisible="False">
+                <Border BorderBrush="#14C8B0" BorderThickness="2" CornerRadius="14" Margin="6" Background="#2214C8B0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="✚" FontSize="32" Foreground="#14C8B0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Ajouter aux morceaux à jouer" FontSize="13" FontWeight="Bold" Foreground="White" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Déposez le fichier pour le préparer" FontSize="10" Foreground="#A0AEC0" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Border>
         </Grid>
     </Border>
 </Window>

@@ -118,25 +118,64 @@ namespace Recall
                 BtnSaveCombo.Visibility = Visibility.Collapsed;
             }
 
-            // Liste des suggestions
-            ListSuggestions.ItemsSource = _monitor.Suggestions;
-            TxtMatchCount.Text = $"{_monitor.Suggestions.Count} matchs";
-
-            // Vue compacte
-            var topSuggestion = _monitor.Suggestions.FirstOrDefault();
-            if (topSuggestion != null)
+            if (_settings.IsToPlayFilterActive)
             {
-                TxtCompactTitle.Text = topSuggestion.DisplayTitle;
-                TxtCompactArtist.Text = topSuggestion.DisplayArtist;
-                TxtCompactKey.Text = topSuggestion.DisplayKey;
-                TxtCompactBpm.Text = $"{topSuggestion.DisplayBpm} BPM";
+                var toPlayList = ToPlayService.Shared.ToTrackList(_monitor.CurrentTrack);
+                if (_settings.IsHarmonicFilterActive && _monitor.CurrentTrack?.CamelotKey != null)
+                {
+                    toPlayList = toPlayList.Where(t => t.HarmonicRelation.HasValue && t.HarmonicRelation.Value.IsCompatible()).ToList();
+                }
+                if (_settings.IsBpmFilterActive && _monitor.CurrentTrack?.Bpm > 0)
+                {
+                    double currentBpm = _monitor.CurrentTrack.Bpm;
+                    double tol = _settings.BpmTolerancePercent / 100.0;
+                    toPlayList = toPlayList.Where(t => t.Bpm > 0 && Math.Abs(t.Bpm / currentBpm - 1.0) <= tol).ToList();
+                }
+
+                ListSuggestions.ItemsSource = toPlayList;
+                TxtMatchCount.Text = $"{toPlayList.Count} à jouer";
+                ChkFilterToPlay.Content = toPlayList.Count > 0 ? $"À Jouer ({toPlayList.Count})" : "À Jouer";
+
+                var topToPlay = toPlayList.FirstOrDefault();
+                if (topToPlay != null)
+                {
+                    TxtCompactTitle.Text = topToPlay.DisplayTitle;
+                    TxtCompactArtist.Text = topToPlay.DisplayArtist;
+                    TxtCompactKey.Text = topToPlay.DisplayKey;
+                    TxtCompactBpm.Text = $"{topToPlay.DisplayBpm} BPM";
+                }
+                else
+                {
+                    TxtCompactTitle.Text = "Aucun morceau à jouer";
+                    TxtCompactArtist.Text = "Glissez un morceau ici";
+                    TxtCompactKey.Text = "--";
+                    TxtCompactBpm.Text = "-- BPM";
+                }
             }
             else
             {
-                TxtCompactTitle.Text = current != null ? current.DisplayTitle : "Aucune suggestion";
-                TxtCompactArtist.Text = current != null ? current.DisplayArtist : "En attente...";
-                TxtCompactKey.Text = current?.DisplayKey ?? "--";
-                TxtCompactBpm.Text = current != null ? $"{current.DisplayBpm} BPM" : "-- BPM";
+                // Liste des suggestions
+                ListSuggestions.ItemsSource = _monitor.Suggestions;
+                TxtMatchCount.Text = $"{_monitor.Suggestions.Count} matchs";
+                int toPlayTotal = ToPlayService.Shared.GetTracks().Count;
+                ChkFilterToPlay.Content = toPlayTotal > 0 ? $"À Jouer ({toPlayTotal})" : "À Jouer";
+
+                // Vue compacte
+                var topSuggestion = _monitor.Suggestions.FirstOrDefault();
+                if (topSuggestion != null)
+                {
+                    TxtCompactTitle.Text = topSuggestion.DisplayTitle;
+                    TxtCompactArtist.Text = topSuggestion.DisplayArtist;
+                    TxtCompactKey.Text = topSuggestion.DisplayKey;
+                    TxtCompactBpm.Text = $"{topSuggestion.DisplayBpm} BPM";
+                }
+                else
+                {
+                    TxtCompactTitle.Text = current != null ? current.DisplayTitle : "Aucune suggestion";
+                    TxtCompactArtist.Text = current != null ? current.DisplayArtist : "En attente...";
+                    TxtCompactKey.Text = current?.DisplayKey ?? "--";
+                    TxtCompactBpm.Text = current != null ? $"{current.DisplayBpm} BPM" : "-- BPM";
+                }
             }
         }
 
@@ -146,6 +185,7 @@ namespace Recall
             ChkFilterBpm.IsChecked = _settings.IsBpmFilterActive;
             ChkFilterHarmonie.IsChecked = _settings.IsHarmonicFilterActive;
             ChkFilterFavs.IsChecked = _settings.IsFavoritesFilterActive;
+            ChkFilterToPlay.IsChecked = _settings.IsToPlayFilterActive;
 
             if (_settings.IsCompactMode)
             {
@@ -205,11 +245,35 @@ namespace Recall
 
         private void FilterChanged(object sender, RoutedEventArgs e)
         {
+            if (sender == ChkFilterToPlay)
+            {
+                _settings.IsToPlayFilterActive = ChkFilterToPlay.IsChecked == true;
+                if (_settings.IsToPlayFilterActive)
+                {
+                    _settings.IsFavoritesFilterActive = false;
+                    ChkFilterFavs.IsChecked = false;
+                }
+            }
+            else if (sender == ChkFilterFavs && ChkFilterFavs.IsChecked == true)
+            {
+                _settings.IsToPlayFilterActive = false;
+                ChkFilterToPlay.IsChecked = false;
+            }
+
             _settings.IsBpmFilterActive = ChkFilterBpm.IsChecked == true;
             _settings.IsHarmonicFilterActive = ChkFilterHarmonie.IsChecked == true;
             _settings.IsFavoritesFilterActive = ChkFilterFavs.IsChecked == true;
+            _settings.IsToPlayFilterActive = ChkFilterToPlay.IsChecked == true;
             _settings.Save();
-            _monitor.UpdateFilteredSuggestions();
+
+            if (_settings.IsToPlayFilterActive)
+            {
+                UpdateUI();
+            }
+            else
+            {
+                _monitor.UpdateFilteredSuggestions();
+            }
         }
 
         private void BtnSaveCombo_Click(object sender, RoutedEventArgs e)
@@ -242,6 +306,67 @@ namespace Recall
                 {
                     Process.Start("explorer.exe", $"/select,\"{track.FilePath}\"");
                 }
+            }
+        }
+
+        // ==================== RÉCEPTION DU GLISSER-DÉPOSER DEPUIS SERATO / EXPLORATEUR ====================
+        private void Window_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+                DropOverlay.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private void Window_DragLeave(object sender, DragEventArgs e)
+        {
+            DropOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void Window_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void Window_Drop(object sender, DragEventArgs e)
+        {
+            DropOverlay.Visibility = Visibility.Collapsed;
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[]? files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0)
+                {
+                    foreach (var file in files)
+                    {
+                        ToPlayService.Shared.AddTrackFromPath(file);
+                    }
+                    _settings.IsToPlayFilterActive = true;
+                    ChkFilterToPlay.IsChecked = true;
+                    _settings.Save();
+                    UpdateUI();
+                }
+            }
+        }
+
+        private void DeleteToPlay_Click(object sender, RoutedEventArgs e)
+        {
+            if (ListSuggestions.SelectedItem is Track track)
+            {
+                ToPlayService.Shared.RemoveTrack(track.Id);
+                UpdateUI();
             }
         }
     }
