@@ -103,6 +103,12 @@ const translations = {
     "f-tracklist-title": "Générateur de Tracklists 1-Clic",
     "f-tracklist-desc": "Générez instantanément votre tracklist officielle minutée et parfaitement formatée pour 1001Tracklists, Mixcloud, SoundCloud et YouTube dès la fin de votre prestation.",
     "f-tracklist-badge": "Compatible 1001Tracklists & Mixcloud",
+    "f-winparity-title": "Refonte Windows & Parité macOS Complète",
+    "f-winparity-desc": "L'application Windows bénéficie de la même élégance sombre néon que sur Mac : conteneur en verre dépoli, boutons circulaires, menus popups sombres, scrollbars ultra-fines de 6 px et disque vinyle dynamique selon la tonalité Camelot.",
+    "f-winparity-badge": "Design 100 % Unifié macOS & Windows",
+    "f-searchguide-title": "Recherche Bibliothèque & Guide Interactif",
+    "f-searchguide-desc": "Trouvez instantanément n'importe quel morceau dans votre bibliothèque Serato ou Rekordbox (Ctrl+Shift+F / Cmd+Shift+F) pour prévisualiser les transitions possibles sans charger le deck. Accédez à la modale de guide détaillant les règles harmoniques et de BPM.",
+    "f-searchguide-badge": "Recherche instantanée & Prévisualisation à froid",
     "f6-title": "100 % Hors-Ligne & Respect Absolu de la Vie Privée",
     "f6-desc": "Aucun compte requis, aucune télémétrie, aucune connexion Internet. Recall lit uniquement vos historiques locaux sans jamais modifier vos fichiers.",
     "f6-badge": "100 % Local & Sandboxé",
@@ -362,6 +368,12 @@ const translations = {
     "f-tracklist-title": "1-Click Tracklist Generator",
     "f-tracklist-desc": "Instantly generate your official timestamped set tracklist formatted for 1001Tracklists, Mixcloud, SoundCloud, and YouTube as soon as your set wraps up.",
     "f-tracklist-badge": "1001Tracklists & Mixcloud Ready",
+    "f-winparity-title": "Windows UI Redesign & Full macOS Parity",
+    "f-winparity-desc": "The Windows app now features the same sleek dark neon experience as on Mac: frosted glass window, circular action buttons, dark popups, slim 6px scrollbars, and dynamic Camelot-tinted vinyl discs.",
+    "f-winparity-badge": "100% Unified macOS & Windows UX",
+    "f-searchguide-title": "Library Search & Interactive Guide",
+    "f-searchguide-desc": "Instantly search any track in your Serato or Rekordbox library (Ctrl+Shift+F / Cmd+Shift+F) to preview transition routines without loading the deck. Open the interactive guide explaining Camelot keys and BPM tolerances.",
+    "f-searchguide-badge": "Instant Search & Routine Preview",
     "f6-title": "100% Offline & Absolute Privacy",
     "f6-desc": "No user account, no tracking telemetry, no Internet access required. Recall only reads local databases without ever modifying your files.",
     "f6-badge": "100% Local & Sandboxed",
@@ -601,7 +613,7 @@ function updateSmartHeroButton(os, lang) {
   const currentDict = translations[lang] || translations.fr;
 
   if (isWin) {
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.0/Recall-Windows-x64.zip";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall-Windows-x64.zip";
     smartBtn.setAttribute("data-track-download", "Windows");
     smartBtn.setAttribute("data-track-file", "Recall-Windows.zip");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (Windows)");
@@ -622,7 +634,7 @@ function updateSmartHeroButton(os, lang) {
     }
   } else {
     // macOS default
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.0/Recall.dmg";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall.dmg";
     smartBtn.setAttribute("data-track-download", "macOS");
     smartBtn.setAttribute("data-track-file", "Recall.dmg");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (macOS)");
@@ -820,19 +832,19 @@ function initFAQ() {
 function getMockupTitles(lang) {
   if (lang === "en") {
     return {
-      "mockup-serato-floating": "Serato DJ Pro — Recall 1.0 (Floating Mode)",
-      "mockup-serato-selec": "Serato DJ Pro — Recall 1.0 (Sélec Scratchpad)",
-      "mockup-serato-compact": "Serato DJ Pro — Recall 1.0 (78px Compact Dock Mode)",
-      "mockup-rekordbox": "Pioneer Rekordbox — Recall 1.0 (Performance Mode)",
-      "mockup-settings": "Recall 1.0 — Settings Sheet & Soft Dimming"
+      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.1 (Floating Mode)",
+      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.1 (Sélec Scratchpad)",
+      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.1 (78px Compact Dock Mode)",
+      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.1 (Performance Mode)",
+      "mockup-settings": "Recall v1.0.1 — Settings Sheet & Soft Dimming"
     };
   }
   return {
-    "mockup-serato-floating": "Serato DJ Pro — Recall 1.0 (Mode Flottant)",
-    "mockup-serato-selec": "Serato DJ Pro — Recall 1.0 (Onglet Sélec & Scratchpad)",
-    "mockup-serato-compact": "Serato DJ Pro — Recall 1.0 (Mode Bandeau Compact 78 px)",
-    "mockup-rekordbox": "Pioneer Rekordbox — Recall 1.0 (Mode Performance)",
-    "mockup-settings": "Recall 1.0 — Panneau des Paramètres & Estompage"
+    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.1 (Mode Flottant)",
+    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.1 (Onglet Sélec & Scratchpad)",
+    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.1 (Mode Bandeau Compact 78 px)",
+    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.1 (Mode Performance)",
+    "mockup-settings": "Recall v1.0.1 — Panneau des Paramètres & Estompage"
   };
 }
 
@@ -893,7 +905,7 @@ function sendDownloadEvent(eventData) {
   const payload = {
     platform: eventData.platform || "macOS",
     file: file,
-    version: "1.0.0",
+    version: "1.0.1",
     event: "Téléchargement direct",
     location: eventData.location || "Section Téléchargement",
     site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
@@ -1257,7 +1269,7 @@ function submitFeedbackForm(e) {
     email: email,
     software: software,
     source: source,
-    version: "1.0.0",
+    version: "1.0.1",
     event: "💡 Suggestion : " + category,
     location: author + (email ? " <" + email + ">" : ""),
     file: (software ? "[" + software + "] " : "") + message,

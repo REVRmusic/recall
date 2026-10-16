@@ -64,13 +64,19 @@ Contrairement aux solutions génériques qui se basent sur des algorithmes opaqu
 
 ---
 
-## 📥 Téléchargement & Installation
+## 📥 Téléchargement & Installation (v1.0.1)
+
+| Plateforme | Fichier à télécharger | Recommandation |
+| :--- | :--- | :--- |
+| 🍏 **macOS (13.0+)** | [**Recall.dmg**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall.dmg) | ⭐️ **Recommandé Mac** — Image disque officielle prête à glisser dans Applications |
+| 🍏 **macOS (13.0+)** | [**Recall-macOS.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall-macOS.zip) | Archive application autonome macOS |
+| 🪟 **Windows (10 / 11)** | [**Recall-Windows-x64.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall-Windows-x64.zip) | ⭐️ **Recommandé Windows** — Archive complète avec `Recall.exe` |
+| 🪟 **Windows (10 / 11)** | [**Recall.exe**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall.exe) | Exécutable Windows autonome 64-bit |
 
 ### 🍏 Pour macOS
 
 #### Option 1 : Téléchargement Direct (Recommandé)
-1. Rendez-vous sur la page des **[Releases GitHub](https://github.com/REVRmusic/recall/releases)**.
-2. Téléchargez **`Recall.dmg`**.
+1. Téléchargez [**Recall.dmg**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall.dmg).
 3. Ouvrez le fichier `.dmg` et glissez **Recall** dans votre dossier **Applications**.
 4. Lancez **Serato DJ Pro**, puis ouvrez **Recall** : la détection est automatique et immédiate !
 
@@ -93,10 +99,9 @@ chmod +x build.sh && ./build.sh --dmg
 ### 🪟 Pour Windows (10 & 11)
 
 #### Option 1 : Téléchargement Direct (Recommandé)
-1. Rendez-vous sur la page des **[Releases GitHub](https://github.com/REVRmusic/recall/releases)**.
-2. Téléchargez **`Recall-Windows-x64.zip`** ou l'exécutable autonome **`Recall.exe`**.
-3. Dézippez l'archive dans le dossier de votre choix (ex: `C:\Program Files\Recall` ou sur votre Bureau).
-4. Lancez **Serato DJ Pro**, puis double-cliquez sur **`Recall.exe`** : la détection de votre base `%LOCALAPPDATA%\Serato\Library\master.sqlite` est instantanée !
+1. Téléchargez [**Recall-Windows-x64.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall-Windows-x64.zip) ou l'exécutable autonome [**Recall.exe**](https://github.com/REVRmusic/recall/releases/download/v1.0.1/Recall.exe).
+2. Dézippez l'archive dans le dossier de votre choix (ex: `C:\Program Files\Recall` ou sur votre Bureau).
+3. Lancez **Serato DJ Pro** ou **Rekordbox**, puis double-cliquez sur **`Recall.exe`** : la détection est instantanée !
 
 #### Option 2 : Compilation depuis les Sources (Windows)
 Prérequis : PC sous Windows 10/11 avec le SDK [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0) installé.
@@ -165,20 +170,30 @@ L'exécutable autonome optimisé est généré directement dans `Windows\build-w
 - **Préréglage anti-conflit garanti** : Sous Serato, `⌘⇧F` et `⌘⇧R` étant réservés par le crate browser, le mode `⌥⌘` (Cmd + Option) est 100% libre et évite tout conflit !
 
 ### 10. 📊 Récapitulatif de Set & Statistiques de Fin de Mix
-- **Durée réelle de mix** : Le chrono ne démarre qu'au moment précis où votre premier morceau est joué (zéro décompte à vide).
-- **Genre Musical Dominant & Top Genres** : Analyse automatique des tags de vos morceaux joués avec répartition visuelle en pourcentages.
-- **Métriques clés** : Morceaux joués, transitions uniques enchaînées, tempo moyen (BPM).
-- **Export 1-clic** : Copie instantanée de la synthèse formatée pour vos réseaux sociaux et tracklists.
+- **Durée réelle de mix** : Le chrono reste figé à `00m 00s` et ne démarre qu'au moment précis où votre premier morceau est joué (élimination totale du temps fantôme).
+- **Genre Musical Dominant & Top 5 des Genres** : Détection en temps réel du genre le plus joué et affichage graphique des 5 genres principaux avec barres de progression colorées et pourcentages.
+- **Métriques clés** : Morceaux joués, cadence moyenne (titres/heure), transitions uniques enchaînées, BPM moyen et amplitude de tempo, tonalité Camelot dominante et top artistes.
+- **Export 1-clic** : Copie instantanée de la synthèse formatée dans le presse-papier pour vos réseaux sociaux et tracklists.
 
-### 11. 🎨 Ambiance Visuelle & Thèmes DJ
+### 11. 🪟 Refonte Complète de l'Interface Windows (Parité macOS)
+- **Design sombre néon & Verre dépoli** : Application d'un conteneur moderne avec coins arrondis, bordures subtiles et fond sombre semi-translucide identique à la version Mac.
+- **Boutons circulaires d'action** : Fermer, Réduire en bandeau, Épingler (*Always-on-top*), Guide & Légende, Statistiques, Recherche de bibliothèque et Paramètres.
+- **Contrôles personnalisés** : Menus déroulants sombres, scrollbars fines de 6 px et disque vinyle dynamique texturé dont le macaron s'adapte en temps réel à la tonalité Camelot du morceau en cours.
+- **Raccourcis Windows intégrés** : `Ctrl+Shift+C` (Bandeau compact), `Ctrl+Shift+F` (Recherche), `Ctrl+Shift+S` (Paramètres).
+
+### 12. 🔍 Recherche Bibliothèque & Guide Interactif
+- **Recherche instantanée** (`Ctrl+Shift+F` sur Windows, `Cmd+Shift+F` sur Mac) : Trouvez n'importe quel morceau par titre ou artiste dans Serato DJ Pro ou Rekordbox pour prévisualiser les enchaînements sans charger le deck.
+- **Guide & Légende** (`?`) : Explication détaillée des codes couleur de la roue de Camelot, de la tolérance BPM, du décompte de fréquence de mix (`🔥 15x`), et du glisser-déposer.
+
+### 13. 🎨 Ambiance Visuelle & Thèmes DJ
 - 4 palettes néon conçues pour la nuit et les cabines de DJ : **Cyan Neon**, **Purple Haze**, **Amber Sunset**, **Lime Club**.
-- Curseur de translucidité étendu (20% à 100%) avec flou d'arrière-plan dynamique.
+- Flou d'arrière-plan natif en verre dépoli (`NSVisualEffectView`) avec curseur de translucidité intuitif de 20% à 100%.
 
-### 12. 📝 Générateur de Tracklists 1-Clic
+### 14. 📝 Générateur de Tracklists 1-Clic
 - Export immédiat minuté et formaté compatible 1001Tracklists, Mixcloud, SoundCloud et YouTube.
 
-### 13. 🚀 Mises à Jour Automatiques & Détection Intégrée
-- Détection fluide au lancement (sans ralentissement) et bouton de vérification manuelle dans les paramètres sous macOS et Windows.
+### 15. 🚀 Mises à Jour en un Clic dans les Paramètres
+- Détection automatique au lancement (asynchrone sans impact audio) et bouton de vérification manuelle (**« Vérifier maintenant »**) dans la modale des paramètres sous macOS et Windows avec lien de téléchargement direct.
 
 ---
 
