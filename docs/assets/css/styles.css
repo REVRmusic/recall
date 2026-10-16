@@ -548,6 +548,15 @@ img {
   box-shadow: 0 12px 32px rgba(0, 210, 255, 0.55);
 }
 
+.btn-apple-logo {
+  height: 19px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0);
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -2709,11 +2718,23 @@ img {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
 }
 
+.os-icon-badge.mac .os-icon-img-mac {
+  width: 38px;
+  height: 45px;
+  object-fit: contain;
+  display: block;
+  transition: transform var(--transition-normal), filter var(--transition-normal);
+}
+
 .download-card:hover .os-icon-badge.mac {
   transform: translateY(-3px) scale(1.06);
   border-color: rgba(0, 210, 255, 0.6);
   color: var(--cyan-primary);
   box-shadow: 0 12px 35px var(--cyan-glow);
+}
+
+.download-card:hover .os-icon-badge.mac .os-icon-img-mac {
+  filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.85));
 }
 
 .os-icon-badge.win {
