@@ -5,10 +5,10 @@ public struct DJThemeSettingsCard: View {
     @EnvironmentObject var settings: UserSettings
     
     private let glassPresets: [(label: String, value: Double, desc: String)] = [
-        ("Translucide", 0.30, "30% (Verre givré ultra translucide)"),
-        ("Équilibré", 0.60, "60% (Transparence feutrée)"),
-        ("Standard", 0.92, "92% (Défaut signature)"),
-        ("Opaque", 1.00, "100% (Noir opaque)")
+        ("Opaque", 0.00, "0% (Fond noir 100% opaque sans transparence)"),
+        ("Standard", 0.35, "35% (Translucidité subtile par défaut)"),
+        ("Équilibré", 0.65, "65% (Transparence feutrée équilibrée)"),
+        ("Translucide", 1.00, "100% (Translucidité maximale, verre dépoli cristallin)")
     ]
     
     public init() {}
@@ -48,7 +48,7 @@ public struct DJThemeSettingsCard: View {
                 )
             }
             
-            Text("Choisissez les accents lumineux pour matcher l'esthétique de vos platines, contrôleurs ou table de mixage, et ajustez la transparence du verre dépoli.")
+            Text("Choisissez les accents lumineux pour matcher l'esthétique de vos platines, contrôleurs ou table de mixage, et ajustez la translucidité du verre dépoli.")
                 .font(.system(size: 9.5))
                 .foregroundColor(.white.opacity(0.60))
                 .fixedSize(horizontal: false, vertical: true)
@@ -69,11 +69,11 @@ public struct DJThemeSettingsCard: View {
                 .background(Color.white.opacity(0.08))
                 .padding(.vertical, 2)
             
-            // Réglage de la transparence du verre dépoli (Frosted Glass)
+            // Réglage de la translucidité du verre dépoli (Frosted Glass)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Label {
-                        Text("Transparence du verre dépoli")
+                        Text("Translucidité (Effet Verre Dépoli)")
                             .font(.system(size: 10.5, weight: .semibold))
                             .foregroundColor(.white.opacity(0.90))
                     } icon: {
@@ -96,10 +96,10 @@ public struct DJThemeSettingsCard: View {
                 // Puces de présélection rapide
                 HStack(spacing: 5) {
                     ForEach(glassPresets, id: \.label) { preset in
-                        let isSelected = abs(settings.glassOpacity - preset.value) < 0.03
+                        let isSelected = abs(settings.glassTranslucency - preset.value) < 0.05
                         Button {
                             withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
-                                settings.glassOpacity = preset.value
+                                settings.glassTranslucency = preset.value
                             }
                         } label: {
                             HStack(spacing: 3) {
@@ -128,24 +128,24 @@ public struct DJThemeSettingsCard: View {
                 
                 // Curseur de précision
                 HStack(spacing: 8) {
-                    Text("Translucide (20%)")
+                    Text("Opaque (0%)")
                         .font(.system(size: 8.5))
                         .foregroundColor(.white.opacity(0.45))
                     
                     Slider(
-                        value: $settings.glassOpacity,
-                        in: 0.20...1.00,
+                        value: $settings.glassTranslucency,
+                        in: 0.00...1.00,
                         step: 0.02
                     )
                     .tint(settings.accentColor)
                     .controlSize(.mini)
                     
-                    Text("Opaque (100%)")
+                    Text("Translucide (100%)")
                         .font(.system(size: 8.5))
                         .foregroundColor(.white.opacity(0.45))
                 }
                 
-                Text("Le verre dépoli floute dynamiquement la fenêtre sous Recall (ex: Serato ou Rekordbox). Une valeur plus translucide laisse voir en transparence douce vos formes d'onde et pistes en arrière-plan.")
+                Text("Le verre dépoli floute dynamiquement la fenêtre sous Recall (ex: Serato ou Rekordbox). À 100%, l'effet verre dépoli est maximal et laisse transparaître vos formes d'onde et pistes en arrière-plan.")
                     .font(.system(size: 8.5))
                     .foregroundColor(.white.opacity(0.48))
                     .fixedSize(horizontal: false, vertical: true)
@@ -164,17 +164,17 @@ public struct DJThemeSettingsCard: View {
     }
     
     private var opacityBadgeText: String {
-        let pct = Int(round(settings.glassOpacity * 100))
-        if abs(settings.glassOpacity - 0.92) < 0.02 || abs(settings.glassOpacity - 0.96) < 0.02 {
+        let pct = Int(round(settings.glassTranslucency * 100))
+        if settings.glassTranslucency <= 0.02 {
+            return "0% (Opaque)"
+        } else if abs(settings.glassTranslucency - 0.35) < 0.04 {
             return "\(pct)% (Standard défaut)"
-        } else if settings.glassOpacity >= 0.99 {
-            return "100% (Opaque)"
-        } else if settings.glassOpacity <= 0.40 {
-            return "\(pct)% (Ultra translucide)"
-        } else if settings.glassOpacity <= 0.70 {
-            return "\(pct)% (Translucide)"
+        } else if settings.glassTranslucency >= 0.98 {
+            return "100% (Translucidité max)"
+        } else if settings.glassTranslucency >= 0.60 {
+            return "\(pct)% (Équilibré)"
         }
-        return "\(pct)% opacité"
+        return "\(pct)% translucidité"
     }
     
     /// Carte de sélection individuelle de thème
@@ -259,7 +259,7 @@ public struct DJThemeSettingsCard: View {
         ZStack {
             // Effet verre dépoli simulé
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.darkBg.opacity(settings.glassOpacity))
+                .fill(Color.darkBg.opacity(settings.effectiveGlassTintOpacity))
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(.ultraThinMaterial)

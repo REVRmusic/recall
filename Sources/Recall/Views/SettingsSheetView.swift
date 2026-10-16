@@ -54,7 +54,7 @@ public struct SettingsSheetView: View {
             .padding(.horizontal, 14)
             .padding(.top, 12)
             .padding(.bottom, 10)
-            .background(Color.darkBg)
+            .background(Color.darkBg.opacity(min(0.92, settings.effectiveGlassTintOpacity + 0.15)))
             
             Divider()
                 .background(Color.white.opacity(0.10))
@@ -1025,11 +1025,7 @@ public struct SettingsSheetView: View {
         .frame(minWidth: 350, maxWidth: .infinity, minHeight: 440, maxHeight: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color.darkBg.opacity(0.96))
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(.ultraThinMaterial)
-                )
+                .fill(Color.darkBg.opacity(settings.effectiveGlassTintOpacity))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(
@@ -1057,13 +1053,13 @@ public struct SettingsSheetView: View {
         }
     }
     
-    // Conteneur de carte de réglage avec contraste élevé
+    // Conteneur de carte de réglage avec contraste élevé et transparence adaptée
     private func settingCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             content()
         }
         .padding(9)
-        .background(Color.cardBg)
+        .background(Color.cardBg.opacity(min(0.85, 0.25 + (1.0 - settings.glassTranslucency) * 0.60)))
         .cornerRadius(8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)

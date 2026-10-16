@@ -22,7 +22,6 @@ public struct VisualEffectBackground: NSViewRepresentable {
         view.material = material
         view.blendingMode = blendingMode
         view.state = state
-        view.wantsLayer = true
         return view
     }
 

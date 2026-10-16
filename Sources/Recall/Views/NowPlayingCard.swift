@@ -269,7 +269,7 @@ public struct NowPlayingCard: View {
             }
         }
         .padding(10)
-        .background(Color.cardBg.opacity(min(1.0, 0.40 + settings.glassOpacity * 0.55)))
+        .background(Color.cardBg.opacity(min(0.85, 0.20 + (1.0 - settings.glassTranslucency) * 0.65)))
         .cornerRadius(10)
         .overlay(
             RoundedRectangle(cornerRadius: 10)

@@ -103,13 +103,26 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         panel.standardWindowButton(.miniaturizeButton)?.removeFromSuperview()
         panel.standardWindowButton(.zoomButton)?.removeFromSuperview()
         
+        // Fond en verre dépoli natif macOS floutant l'arrière-plan
+        let effectView = NSVisualEffectView(frame: panel.contentLayoutRect)
+        effectView.material = .popover
+        effectView.blendingMode = .behindWindow
+        effectView.state = .active
+        effectView.wantsLayer = true
+        effectView.layer?.cornerRadius = 14
+        effectView.layer?.masksToBounds = true
+        effectView.autoresizingMask = [.width, .height]
+        
         let contentView = SettingsSheetView()
             .environmentObject(SeratoMonitorService.shared)
             .environmentObject(UserSettings.shared)
         
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.autoresizingMask = [.width, .height]
-        panel.contentView = hostingView
+        hostingView.frame = effectView.bounds
+        
+        effectView.addSubview(hostingView)
+        panel.contentView = effectView
         
         setupDimmingWindow()
     }
@@ -164,7 +177,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             dim.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.22
-                dim.animator().alphaValue = 0.72
+                dim.animator().alphaValue = 0.35
             }
         }
 

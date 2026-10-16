@@ -175,6 +175,16 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.standardWindowButton(.miniaturizeButton)?.removeFromSuperview()
         panel.standardWindowButton(.zoomButton)?.removeFromSuperview()
         
+        // Fond en verre dépoli natif macOS floutant les fenêtres sous Recall (Serato, Rekordbox, bureau)
+        let effectView = NSVisualEffectView(frame: panel.contentLayoutRect)
+        effectView.material = .popover
+        effectView.blendingMode = .behindWindow
+        effectView.state = .active
+        effectView.wantsLayer = true
+        effectView.layer?.cornerRadius = 14
+        effectView.layer?.masksToBounds = true
+        effectView.autoresizingMask = [.width, .height]
+        
         // Configuration de la vue principale SwiftUI avec injection d'environnement
         let contentView = MainFloatingView()
             .environmentObject(SeratoMonitorService.shared)
@@ -182,10 +192,13 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.autoresizingMask = [.width, .height]
+        hostingView.frame = effectView.bounds
         if #available(macOS 13.0, *) {
             hostingView.sizingOptions = []
         }
-        panel.contentView = hostingView
+        
+        effectView.addSubview(hostingView)
+        panel.contentView = effectView
         
         // Positionnement initial au coin inférieur droit de l'écran principal
         positionAtBottomRight()

@@ -111,8 +111,21 @@ public class UserSettings: ObservableObject {
     @Published public var djTheme: DJTheme {
         didSet { UserDefaults.standard.set(djTheme.rawValue, forKey: "djTheme") }
     }
-    @Published public var glassOpacity: Double {
-        didSet { UserDefaults.standard.set(glassOpacity, forKey: "glassOpacity") }
+    /// Degré de translucidité du verre dépoli (0.0 = Noir opaque, 1.0 = Translucidité maximale)
+    @Published public var glassTranslucency: Double {
+        didSet {
+            UserDefaults.standard.set(glassTranslucency, forKey: "glassTranslucency")
+            UserDefaults.standard.set(effectiveGlassTintOpacity, forKey: "glassOpacity")
+        }
+    }
+    /// Opacité réelle de la teinte sombre appliquée par-dessus le flou natif macOS (1.0 = Opaque, 0.04 = Verre cristallin pur)
+    public var effectiveGlassTintOpacity: Double {
+        max(0.04, 1.0 - (glassTranslucency * 0.96))
+    }
+    /// Propriété de compatibilité avec les composants existants
+    public var glassOpacity: Double {
+        get { effectiveGlassTintOpacity }
+        set { glassTranslucency = max(0.0, min(1.0, (1.0 - newValue) / 0.96)) }
     }
     @Published public var hotKeyPreset: HotKeyModifierPreset {
         didSet {
@@ -155,7 +168,13 @@ public class UserSettings: ObservableObject {
         self.includeDiagonalInHarmonicFilter = def.object(forKey: "includeDiagonalInHarmonicFilter") != nil ? def.bool(forKey: "includeDiagonalInHarmonicFilter") : true
         let rawTheme = def.string(forKey: "djTheme") ?? DJTheme.cyanNeon.rawValue
         self.djTheme = DJTheme(rawValue: rawTheme) ?? .cyanNeon
-        self.glassOpacity = def.object(forKey: "glassOpacity") != nil ? def.double(forKey: "glassOpacity") : 0.96
+        if def.object(forKey: "glassTranslucency") != nil {
+            self.glassTranslucency = def.double(forKey: "glassTranslucency")
+        } else if let savedOpacity = def.object(forKey: "glassOpacity") as? Double {
+            self.glassTranslucency = max(0.0, min(1.0, (1.0 - savedOpacity) / 0.88))
+        } else {
+            self.glassTranslucency = 0.50
+        }
         let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.both.rawValue
         self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .both
     }

@@ -194,7 +194,7 @@ public struct ToPlayTrackRow: View {
                         Color.cardHoverBg :
                         (track.isPlayedInSession && settings.playedTrackHighlightStyle != .textOnly ?
                             settings.playedTrackColor.opacity(0.14) :
-                            Color.cardBg.opacity(0.55))
+                            Color.cardBg.opacity(min(0.55, 0.12 + (1.0 - settings.glassTranslucency) * 0.43)))
                 )
         )
         .overlay(

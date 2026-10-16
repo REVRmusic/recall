@@ -80,20 +80,17 @@ public struct MainFloatingView: View {
     
     public var body: some View {
         ZStack {
-            // Fond en verre dépoli natif macOS floutant dynamiquement les fenêtres en arrière-plan (Serato, Rekordbox, bureau)
-            VisualEffectBackground(material: .hudWindow, blendingMode: .behindWindow, state: .active)
-                .overlay(
-                    Color.darkBg.opacity(settings.glassOpacity)
-                )
+            // Teinte d'ambiance avec opacité réglable sur le verre dépoli natif macOS de la fenêtre
+            Color.darkBg.opacity(settings.effectiveGlassTintOpacity)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    Color.white.opacity(0.20),
-                                    settings.accentColor.opacity(0.22),
-                                    Color.white.opacity(0.06)
+                                    Color.white.opacity(0.25),
+                                    settings.accentColor.opacity(0.28),
+                                    Color.white.opacity(0.08)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
