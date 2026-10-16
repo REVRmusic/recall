@@ -112,6 +112,23 @@ public struct ToPlayTrack: Codable, Identifiable, Hashable {
             FavoriteCombosService.normalize(fileName)
         ))
         
+        var isFav = false
+        if let ref = referenceTrack {
+            let candidateTrack = Track(
+                id: id,
+                assetId: nil,
+                historyEntryId: nil,
+                title: title,
+                artist: artist,
+                bpm: bpm,
+                rawKey: rawKey,
+                filePath: filePath,
+                fileName: fileName,
+                portableId: portableId
+            )
+            isFav = FavoriteCombosService.shared.isComboFavorite(track1: ref, track2: candidateTrack)
+        }
+        
         return Track(
             id: id,
             assetId: nil,
@@ -129,7 +146,7 @@ public struct ToPlayTrack: Codable, Identifiable, Hashable {
             matchType: .directTransition,
             harmonicRelation: harmonicRel,
             bpmDiff: bpmDifference,
-            isFavorite: false,
+            isFavorite: isFav,
             isPlayedInSession: playedInSession
         )
     }
@@ -347,9 +364,78 @@ public class ToPlayService: ObservableObject {
         showToast("Sélec vidée")
     }
     
-    /// Récupère la liste sous forme de [Track] avec les relations harmoniques et de BPM calculées
+    /// Récupère la liste sous forme de [Track] avec les relations harmoniques et de BPM calculées,
+    /// ordonnée intelligemment par affinité ("match") avec le morceau en cours de lecture.
     public func toTrackList(referenceTrack: Track? = nil) -> [Track] {
-        return tracks.map { $0.toTrack(referenceTrack: referenceTrack) }
+        let list = tracks.map { $0.toTrack(referenceTrack: referenceTrack) }
+        guard let ref = referenceTrack, (ref.bpm > 0 || ref.camelotKey != nil) else {
+            return list
+        }
+        return sortTracksByMatch(list, referenceTrack: ref)
+    }
+    
+    /// Trie les morceaux de la sélection selon la qualité de match avec le morceau en cours :
+    /// - Le BPM est le paramètre prépondérant (proximité directe et demi/double tempo)
+    /// - La gamme harmonique intervient en paramètre secondaire pour départager les morceaux proches
+    private func sortTracksByMatch(_ tracks: [Track], referenceTrack: Track) -> [Track] {
+        let indexed = tracks.enumerated().map { (index: $0.offset, track: $0.element, score: calculateMatchScore(for: $0.element, reference: referenceTrack)) }
+        
+        return indexed.sorted { a, b in
+            // Différence de score significative
+            if abs(a.score - b.score) > 0.0001 {
+                return a.score < b.score
+            }
+            // En cas d'égalité quasi parfaite, conserver l'ordre d'ajout initial
+            return a.index < b.index
+        }.map { $0.track }
+    }
+    
+    private func calculateMatchScore(for track: Track, reference: Track) -> Double {
+        // 1. Écart de BPM (facteur prépondérant)
+        let bpmPenalty: Double
+        if reference.bpm > 0 && track.bpm > 0 {
+            let bRef = reference.bpm
+            let bCand = track.bpm
+            
+            // Distance relative directe
+            let diffDirect = abs(bCand - bRef) / bRef
+            
+            // Distance demi-tempo (ex: 65 vs 130 bpm) avec une pénalité fixe de 4%
+            let diffHalf = abs((bCand * 2.0) - bRef) / bRef + 0.04
+            
+            // Distance double-tempo (ex: 180 vs 90 bpm) avec une pénalité fixe de 4%
+            let diffDouble = abs((bCand / 2.0) - bRef) / bRef + 0.04
+            
+            bpmPenalty = min(diffDirect, diffHalf, diffDouble)
+        } else {
+            // Pas de BPM disponible pour l'un ou l'autre
+            bpmPenalty = 0.50
+        }
+        
+        // 2. Compatibilité Harmonique (gamme, paramètre secondaire dans la balance)
+        // Bonus équivalent à environ 1.5% à 2.5% de BPM :
+        // permet à un morceau dans la clé de passer devant un morceau hors clé si leurs tempos sont proches (ex: 128 vs 129 bpm),
+        // sans jamais passer devant un morceau ayant un écart de tempo ingérable (ex: 128 vs 180 ou 80 bpm).
+        let harmonicBonus: Double
+        switch track.harmonicRelation {
+        case .exact:
+            harmonicBonus = 0.025
+        case .adjacent:
+            harmonicBonus = 0.020
+        case .relative:
+            harmonicBonus = 0.018
+        case .energyBoost:
+            harmonicBonus = 0.012
+        case .energyDrop:
+            harmonicBonus = 0.006
+        case .incompatible, .none:
+            harmonicBonus = 0.0
+        }
+        
+        // 3. Petit bonus si le combo fait partie des favoris du DJ
+        let favoriteBonus = track.isFavorite ? 0.005 : 0.0
+        
+        return bpmPenalty - harmonicBonus - favoriteBonus
     }
     
     /// Traite les éléments déposés via SwiftUI (NSItemProvider)

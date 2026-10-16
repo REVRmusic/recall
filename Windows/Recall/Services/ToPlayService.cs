@@ -180,7 +180,71 @@ namespace Recall.Services
 
         public List<Track> ToTrackList(Track? referenceTrack = null)
         {
-            return _tracks.Select(t => t.ToTrack(referenceTrack)).ToList();
+            var list = _tracks.Select(t => t.ToTrack(referenceTrack)).ToList();
+            if (referenceTrack == null || (referenceTrack.Bpm <= 0 && referenceTrack.CamelotKey == null))
+            {
+                return list;
+            }
+            return SortTracksByMatch(list, referenceTrack);
+        }
+
+        private List<Track> SortTracksByMatch(List<Track> tracks, Track referenceTrack)
+        {
+            var indexed = tracks.Select((t, idx) => (track: t, index: idx, score: CalculateMatchScore(t, referenceTrack))).ToList();
+
+            return indexed.OrderBy(x => x.score)
+                          .ThenBy(x => x.index)
+                          .Select(x => x.track)
+                          .ToList();
+        }
+
+        private double CalculateMatchScore(Track track, Track reference)
+        {
+            // 1. Écart de BPM (facteur prépondérant)
+            double bpmPenalty;
+            if (reference.Bpm > 0 && track.Bpm > 0)
+            {
+                double bRef = reference.Bpm;
+                double bCand = track.Bpm;
+
+                double diffDirect = Math.Abs(bCand - bRef) / bRef;
+                double diffHalf = Math.Abs((bCand * 2.0) - bRef) / bRef + 0.04;
+                double diffDouble = Math.Abs((bCand / 2.0) - bRef) / bRef + 0.04;
+
+                bpmPenalty = Math.Min(diffDirect, Math.Min(diffHalf, diffDouble));
+            }
+            else
+            {
+                bpmPenalty = 0.50;
+            }
+
+            // 2. Compatibilité Harmonique (gamme, paramètre secondaire)
+            double harmonicBonus = 0.0;
+            if (track.HarmonicRelation.HasValue)
+            {
+                switch (track.HarmonicRelation.Value)
+                {
+                    case HarmonicRelation.Exact:
+                        harmonicBonus = 0.025;
+                        break;
+                    case HarmonicRelation.Adjacent:
+                        harmonicBonus = 0.020;
+                        break;
+                    case HarmonicRelation.Relative:
+                        harmonicBonus = 0.018;
+                        break;
+                    case HarmonicRelation.EnergyBoost:
+                        harmonicBonus = 0.012;
+                        break;
+                    case HarmonicRelation.EnergyDrop:
+                        harmonicBonus = 0.006;
+                        break;
+                }
+            }
+
+            double favoriteBonus = track.IsFavorite ? 0.005 : 0.0;
+
+            return bpmPenalty - harmonicBonus - favoriteBonus;
         }
 
         public static string Normalize(string str)
