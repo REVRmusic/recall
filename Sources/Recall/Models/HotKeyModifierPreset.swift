@@ -25,11 +25,11 @@ public enum HotKeyModifierPreset: String, CaseIterable, Identifiable {
     public var subtitle: String {
         switch self {
         case .both:
-            return "Flexibilité maximale • Compatible tous logiciels"
+            return "Flexibilité maximale • Supporte ⇧⌘ et ⌥⌘ simultanément"
         case .cmdOption:
-            return "Anti-conflit garanti Serato DJ Pro & Rekordbox (Recommandé)"
+            return "Anti-conflit garanti Rekordbox & Serato (Recommandé en live)"
         case .cmdShift:
-            return "Idéal Rekordbox (sans écraser la recherche de caisse Serato)"
+            return "Touches directes ⇧⌘ (attention aux raccourcis natifs Rekordbox/Serato)"
         case .disabled:
             return "Aucun raccourci global n'intercepte vos touches"
         }

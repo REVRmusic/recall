@@ -163,11 +163,14 @@ L'exécutable autonome optimisé est généré directement dans `Windows\build-w
 - Bouton de réduction en **Bandeau Compact (78 px)** affichant le Top Match en cours d'un simple coup d'œil.
 
 ### 9. ⌨️ Raccourcis Clavier Globaux Système (Hotkeys)
-- Contrôlez Recall sans jamais quitter Rekordbox ou Serato DJ Pro des yeux :
-  - `⌘ + ⇧ + R` / `⌥ + ⌘ + R` : **Afficher / Masquer Recall** instantanément.
-  - `⌘ + ⇧ + C` / `⌥ + ⌘ + C` : **Basculer entre vue normale et bandeau compact**.
-  - `⌘ + ⇧ + F` / `⌥ + ⌘ + F` : **Ouvrir la recherche Recall** par-dessus votre logiciel DJ.
-- **Préréglage anti-conflit garanti** : Sous Serato, `⌘⇧F` et `⌘⇧R` étant réservés par le crate browser, le mode `⌥⌘` (Cmd + Option) est 100% libre et évite tout conflit !
+- **Le concept : Pouvoir contrôler Recall sans jamais quitter Rekordbox/Serato de l'écran :**
+  - `⌘ + ⇧ + R` (ou `Ctrl + Shift + R`) : **Afficher / Masquer Recall**.
+  - `⌘ + ⇧ + C` (ou `Ctrl + Shift + C`) : **Basculer instantanément entre mode normal et bandeau compact**.
+  - `⌘ + ⇧ + F` (ou `Ctrl + Shift + F`) : **Ouvrir la recherche Recall par-dessus votre logiciel DJ**.
+- **🛡️ Protection Anti-Conflit Rekordbox & Serato :**
+  - Dans **Rekordbox** (Mode Performance), `⌘ + ⇧ + R` déclenche le saut arrière (**Jump Reverse Deck 1**).
+  - Dans **Serato DJ Pro**, `⌘ + ⇧ + F` déclenche la recherche dans toutes les caisses (**All Crates Search**).
+  - Pour un mix sans aucun risque en live, Recall supporte également en parallèle le mode **`⌥⌘` (Cmd + Option sur Mac / Ctrl + Alt sur Windows)** (`⌥⌘R`, `⌥⌘C`, `⌥⌘F`), **100 % libre et garanti sans aucun conflit**.
 
 ### 10. 📊 Récapitulatif de Set & Statistiques de Fin de Mix
 - **Durée réelle de mix** : Le chrono reste figé à `00m 00s` et ne démarre qu'au moment précis où votre premier morceau est joué (élimination totale du temps fantôme).

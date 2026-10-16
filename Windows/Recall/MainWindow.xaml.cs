@@ -2,9 +2,11 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using Recall.Models;
 using Recall.Services;
@@ -72,10 +74,170 @@ namespace Recall
             if (Top + Height > workArea.Bottom) Top = workArea.Bottom - Height;
         }
 
+        // P/Invoke Win32 RegisterHotKey pour le contrôle global sans quitter Rekordbox / Serato
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        private const int WM_HOTKEY = 0x0312;
+        private const uint MOD_ALT = 0x0001;
+        private const uint MOD_CONTROL = 0x0002;
+        private const uint MOD_SHIFT = 0x0004;
+        private const uint MOD_NOREPEAT = 0x4000;
+
+        private const uint VK_C = 0x43;
+        private const uint VK_F = 0x46;
+        private const uint VK_R = 0x52;
+
+        private const int HOTKEY_ID_TOGGLE_SHIFT = 9001;
+        private const int HOTKEY_ID_COMPACT_SHIFT = 9002;
+        private const int HOTKEY_ID_SEARCH_SHIFT = 9003;
+
+        private const int HOTKEY_ID_TOGGLE_ALT = 9011;
+        private const int HOTKEY_ID_COMPACT_ALT = 9012;
+        private const int HOTKEY_ID_SEARCH_ALT = 9013;
+
+        private HwndSource? _hwndSource;
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            RegisterGlobalHotKeys();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            UnregisterGlobalHotKeys();
+            base.OnClosed(e);
+        }
+
+        private void RegisterGlobalHotKeys()
+        {
+            try
+            {
+                var helper = new WindowInteropHelper(this);
+                var handle = helper.Handle;
+                if (handle == IntPtr.Zero) return;
+
+                _hwndSource = HwndSource.FromHwnd(handle);
+                _hwndSource?.AddHook(HwndHook);
+
+                // 1. Combinaisons Ctrl + Shift (Classique)
+                RegisterHotKey(handle, HOTKEY_ID_TOGGLE_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_R);
+                RegisterHotKey(handle, HOTKEY_ID_COMPACT_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_C);
+                RegisterHotKey(handle, HOTKEY_ID_SEARCH_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_F);
+
+                // 2. Combinaisons Ctrl + Alt (Protection Anti-Conflit Serato & Rekordbox)
+                RegisterHotKey(handle, HOTKEY_ID_TOGGLE_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_R);
+                RegisterHotKey(handle, HOTKEY_ID_COMPACT_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_C);
+                RegisterHotKey(handle, HOTKEY_ID_SEARCH_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_F);
+            }
+            catch (Exception)
+            {
+                // Silencieux
+            }
+        }
+
+        private void UnregisterGlobalHotKeys()
+        {
+            try
+            {
+                var helper = new WindowInteropHelper(this);
+                var handle = helper.Handle;
+                if (handle != IntPtr.Zero)
+                {
+                    UnregisterHotKey(handle, HOTKEY_ID_TOGGLE_SHIFT);
+                    UnregisterHotKey(handle, HOTKEY_ID_COMPACT_SHIFT);
+                    UnregisterHotKey(handle, HOTKEY_ID_SEARCH_SHIFT);
+
+                    UnregisterHotKey(handle, HOTKEY_ID_TOGGLE_ALT);
+                    UnregisterHotKey(handle, HOTKEY_ID_COMPACT_ALT);
+                    UnregisterHotKey(handle, HOTKEY_ID_SEARCH_ALT);
+                }
+                _hwndSource?.RemoveHook(HwndHook);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_HOTKEY)
+            {
+                int id = wParam.ToInt32();
+                switch (id)
+                {
+                    case HOTKEY_ID_TOGGLE_SHIFT:
+                    case HOTKEY_ID_TOGGLE_ALT:
+                        ToggleWindowVisibility();
+                        handled = true;
+                        break;
+
+                    case HOTKEY_ID_COMPACT_SHIFT:
+                    case HOTKEY_ID_COMPACT_ALT:
+                        ToggleCompactModeGlobal();
+                        handled = true;
+                        break;
+
+                    case HOTKEY_ID_SEARCH_SHIFT:
+                    case HOTKEY_ID_SEARCH_ALT:
+                        TriggerSearchGlobal();
+                        handled = true;
+                        break;
+                }
+            }
+            return IntPtr.Zero;
+        }
+
+        private void ToggleWindowVisibility()
+        {
+            if (Visibility == Visibility.Visible)
+            {
+                Hide();
+            }
+            else
+            {
+                Show();
+                WindowState = WindowState.Normal;
+                Activate();
+            }
+        }
+
+        private void ToggleCompactModeGlobal()
+        {
+            if (Visibility != Visibility.Visible)
+            {
+                Show();
+            }
+            SetCompactMode(!_settings.IsCompactMode);
+            WindowState = WindowState.Normal;
+            Activate();
+        }
+
+        private void TriggerSearchGlobal()
+        {
+            if (Visibility != Visibility.Visible)
+            {
+                Show();
+            }
+            if (_settings.IsCompactMode)
+            {
+                SetCompactMode(false);
+            }
+            WindowState = WindowState.Normal;
+            Activate();
+            BtnSearch_Click(this, new RoutedEventArgs());
+        }
+
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control &&
-                (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+            bool isCtrlShift = (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) == (ModifierKeys.Control | ModifierKeys.Shift);
+            bool isCtrlAlt = (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Alt)) == (ModifierKeys.Control | ModifierKeys.Alt);
+
+            if (isCtrlShift || isCtrlAlt)
             {
                 if (e.Key == Key.F)
                 {
@@ -90,6 +252,11 @@ namespace Recall
                 else if (e.Key == Key.C)
                 {
                     SetCompactMode(!_settings.IsCompactMode);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.R)
+                {
+                    ToggleWindowVisibility();
                     e.Handled = true;
                 }
             }

@@ -157,29 +157,33 @@
                     <!-- SECTION 7 : Raccourcis Clavier Windows -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="Raccourcis Clavier Système (Hotkeys)" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,6"/>
-                            <TextBlock Text="Contrôlez Recall sans jamais quitter Rekordbox ou Serato du regard :" FontSize="9.5" Foreground="#9CA3AF" Margin="0,0,0,6"/>
+                            <TextBlock Text="Raccourcis Clavier Système (Hotkeys)" FontWeight="SemiBold" FontSize="11" Foreground="#00F0FF" Margin="0,0,0,4"/>
+                            <TextBlock Text="Contrôlez Recall sans jamais quitter Rekordbox / Serato de l'écran :" FontSize="9.5" Foreground="#9CA3AF" Margin="0,0,0,6"/>
                             
                             <Grid Margin="0,2">
                                 <TextBlock Text="Afficher / Masquer Recall" FontSize="9.5" Foreground="#D1D5DB"/>
                                 <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
-                                    <TextBlock Text="Ctrl + Shift + R" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="Ctrl + Shift + R  (ou Ctrl + Alt + R)" FontSize="9" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                             </Grid>
 
                             <Grid Margin="0,2">
-                                <TextBlock Text="Basculer bandeau compact" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <TextBlock Text="Basculer instantanément en bandeau compact" FontSize="9.5" Foreground="#D1D5DB"/>
                                 <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
-                                    <TextBlock Text="Ctrl + Shift + C" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="Ctrl + Shift + C  (ou Ctrl + Alt + C)" FontSize="9" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                             </Grid>
 
                             <Grid Margin="0,2">
-                                <TextBlock Text="Ouvrir recherche Recall" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <TextBlock Text="Ouvrir la recherche Recall par-dessus votre logiciel DJ" FontSize="9.5" Foreground="#D1D5DB"/>
                                 <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
-                                    <TextBlock Text="Ctrl + Shift + F" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="Ctrl + Shift + F  (ou Ctrl + Alt + F)" FontSize="9" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                             </Grid>
+
+                            <Border Background="#152433" BorderBrush="#00F0FF" BorderThickness="0.6" CornerRadius="5" Padding="6" Margin="0,6,0,0">
+                                <TextBlock Text="🛡️ Protection Anti-Conflit Rekordbox &amp; Serato : Dans Rekordbox, Ctrl+Shift+R déclenche le saut arrière (Jump Reverse Deck 1) et dans Serato, Ctrl+Shift+F active la recherche de caisse. Le mode Ctrl+Alt (ou AltGr) est 100% libre et recommandé en live." FontSize="8.5" Foreground="#9CA3AF" TextWrapping="Wrap"/>
+                            </Border>
                         </StackPanel>
                     </Border>
 

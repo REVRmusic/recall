@@ -113,7 +113,7 @@ public struct HotKeySettingsCard: View {
                         .foregroundColor(Color.accentCyan.opacity(0.85))
                         .padding(.top, 1)
                     
-                    Text("Astuce Serato : ⇧⌘F et ⇧⌘R étant déjà utilisés par Serato (recherche de caisse et révélation), le préréglage ⌥⌘ (Cmd + Option) est 100% libre et recommandé.")
+                    Text("Astuce Sécurité DJ : Dans Rekordbox, ⇧⌘R déclenche Jump Reverse (saut arrière platine 1), et dans Serato, ⇧⌘F active la recherche de caisse. Le mode ⌥⌘ (Cmd + Option) est 100% libre et garanti sans conflit en plein mix.")
                         .font(.system(size: 8.5))
                         .foregroundColor(.white.opacity(0.55))
                         .lineSpacing(1.2)

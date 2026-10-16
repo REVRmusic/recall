@@ -145,7 +145,29 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- SECTION 7 : 100% Hors-Ligne -->
+                    <!-- SECTION 7 : Raccourcis Clavier Système (Hotkeys) -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⌨️" FontSize="12" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Raccourcis Clavier Globaux Système (Hotkeys)" FontWeight="Bold" FontSize="11.5" Foreground="#00F0FF"/>
+                                </StackPanel>
+                                <Border Background="#152433" BorderBrush="#00F0FF" BorderThickness="1" CornerRadius="3" Padding="4,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="GLOBAL" FontSize="9" FontWeight="Bold" Foreground="#00F0FF"/>
+                                </Border>
+                            </Grid>
+                            <TextBlock Text="Le concept : Pouvoir contrôler Recall sans jamais quitter Rekordbox / Serato de l'écran :" FontSize="9.5" Foreground="#D1D5DB" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Ctrl + Shift + R (ou Ctrl + Alt + R) : Afficher / Masquer Recall." FontSize="9" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Ctrl + Shift + C (ou Ctrl + Alt + C) : Basculer instantanément entre mode normal et bandeau compact." FontSize="9" Foreground="#9CA3AF" Margin="4,1"/>
+                            <TextBlock Text="• Ctrl + Shift + F (ou Ctrl + Alt + F) : Ouvrir la recherche Recall par-dessus votre logiciel DJ." FontSize="9" Foreground="#9CA3AF" Margin="4,1"/>
+                            <Border Background="#151A24" CornerRadius="4" Padding="6" Margin="0,4,0,0">
+                                <TextBlock Text="🛡️ Protection Anti-Conflit Rekordbox &amp; Serato : Dans Rekordbox, Ctrl+Shift+R déclenche le saut arrière (platine 1) et dans Serato, Ctrl+Shift+F active la recherche de caisse. Le mode Ctrl+Alt (ou AltGr) garantit 100% de liberté sans aucun conflit." FontSize="8.5" Foreground="#9CA3AF" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 8 : 100% Hors-Ligne -->
                     <Border Background="#151820" BorderBrush="#222834" BorderThickness="1" CornerRadius="8" Padding="10">
                         <StackPanel>
                             <TextBlock Text="🔒 100% Hors-Ligne &amp; Respect de votre bibliothèque" FontWeight="SemiBold" FontSize="10" Foreground="#9CA3AF" Margin="0,0,0,4"/>
