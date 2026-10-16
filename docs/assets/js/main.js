@@ -31,6 +31,12 @@ const translations = {
     "hero-subtitle": "Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées, vos sélections préparées et vos enchaînements harmoniques Camelot en plein set.",
     "hero-btn-mac": "Télécharger pour macOS",
     "hero-btn-win": "Télécharger pour Windows",
+    "hero-btn-smart-mac": "Télécharger pour macOS",
+    "hero-btn-smart-win": "Télécharger pour Windows",
+    "hero-other-os-text": "Également disponible pour ",
+    "hero-other-os-link": "Windows (PC)",
+    "hero-other-os-win": "Windows (PC)",
+    "hero-other-os-mac": "macOS (Apple Mac)",
     "hero-btn-github": "Code source GitHub",
     "trust-offline": "100 % Hors-ligne (Zéro Wi-Fi)",
     "trust-cpu": "0 % CPU au repos (< 25 Mo RAM)",
@@ -151,6 +157,24 @@ const translations = {
     "dl-win-exe": "Exécutable autonome prêt à l'emploi",
     "dl-github-note": "Consultez également les releases officielles et le code source sur ",
     
+    // Post-Download Modal
+    "modal-title": "Téléchargement en cours...",
+    "modal-subtitle": "Merci d'avoir choisi Recall ! Voici la marche à suivre pour commencer à mixer :",
+    "modal-fallback": "Le téléchargement ne s'est pas lancé automatiquement ?",
+    "modal-retry": "Cliquez ici pour relancer le téléchargement direct",
+    "step-mac-1-title": "1. Ouvrez le fichier téléchargé",
+    "step-mac-1-desc": "Double-cliquez sur le fichier <code>Recall.dmg</code> puis glissez l'icône Recall dans votre dossier <em>Applications</em>.",
+    "step-mac-2-title": "2. Lancez Serato ou Rekordbox",
+    "step-mac-2-desc": "Ouvrez votre logiciel DJ habituel. Recall détectera automatiquement vos platines et vos historiques de mix.",
+    "step-mac-3-title": "Sécurité macOS (Gatekeeper)",
+    "step-mac-3-desc": "Au premier lancement, si macOS bloque l'ouverture (développeur non identifié) : faites <em>Clic droit &gt; Ouvrir</em>, ou rendez-vous dans <em>Réglages Système &gt; Confidentialité et sécurité</em> et cliquez sur <em>\"Ouvrir quand même\"</em>.",
+    "step-win-1-title": "1. Décompressez l'archive ZIP",
+    "step-win-1-desc": "Faites un clic droit sur <code>Recall-Windows-x64.zip</code> et choisissez <em>\"Extraire tout...\"</em> dans le dossier de votre choix.",
+    "step-win-2-title": "2. Lancez Recall.exe",
+    "step-win-2-desc": "Double-cliquez sur <code>Recall.exe</code>. L'application est autonome et s'exécute immédiatement sans installation requise.",
+    "step-win-3-title": "Avertissement Windows SmartScreen",
+    "step-win-3-desc": "Si le filtre SmartScreen bleu s'affiche (\"Windows a protégé votre ordinateur\") : cliquez sur <em>\"Informations complémentaires\"</em> puis sur <em>\"Exécuter quand même\"</em>.",
+    
     // FAQ
     "faq-tag": "Questions Fréquentes",
     "faq-title": "Tout ce que vous devez savoir avant de mixer avec Recall",
@@ -213,6 +237,12 @@ const translations = {
     "hero-subtitle": "The smart DJ copilot that mines your Serato & Rekordbox history to instantly recommend proven routines, prepped selections, and Camelot harmonic transitions in live sets.",
     "hero-btn-mac": "Download for macOS",
     "hero-btn-win": "Download for Windows",
+    "hero-btn-smart-mac": "Download for macOS",
+    "hero-btn-smart-win": "Download for Windows",
+    "hero-other-os-text": "Also available for ",
+    "hero-other-os-link": "Windows (PC)",
+    "hero-other-os-win": "Windows (PC)",
+    "hero-other-os-mac": "macOS (Apple Mac)",
     "hero-btn-github": "GitHub Source Code",
     "trust-offline": "100% Offline (No Wi-Fi needed)",
     "trust-cpu": "0% Idle CPU (< 25 MB RAM)",
@@ -333,6 +363,24 @@ const translations = {
     "dl-win-exe": "Self-contained executable ready to run",
     "dl-github-note": "Explore official releases and source code on ",
     
+    // Post-Download Modal
+    "modal-title": "Download starting...",
+    "modal-subtitle": "Thank you for choosing Recall! Here are quick instructions to get you mixing:",
+    "modal-fallback": "Didn't the download start automatically?",
+    "modal-retry": "Click here to retry direct download",
+    "step-mac-1-title": "1. Open the downloaded file",
+    "step-mac-1-desc": "Double-click <code>Recall.dmg</code> then drag the Recall icon into your <em>Applications</em> folder.",
+    "step-mac-2-title": "2. Launch Serato or Rekordbox",
+    "step-mac-2-desc": "Open your usual DJ software. Recall will automatically detect your decks and mix histories.",
+    "step-mac-3-title": "macOS Security (Gatekeeper)",
+    "step-mac-3-desc": "On first launch, if macOS displays an unidentified developer prompt: <em>Right-click &gt; Open</em>, or go to <em>System Settings &gt; Privacy &amp; Security</em> and click <em>\"Open Anyway\"</em>.",
+    "step-win-1-title": "1. Extract the ZIP archive",
+    "step-win-1-desc": "Right-click <code>Recall-Windows-x64.zip</code> and select <em>\"Extract All...\"</em> into your preferred directory.",
+    "step-win-2-title": "2. Launch Recall.exe",
+    "step-win-2-desc": "Double-click <code>Recall.exe</code>. The app is fully portable and runs instantly with no installer needed.",
+    "step-win-3-title": "Windows SmartScreen Warning",
+    "step-win-3-desc": "If the blue SmartScreen prompt appears (\"Windows protected your PC\"): click <em>\"More info\"</em> then <em>\"Run anyway\"</em>.",
+    
     // FAQ
     "faq-tag": "Frequently Asked Questions",
     "faq-title": "Everything you need to know before gigging with Recall",
@@ -405,14 +453,91 @@ function getInitialLanguage() {
 }
 
 let currentLang = getInitialLanguage();
+let detectedVisitorOS = "macOS";
+
+// ==========================================================================
+// Détection de l'OS du Visiteur & Adaptation du Bouton Télécharger Hero
+// ==========================================================================
+function detectVisitorOS() {
+  try {
+    if (navigator.userAgentData && navigator.userAgentData.platform) {
+      const p = navigator.userAgentData.platform.toLowerCase();
+      if (p.includes("win")) return "Windows";
+      if (p.includes("mac")) return "macOS";
+    }
+    const platform = (navigator.platform || "").toLowerCase();
+    if (platform.includes("win")) return "Windows";
+    if (platform.includes("mac")) return "macOS";
+
+    const ua = (navigator.userAgent || "").toLowerCase();
+    if (ua.includes("windows") || ua.includes("win32") || ua.includes("win64")) return "Windows";
+    if (ua.includes("macintosh") || ua.includes("mac os")) return "macOS";
+  } catch (e) {}
+
+  return "macOS";
+}
+
+function updateSmartHeroButton(os, lang) {
+  const smartBtn = document.getElementById("hero-smart-btn");
+  const iconWrap = document.getElementById("hero-smart-icon-wrap");
+  const textSpan = document.getElementById("hero-smart-text");
+  const otherLink = document.getElementById("hero-other-os-link");
+
+  if (!smartBtn) return;
+
+  const isWin = (os === "Windows");
+  const currentDict = translations[lang] || translations.fr;
+
+  if (isWin) {
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.0/Recall-Windows-x64.zip";
+    smartBtn.setAttribute("data-track-download", "Windows");
+    smartBtn.setAttribute("data-track-file", "Recall-Windows.zip");
+    smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (Windows)");
+
+    if (iconWrap) {
+      iconWrap.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 88 88" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+          <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+        </svg>
+      `;
+    }
+    if (textSpan) {
+      textSpan.setAttribute("data-i18n", "hero-btn-smart-win");
+      textSpan.textContent = currentDict["hero-btn-smart-win"] || "Télécharger pour Windows";
+    }
+    if (otherLink) {
+      otherLink.textContent = currentDict["hero-other-os-mac"] || "macOS (Apple Mac)";
+    }
+  } else {
+    // macOS default
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.0/Recall.dmg";
+    smartBtn.setAttribute("data-track-download", "macOS");
+    smartBtn.setAttribute("data-track-file", "Recall.dmg");
+    smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (macOS)");
+
+    if (iconWrap) {
+      iconWrap.innerHTML = `<img src="assets/images/apple-logo.png" alt="Apple" class="btn-apple-logo" id="hero-smart-icon">`;
+    }
+    if (textSpan) {
+      textSpan.setAttribute("data-i18n", "hero-btn-smart-mac");
+      textSpan.textContent = currentDict["hero-btn-smart-mac"] || "Télécharger pour macOS";
+    }
+    if (otherLink) {
+      otherLink.textContent = currentDict["hero-other-os-win"] || "Windows (PC)";
+    }
+  }
+}
 
 // --- DOM Initializer ---
 document.addEventListener("DOMContentLoaded", () => {
+  detectedVisitorOS = detectVisitorOS();
   initLanguage();
+  updateSmartHeroButton(detectedVisitorOS, currentLang);
   initMobileMenu();
   initNavbarScroll();
   initMockupTabs();
   initFAQ();
+  initDownloadModal();
   initDownloadTracker();
 });
 
@@ -471,6 +596,11 @@ function setLanguage(lang) {
       const titles = getMockupTitles(currentLang);
       if (titles[targetId]) titleText.textContent = titles[targetId];
     }
+  }
+
+  // Update smart hero button text in current language
+  if (typeof updateSmartHeroButton === "function") {
+    updateSmartHeroButton(detectedVisitorOS, currentLang);
   }
 
   document.documentElement.lang = currentLang;
@@ -690,15 +820,93 @@ function sendDownloadEvent(eventData) {
   }
 }
 
+// ==========================================================================
+// Boîte Modale d'Instructions après Téléchargement Direct
+// ==========================================================================
+function openDownloadModal(platform, downloadUrl) {
+  const modal = document.getElementById("download-modal");
+  const stepsMac = document.getElementById("modal-steps-mac");
+  const stepsWin = document.getElementById("modal-steps-win");
+  const retryLink = document.getElementById("modal-retry-link");
+
+  if (!modal) return;
+
+  const isWin = (platform === "Windows");
+
+  if (stepsMac && stepsWin) {
+    if (isWin) {
+      stepsMac.style.display = "none";
+      stepsWin.style.display = "flex";
+    } else {
+      stepsMac.style.display = "flex";
+      stepsWin.style.display = "none";
+    }
+  }
+
+  if (retryLink && downloadUrl) {
+    retryLink.href = downloadUrl;
+    retryLink.setAttribute("data-track-download", platform);
+    retryLink.setAttribute("data-track-file", isWin ? "Recall-Windows.zip" : "Recall.dmg");
+  }
+
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDownloadModal() {
+  const modal = document.getElementById("download-modal");
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function initDownloadModal() {
+  const modal = document.getElementById("download-modal");
+  const closeBtn = document.getElementById("modal-close-btn");
+
+  if (!modal) return;
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeDownloadModal);
+  }
+
+  // Fermeture en cliquant sur l'arrière-plan flouté
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeDownloadModal();
+    }
+  });
+
+  // Fermeture avec la touche Échap
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("active")) {
+      closeDownloadModal();
+    }
+  });
+}
+
 function initDownloadTracker() {
   // Attache un écouteur UNIQUE exclusivement sur les vrais liens de téléchargement de fichier
   document.querySelectorAll("[data-track-download]").forEach(btn => {
     btn.addEventListener("click", () => {
+      const platform = btn.getAttribute("data-track-download") || detectedVisitorOS;
+      const file = btn.getAttribute("data-track-file") || (platform === "Windows" ? "Recall-Windows.zip" : "Recall.dmg");
+      const location = btn.getAttribute("data-track-location") || "Section Téléchargement";
+      const downloadUrl = btn.getAttribute("href");
+
       sendDownloadEvent({
-        platform: btn.getAttribute("data-track-download") || "macOS",
-        file: btn.getAttribute("data-track-file") || "Recall.dmg",
-        location: btn.getAttribute("data-track-location") || "Section Téléchargement"
+        platform: platform,
+        file: file,
+        location: location
       });
+
+      // Si le clic ne provient pas déjà du lien de réessai interne à la modale, on affiche la modale
+      if (btn.id !== "modal-retry-link") {
+        openDownloadModal(platform, downloadUrl);
+      }
     });
   });
 
