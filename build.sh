@@ -74,9 +74,14 @@ EOF
 # PkgInfo
 echo "APPL????" > "$CONTENTS_DIR/PkgInfo"
 
+# Signature ad-hoc propre du bundle complet pour TCC et Accessibilité macOS
+echo "🔏 Signature de $APP_NAME.app..."
+codesign --force --deep --sign - "$APP_BUNDLE"
+
 # Installation optionnelle dans /Applications
 rm -rf /Applications/Recall.app 2>/dev/null || true
 cp -R "$APP_BUNDLE" /Applications/Recall.app 2>/dev/null || true
+codesign --force --deep --sign - /Applications/Recall.app
 
 echo "✅ Recall.app créé avec succès dans :"
 echo "   $APP_BUNDLE"

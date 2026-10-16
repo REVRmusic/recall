@@ -3,6 +3,7 @@ import SwiftUI
 public struct NowPlayingCard: View {
     @EnvironmentObject var monitor: SeratoMonitorService
     @EnvironmentObject var settings: UserSettings
+    @ObservedObject var rekordboxService: RekordboxService = .shared
     
     public init() {}
     
@@ -26,28 +27,48 @@ public struct NowPlayingCard: View {
                 // Sélecteurs de platines ou statut Rekordbox
                 HStack(spacing: 3) {
                     if monitor.activeDJSoftware == .rekordbox {
-                        Text("REKORDBOX")
-                            .font(.system(size: 8, weight: .bold))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .background(Color.accentCyan.opacity(0.18))
-                            .foregroundColor(Color.accentCyan)
-                            .cornerRadius(4)
-                    } else {
-                        deckPill(label: "AUTO", isSelected: monitor.activeDeckSelection == "AUTO") {
-                            monitor.selectDeck("AUTO")
-                        }
-                        
-                        if monitor.deck1Track != nil {
-                            deckPill(label: "DECK 1", isSelected: monitor.activeDeckSelection == "1") {
-                                monitor.selectDeck("1")
+                        if !rekordboxService.isAccessibilityGranted {
+                            Button {
+                                rekordboxService.openAccessibilityPreferences()
+                            } label: {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "hand.raised.fill")
+                                        .font(.system(size: 7, weight: .bold))
+                                    Text("ACCÈS REQUIS")
+                                        .font(.system(size: 8, weight: .bold))
+                                }
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Color.accentOrange.opacity(0.25))
+                                .foregroundColor(Color.accentOrange)
+                                .cornerRadius(4)
                             }
+                            .buttonStyle(.plain)
+                            .help("Cliquez pour autoriser Recall dans Réglages Système > Confidentialité et sécurité > Accessibilité")
+                        } else {
+                            Text("REKORDBOX")
+                                .font(.system(size: 8, weight: .bold))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Color.accentCyan.opacity(0.18))
+                                .foregroundColor(Color.accentCyan)
+                                .cornerRadius(4)
                         }
-                        
-                        if monitor.deck2Track != nil {
-                            deckPill(label: "DECK 2", isSelected: monitor.activeDeckSelection == "2") {
-                                monitor.selectDeck("2")
-                            }
+                    }
+                    
+                    deckPill(label: "AUTO", isSelected: monitor.activeDeckSelection == "AUTO") {
+                        monitor.selectDeck("AUTO")
+                    }
+                    
+                    if monitor.deck1Track != nil {
+                        deckPill(label: "DECK 1", isSelected: monitor.activeDeckSelection == "1") {
+                            monitor.selectDeck("1")
+                        }
+                    }
+                    
+                    if monitor.deck2Track != nil {
+                        deckPill(label: "DECK 2", isSelected: monitor.activeDeckSelection == "2") {
+                            monitor.selectDeck("2")
                         }
                     }
                     
@@ -178,32 +199,73 @@ public struct NowPlayingCard: View {
                 }
             } else {
                 // État lorsqu'aucun morceau n'est en cours de lecture
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentCyan.opacity(0.18))
-                            .frame(width: 34, height: 34)
+                if monitor.activeDJSoftware == .rekordbox && !rekordboxService.isAccessibilityGranted {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentOrange.opacity(0.18))
+                                .frame(width: 34, height: 34)
+                            
+                            Image(systemName: "hand.raised.fill")
+                                .font(.system(size: 13, weight: .black))
+                                .foregroundColor(Color.accentOrange)
+                        }
                         
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 13, weight: .black))
-                            .foregroundColor(Color.accentCyan)
-                            .offset(x: 1)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(monitor.activeDJSoftware == .rekordbox ? "Sélectionnez un morceau" : "Lancer la lecture")
-                            .font(.system(size: 12.5, weight: .bold))
-                            .foregroundColor(.white)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Autorisation requise pour Rekordbox")
+                                .font(.system(size: 11.5, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text("Pour détecter vos platines en direct, cochez Recall dans Réglages Système > Accessibilité.")
+                                .font(.system(size: 9))
+                                .foregroundColor(.white.opacity(0.65))
+                                .lineLimit(2)
+                        }
                         
-                        Text(monitor.activeDJSoftware == .rekordbox ? "Recherchez ou choisissez un morceau de votre collection Rekordbox pour afficher les suggestions instantanées." : "Démarrez un morceau sur Deck 1 ou Deck 2 dans Serato DJ Pro pour afficher les suggestions.")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.55))
-                            .lineLimit(2)
+                        Spacer()
+                        
+                        Button {
+                            rekordboxService.openAccessibilityPreferences()
+                        } label: {
+                            Text("Activer")
+                                .font(.system(size: 9.5, weight: .bold))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.accentOrange.opacity(0.25))
+                                .foregroundColor(Color.accentOrange)
+                                .cornerRadius(5)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    
-                    Spacer()
+                    .padding(.vertical, 4)
+                } else {
+                    HStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentCyan.opacity(0.18))
+                                .frame(width: 34, height: 34)
+                            
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 13, weight: .black))
+                                .foregroundColor(Color.accentCyan)
+                                .offset(x: 1)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Lancer la lecture")
+                                .font(.system(size: 12.5, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(monitor.activeDJSoftware == .rekordbox ? "Lancez un morceau sur Deck 1 ou Deck 2 dans Rekordbox pour afficher les suggestions." : "Démarrez un morceau sur Deck 1 ou Deck 2 dans Serato DJ Pro pour afficher les suggestions.")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                                .lineLimit(2)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
             }
         }
         .padding(10)

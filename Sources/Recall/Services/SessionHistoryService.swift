@@ -116,6 +116,43 @@ public class SessionHistoryService: ObservableObject {
         return playedNormalizedTitles.contains(norm)
     }
     
+    /// Enregistre un morceau confirmé comme ayant été joué pendant la session (utilisé pour Rekordbox et les ajouts directs)
+    public func recordPlayedTrack(title: String, artist: String = "", fileName: String = "", durationSeconds: Double = 30.0) {
+        let norm = FavoriteCombosService.normalize(title)
+        guard !norm.isEmpty else { return }
+        
+        let now = Date()
+        playedNormalizedTitles.insert(norm)
+        if !fileName.isEmpty {
+            playedNormalizedTitles.insert(FavoriteCombosService.normalize(fileName))
+        }
+        
+        if let idx = playedTracks.firstIndex(where: { FavoriteCombosService.normalize($0.title) == norm }) {
+            let existing = playedTracks[idx]
+            playedTracks[idx] = SessionPlayedTrack(
+                id: existing.id,
+                title: existing.title,
+                artist: existing.artist,
+                fileName: existing.fileName,
+                playedAt: now,
+                durationSeconds: max(existing.durationSeconds, durationSeconds),
+                playCount: existing.playCount + 1
+            )
+        } else {
+            let newPlayed = SessionPlayedTrack(
+                id: "session_\(norm)",
+                title: title,
+                artist: artist,
+                fileName: fileName,
+                playedAt: now,
+                durationSeconds: durationSeconds,
+                playCount: 1
+            )
+            playedTracks.insert(newPlayed, at: 0)
+        }
+        playedCount = playedTracks.count
+    }
+    
     // MARK: - Synchronisation & Détection Pré-écoute vs Lecture Réelle
     
     /// Interroge l'historique Serato et filtre strictement les morceaux joués (durée >= seuil paramétré)

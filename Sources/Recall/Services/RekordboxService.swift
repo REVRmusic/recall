@@ -1,6 +1,37 @@
 import Foundation
 import Combine
 import SwiftUI
+import AppKit
+import ApplicationServices
+
+/// État en direct des platines Rekordbox (morceaux chargés, BPM, Tonalité, état de lecture)
+public struct RekordboxActiveDecksState: @unchecked Sendable {
+    public let deck1: Track?
+    public let deck2: Track?
+    public let deck1ElapsedSeconds: Int
+    public let deck2ElapsedSeconds: Int
+    public let isDeck1Playing: Bool
+    public let isDeck2Playing: Bool
+    public let activeDeckNumber: String // "1" ou "2"
+    
+    public init(
+        deck1: Track?,
+        deck2: Track?,
+        deck1ElapsedSeconds: Int = 0,
+        deck2ElapsedSeconds: Int = 0,
+        isDeck1Playing: Bool = false,
+        isDeck2Playing: Bool = false,
+        activeDeckNumber: String = "1"
+    ) {
+        self.deck1 = deck1
+        self.deck2 = deck2
+        self.deck1ElapsedSeconds = deck1ElapsedSeconds
+        self.deck2ElapsedSeconds = deck2ElapsedSeconds
+        self.isDeck1Playing = isDeck1Playing
+        self.isDeck2Playing = isDeck2Playing
+        self.activeDeckNumber = activeDeckNumber
+    }
+}
 
 /// Service de gestion et d'analyse de la collection Pioneer DJ Rekordbox (via pont XML officiel)
 /// - Lit et analyse l'ensemble des morceaux, clés Camelot et BPM
@@ -19,6 +50,8 @@ public class RekordboxService: ObservableObject {
     @Published public private(set) var lastLoadedDate: Date? = nil
     @Published public private(set) var errorMessage: String? = nil
     
+    @Published public private(set) var isAccessibilityGranted: Bool = AXIsProcessTrusted()
+    
     // Index en mémoire pour recherche instantanée (sub-milliseconde)
     private var tracksById: [String: Track] = [:]
     private var tracksList: [Track] = []
@@ -28,6 +61,15 @@ public class RekordboxService: ObservableObject {
     
     public init() {
         loadCollectionIfNeeded()
+    }
+    
+    /// Ouvre les Réglages Système macOS directement sur le panneau d'Accessibilité
+    public func openAccessibilityPreferences() {
+        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+        _ = AXIsProcessTrustedWithOptions(options)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
     
     /// Charge la collection XML Rekordbox si elle n'est pas encore en mémoire ou si le fichier a changé
@@ -407,6 +449,265 @@ public class RekordboxService: ObservableObject {
         }
         return nil
     }
+    
+    // MARK: - Détection en Direct des Platines Rekordbox (Accessibilité macOS)
+    
+    private var lastD1Elapsed: Int = -1
+    private var lastD2Elapsed: Int = -1
+    private var lastD1AdvancingTime: Date = .distantPast
+    private var lastD2AdvancingTime: Date = .distantPast
+    private var lastActiveDeck: String = "1"
+    
+    /// Détecte en direct et en temps réel les morceaux chargés et joués sur les platines de Rekordbox via l'API Accessibilité macOS
+    public func fetchActiveDecks() -> RekordboxActiveDecksState? {
+        let trusted = AXIsProcessTrusted()
+        if self.isAccessibilityGranted != trusted {
+            self.isAccessibilityGranted = trusted
+        }
+        guard trusted else {
+            return nil
+        }
+        
+        guard let app = NSWorkspace.shared.runningApplications.first(where: {
+            let n = ($0.localizedName ?? "").lowercased()
+            let bid = ($0.bundleIdentifier ?? "").lowercased()
+            return n.contains("rekordbox") || bid.contains("com.pioneerdj.rekordbox")
+        }) else {
+            try? "error: rekordbox app not found\n".write(toFile: "/tmp/recall_rb_debug.log", atomically: false, encoding: .utf8)
+            return nil
+        }
+        
+        let axApp = AXUIElementCreateApplication(app.processIdentifier)
+        var windowsVal: CFTypeRef?
+        let wRes = AXUIElementCopyAttributeValue(axApp, kAXWindowsAttribute as CFString, &windowsVal)
+        guard wRes == .success, let windows = windowsVal as? [AXUIElement], let window = windows.first else {
+            try? "error: windows copy failed: \(wRes.rawValue)\n".write(toFile: "/tmp/recall_rb_debug.log", atomically: false, encoding: .utf8)
+            return nil
+        }
+        
+        var windowSizeVal: CFTypeRef?
+        var windowSize = CGSize(width: 1512, height: 982)
+        if AXUIElementCopyAttributeValue(window, kAXSizeAttribute as CFString, &windowSizeVal) == .success, let sv = windowSizeVal {
+            AXValueGetValue(sv as! AXValue, .cgSize, &windowSize)
+        }
+        let midX = windowSize.width / 2.0
+        
+        var childrenVal: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, kAXChildrenAttribute as CFString, &childrenVal) == .success,
+              let children = childrenVal as? [AXUIElement] else { return nil }
+        
+        var playerGroup: AXUIElement? = nil
+        for child in children {
+            var roleVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(child, kAXRoleAttribute as CFString, &roleVal)
+            guard (roleVal as? String) == "AXGroup" else { continue }
+            var sizeVal: CFTypeRef?
+            var sz = CGSize.zero
+            if AXUIElementCopyAttributeValue(child, kAXSizeAttribute as CFString, &sizeVal) == .success, let sv = sizeVal {
+                AXValueGetValue(sv as! AXValue, .cgSize, &sz)
+            }
+            var posVal: CFTypeRef?
+            var pt = CGPoint.zero
+            if AXUIElementCopyAttributeValue(child, kAXPositionAttribute as CFString, &posVal) == .success, let pv = posVal {
+                AXValueGetValue(pv as! AXValue, .cgPoint, &pt)
+            }
+            if sz.height > 250 && sz.height < 750 && pt.y < 200 {
+                playerGroup = child
+                break
+            }
+        }
+        if playerGroup == nil && children.count > 1 {
+            playerGroup = children[1]
+        }
+        guard let pGroup = playerGroup else { return nil }
+        
+        var gChildrenVal: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(pGroup, kAXChildrenAttribute as CFString, &gChildrenVal) == .success,
+              let gChildren = gChildrenVal as? [AXUIElement] else { return nil }
+        
+        struct AxItem {
+            let text: String
+            let pt: CGPoint
+        }
+        
+        var allItems: [AxItem] = []
+        for el in gChildren {
+            var roleVal: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXRoleAttribute as CFString, &roleVal)
+            guard (roleVal as? String) == "AXStaticText" else { continue }
+            var valRef: CFTypeRef?
+            AXUIElementCopyAttributeValue(el, kAXValueAttribute as CFString, &valRef)
+            let text = (valRef as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { continue }
+            var posVal: CFTypeRef?
+            var pt = CGPoint.zero
+            if AXUIElementCopyAttributeValue(el, kAXPositionAttribute as CFString, &posVal) == .success, let pv = posVal {
+                AXValueGetValue(pv as! AXValue, .cgPoint, &pt)
+            }
+            allItems.append(AxItem(text: text, pt: pt))
+        }
+        
+        func parseDeck(isDeck1: Bool) -> (track: Track, elapsedSec: Int)? {
+            let deckItems = allItems.filter { isDeck1 ? $0.pt.x < midX : $0.pt.x >= midX }
+            
+            var bpmVal = 0.0
+            var bpmItem: AxItem? = nil
+            for it in deckItems {
+                if let b = Double(it.text), b >= 45.0 && b <= 240.0 && !it.text.contains(":") && !it.text.contains("%") {
+                    bpmVal = b
+                    bpmItem = it
+                    break
+                }
+            }
+            
+            var keyStr = ""
+            if let bp = bpmItem {
+                let keyCandidates = deckItems.filter {
+                    $0.pt.x > bp.pt.x && $0.pt.x <= bp.pt.x + 120 &&
+                    abs($0.pt.y - bp.pt.y) <= 12 &&
+                    Double($0.text) == nil && !$0.text.contains(":") && !$0.text.contains("%")
+                }
+                if let best = keyCandidates.min(by: { abs($0.pt.x - bp.pt.x) < abs($1.pt.x - bp.pt.x) }) {
+                    keyStr = best.text
+                }
+            }
+            
+            var rawTitle = ""
+            if let bp = bpmItem {
+                let titleCandidates = deckItems.filter {
+                    $0.pt.y < bp.pt.y && $0.pt.y >= bp.pt.y - 60 &&
+                    $0.text.count >= 2 && Double($0.text) == nil && !$0.text.contains(":") &&
+                    $0.text != "MIX" && $0.text != "LEVEL" && $0.text != "MUTE"
+                }
+                if let best = titleCandidates.min(by: { abs($0.pt.y - bp.pt.y) < abs($1.pt.y - bp.pt.y) }) {
+                    rawTitle = best.text
+                }
+            }
+            
+            guard !rawTitle.isEmpty || bpmVal > 0 else { return nil }
+            
+            var elapsedSec = 0
+            if let bp = bpmItem {
+                let timeCandidates = deckItems.filter {
+                    abs($0.pt.y - bp.pt.y) <= 15 &&
+                    $0.text.contains(":") && !$0.text.hasPrefix("-") && $0.text.count >= 4 && $0.text.count <= 5
+                }
+                if let t = timeCandidates.first {
+                    let parts = t.text.split(separator: ":")
+                    if parts.count == 2, let m = Int(parts[0]), let s = Int(parts[1]) {
+                        elapsedSec = m * 60 + s
+                    }
+                }
+            }
+            
+            let deckNum = isDeck1 ? "1" : "2"
+            let parsed = Track.parseSmartArtistAndTitle(rawString: rawTitle)
+            
+            // Enrichissement via la collection Rekordbox XML si disponible
+            if let rbFound = findTrack(title: parsed.title, artist: parsed.artist ?? "") {
+                let tr = Track(
+                    id: "rb-deck-\(deckNum)-\(rbFound.id)",
+                    title: rbFound.title,
+                    artist: rbFound.artist,
+                    bpm: bpmVal > 0 ? bpmVal : rbFound.bpm,
+                    rawKey: !keyStr.isEmpty ? keyStr : rbFound.rawKey,
+                    filePath: rbFound.filePath,
+                    fileName: rbFound.fileName,
+                    portableId: rbFound.portableId,
+                    deck: deckNum
+                )
+                return (tr, elapsedSec)
+            }
+            
+            let tr = Track(
+                id: "rb-deck-\(deckNum)-\(abs(rawTitle.hashValue))",
+                title: parsed.title,
+                artist: parsed.artist ?? "",
+                bpm: bpmVal,
+                rawKey: keyStr,
+                filePath: nil,
+                fileName: rawTitle,
+                portableId: rawTitle,
+                deck: deckNum
+            )
+            return (tr, elapsedSec)
+        }
+        
+        let d1Info = parseDeck(isDeck1: true)
+        let d2Info = parseDeck(isDeck1: false)
+        
+        let now = Date()
+        var isD1Playing = false
+        var isD2Playing = false
+        
+        if let d1 = d1Info {
+            if d1.elapsedSec != lastD1Elapsed && d1.elapsedSec > 0 {
+                isD1Playing = true
+                lastD1AdvancingTime = now
+                lastActiveDeck = "1"
+            } else if now.timeIntervalSince(lastD1AdvancingTime) < 2.5 {
+                isD1Playing = true
+                lastActiveDeck = "1"
+            }
+            lastD1Elapsed = d1.elapsedSec
+        }
+        
+        if let d2 = d2Info {
+            if d2.elapsedSec != lastD2Elapsed && d2.elapsedSec > 0 {
+                isD2Playing = true
+                lastD2AdvancingTime = now
+                lastActiveDeck = "2"
+            } else if now.timeIntervalSince(lastD2AdvancingTime) < 2.5 {
+                isD2Playing = true
+                lastActiveDeck = "2"
+            }
+            lastD2Elapsed = d2.elapsedSec
+        }
+        
+        // Si aucun des deux n'avance (pause), orienter selon le temps écoulé
+        if !isD1Playing && !isD2Playing {
+            if let d1 = d1Info, let d2 = d2Info {
+                if d1.elapsedSec > 0 && d2.elapsedSec == 0 {
+                    lastActiveDeck = "1"
+                } else if d2.elapsedSec > 0 && d1.elapsedSec == 0 {
+                    lastActiveDeck = "2"
+                }
+            } else if d1Info != nil && d2Info == nil {
+                lastActiveDeck = "1"
+            } else if d2Info != nil && d1Info == nil {
+                lastActiveDeck = "2"
+            }
+        }
+        
+        // Enregistrement automatique dans l'historique de session quand la durée dépasse le seuil
+        let threshold = UserSettings.shared.playedMinDurationSeconds
+        if let d1 = d1Info, d1.elapsedSec >= threshold {
+            SessionHistoryService.shared.recordPlayedTrack(
+                title: d1.track.displayTitle,
+                artist: d1.track.artist,
+                fileName: d1.track.fileName,
+                durationSeconds: Double(d1.elapsedSec)
+            )
+        }
+        if let d2 = d2Info, d2.elapsedSec >= threshold {
+            SessionHistoryService.shared.recordPlayedTrack(
+                title: d2.track.displayTitle,
+                artist: d2.track.artist,
+                fileName: d2.track.fileName,
+                durationSeconds: Double(d2.elapsedSec)
+            )
+        }
+        
+        return RekordboxActiveDecksState(
+            deck1: d1Info?.track,
+            deck2: d2Info?.track,
+            deck1ElapsedSeconds: d1Info?.elapsedSec ?? 0,
+            deck2ElapsedSeconds: d2Info?.elapsedSec ?? 0,
+            isDeck1Playing: isD1Playing,
+            isDeck2Playing: isD2Playing,
+            activeDeckNumber: lastActiveDeck
+        )
+    }
 }
 
 // MARK: - Parser SAX Rekordbox XML ultra optimisé
@@ -422,6 +723,14 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
     
     private var isInsidePlaylists: Bool = false
     private var currentPlaylistTracks: [String] = []
+    
+    private func sanitizeEncoding(_ str: String) -> String {
+        guard str.contains("Ã") || str.contains("Â") else { return str }
+        if let data = str.data(using: .isoLatin1), let fixed = String(data: data, encoding: .utf8) {
+            return fixed
+        }
+        return str
+    }
     
     func parser(
         _ parser: XMLParser,
@@ -439,8 +748,8 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
             } else {
                 // Morceau de collection
                 guard let trackId = attributeDict["TrackID"], !trackId.isEmpty else { return }
-                let name = attributeDict["Name"] ?? ""
-                let artist = attributeDict["Artist"] ?? ""
+                let name = sanitizeEncoding(attributeDict["Name"] ?? "")
+                let artist = sanitizeEncoding(attributeDict["Artist"] ?? "")
                 let bpm = Double(attributeDict["AverageBpm"] ?? "") ?? 0.0
                 let tonality = attributeDict["Tonality"] ?? ""
                 let location = attributeDict["Location"] ?? ""

@@ -121,8 +121,20 @@ public class SeratoMonitorService: ObservableObject {
         let effective: DJSoftwareMode
         switch mode {
         case .auto:
+            let frontId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier?.lowercased() ?? ""
+            let frontName = NSWorkspace.shared.frontmostApplication?.localizedName?.lowercased() ?? ""
             if isRekordboxRunning && !isSeratoRunning {
                 effective = .rekordbox
+            } else if isSeratoRunning && !isRekordboxRunning {
+                effective = .serato
+            } else if isRekordboxRunning && isSeratoRunning {
+                if frontId.contains("rekordbox") || frontName.contains("rekordbox") {
+                    effective = .rekordbox
+                } else if frontId.contains("serato") || frontName.contains("serato") {
+                    effective = .serato
+                } else {
+                    effective = activeDJSoftware
+                }
             } else {
                 effective = .serato
             }
@@ -140,22 +152,62 @@ public class SeratoMonitorService: ObservableObject {
             refreshSuggestions()
         }
         
-        // --- BRANCHE REKORDBOX ---
+        // --- BRANCHE REKORDBOX (Détection Temps Réel) ---
         if effective == .rekordbox {
             RekordboxService.shared.loadCollectionIfNeeded()
-            deck1Track = nil
-            deck2Track = nil
             
-            if let manual = manualTrackOverride {
+            guard isRekordboxRunning else {
+                deck1Track = nil
+                deck2Track = nil
+                if manualTrackOverride == nil && currentTrack != nil {
+                    currentTrack = nil
+                    suggestions = []
+                    historySuggestions = []
+                    favoriteSuggestions = []
+                }
+                return
+            }
+            
+            if let activeState = RekordboxService.shared.fetchActiveDecks() {
+                self.deck1Track = activeState.deck1
+                self.deck2Track = activeState.deck2
+                
+                // Si la platine sélectionnée manuellement n'a plus de morceau, retour automatique en mode AUTO
+                if self.activeDeckSelection == "1" && self.deck1Track == nil {
+                    self.activeDeckSelection = "AUTO"
+                } else if self.activeDeckSelection == "2" && self.deck2Track == nil {
+                    self.activeDeckSelection = "AUTO"
+                }
+                
+                // Déterminer la piste de référence active selon la sélection du DJ
+                let newRefTrack: Track?
+                if let manual = self.manualTrackOverride {
+                    newRefTrack = manual
+                } else if self.activeDeckSelection == "1" {
+                    newRefTrack = self.deck1Track
+                } else if self.activeDeckSelection == "2" {
+                    newRefTrack = self.deck2Track
+                } else {
+                    // Mode AUTO :
+                    if activeState.activeDeckNumber == "2" {
+                        newRefTrack = self.deck2Track ?? self.deck1Track
+                    } else {
+                        newRefTrack = self.deck1Track ?? self.deck2Track
+                    }
+                }
+                
+                let trackChanged = (self.currentTrack?.id != newRefTrack?.id) ||
+                                   (self.currentTrack?.displayTitle != newRefTrack?.displayTitle)
+                
+                if trackChanged {
+                    self.currentTrack = newRefTrack
+                    self.refreshSuggestions()
+                }
+            } else if let manual = manualTrackOverride {
                 if currentTrack?.id != manual.id {
                     currentTrack = manual
                     refreshSuggestions()
                 }
-            } else if !isRekordboxRunning && currentTrack != nil {
-                currentTrack = nil
-                suggestions = []
-                historySuggestions = []
-                favoriteSuggestions = []
             }
             return
         }
@@ -286,6 +338,16 @@ public class SeratoMonitorService: ObservableObject {
                 }
                 self.suggestions = combined
             }
+            
+            // Secours intelligent : si la collection XML Rekordbox n'a pas encore de routines enregistrées,
+            // proposer les transitions historiques connues depuis la base locale Serato
+            if self.suggestions.isEmpty {
+                let seratoTransitions = self.dbService.fetchTransitions(for: ref, daysLookback: 365, maxResults: maxResults)
+                if !seratoTransitions.isEmpty {
+                    self.suggestions = seratoTransitions
+                }
+            }
+            
             self.isLoading = false
             return
         }

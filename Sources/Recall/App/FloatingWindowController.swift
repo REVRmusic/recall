@@ -65,17 +65,14 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     // MARK: - Réception Globale du Glisser-Déposer Serato / Rekordbox / Finder
     
     public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) {
-            DispatchQueue.main.async {
-                ToPlayService.shared.isDraggingFileOver = true
-            }
-            return .copy
+        DispatchQueue.main.async {
+            ToPlayService.shared.isDraggingFileOver = true
         }
-        return []
+        return .copy
     }
     
     public func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        return ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) ? .copy : []
+        return .copy
     }
     
     public func draggingExited(_ sender: NSDraggingInfo?) {
