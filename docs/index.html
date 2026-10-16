@@ -65,7 +65,7 @@
       </a>
 
       <ul class="nav-links">
-        <li><a href="#demo" class="nav-link" data-i18n="nav-demo">Démonstration</a></li>
+        <li><a href="#mockups" class="nav-link" data-i18n="nav-demo">Démonstration</a></li>
         <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
         <li><a href="#compatibility" class="nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
         <li><a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a></li>
@@ -160,334 +160,6 @@
           <span data-i18n="trust-free">Gratuit & Open-Source</span>
         </div>
       </div>
-
-      <!-- ====================================================================
-           App Interactive Showcase Mockups
-           ==================================================================== -->
-      <!-- ====================================================================
-           App Interactive Showcase: Live Simulated Recall App
-           ==================================================================== -->
-      <div id="demo" class="showcase-wrapper">
-        <div class="showcase-glow"></div>
-        <div class="showcase-frame">
-          <!-- Window Top Bar (Cockpit / Desktop Frame) -->
-          <div class="showcase-header">
-            <div class="showcase-header-left">
-              <div class="window-dots">
-                <span class="window-dot red"></span>
-                <span class="window-dot yellow"></span>
-                <span class="window-dot green"></span>
-              </div>
-              <span class="showcase-window-title" data-i18n="showcase-sim-title">Recall 1.0 — Simulation Interactive de l'Application</span>
-            </div>
-
-            <!-- Showcase Toolbar -->
-            <div class="showcase-controls">
-              <!-- Quick Mode Buttons -->
-              <div class="sim-mode-switcher" role="group">
-                <button type="button" id="sim-btn-floating" class="sim-mode-btn active" data-i18n="sim-mode-floating" title="Passer en vue normale">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 3v18"/></svg>
-                  <span>Vue Flottante</span>
-                </button>
-                <button type="button" id="sim-btn-compact" class="sim-mode-btn" data-i18n="sim-mode-compact" title="Passer en mode bandeau">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="13" width="18" height="8" rx="2"/></svg>
-                  <span>Bandeau Compact (78 px)</span>
-                </button>
-              </div>
-
-              <!-- Software Indicator & Status -->
-              <div class="showcase-status">
-                <span class="status-indicator"></span>
-                <span id="showcase-software-status" data-i18n="sim-status-active">Surveillance active (1.5s)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- DJ Cockpit Stage with Simulated Recall Window Floating Inside -->
-          <div class="showcase-body dj-stage" id="sim-stage">
-            
-            <!-- Toast Feedback Notification -->
-            <div id="sim-toast" class="sim-toast" role="status" aria-live="polite">
-              <span id="sim-toast-icon">✨</span>
-              <span id="sim-toast-msg">Combo mémorisé dans vos favoris !</span>
-            </div>
-
-            <!-- Soft Dimmed & Blurred Backdrop over Stage (Z-Index: 15) -->
-            <div class="sim-settings-backdrop" id="sim-settings-backdrop" aria-hidden="true"></div>
-
-            <!-- ============================================================
-                 THE SIMULATED RECALL APPLICATION WINDOW (Z-Index: 25)
-                 (Remains fully visible above the dimmed/blurred background)
-                 ============================================================ -->
-            <div class="recall-sim-container" id="recall-sim-container">
-              
-              <!-- NORMAL FLOATING WINDOW -->
-              <div class="recall-sim-app" id="recall-app-normal">
-                <!-- App Header -->
-                <div class="recall-sim-header">
-                  <div class="recall-brand-group">
-                    <div class="recall-logo-disc">
-                      <div class="recall-disc-groove"></div>
-                      <div class="recall-disc-macaron"></div>
-                    </div>
-                    <span class="recall-sim-title">Recall</span>
-                    <span class="recall-count-pill" id="sim-session-count" title="37 routines en mémoire">37</span>
-                    <button type="button" class="recall-sim-icon-btn" id="sim-app-reset" title="Réinitialiser la session">↺</button>
-                  </div>
-
-                  <div class="recall-actions-group">
-                    <!-- Collapse Button -->
-                    <button type="button" class="recall-collapse-btn" id="sim-app-collapse" title="Réduire en bandeau (78 px)">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                        <line x1="19" y1="4" x2="19" y2="20"></line>
-                      </svg>
-                      <span data-i18n="sim-app-reduce">Réduire</span>
-                    </button>
-
-                    <!-- Search Button -->
-                    <button type="button" class="recall-sim-icon-btn" id="sim-app-search-toggle" title="Rechercher dans la bibliothèque">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    </button>
-
-                    <!-- Guide Button -->
-                    <button type="button" class="recall-sim-icon-btn" id="sim-app-guide-toggle" title="Guide harmonique & légende">?</button>
-
-                    <!-- Pin Button -->
-                    <button type="button" class="recall-sim-icon-btn active" id="sim-app-pin" title="Toujours au premier plan">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 1 1-1v-6h5v-2l-2-2z"/></svg>
-                    </button>
-
-                    <!-- Settings Button -->
-                    <button type="button" class="recall-sim-icon-btn" id="sim-app-settings-btn" title="Paramètres d'historique et filtres">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                    </button>
-
-                    <!-- Close Button -->
-                    <button type="button" class="recall-sim-icon-btn close" id="sim-app-close" title="Fermer Recall">✕</button>
-                  </div>
-                </div>
-
-                <!-- Slide-Down Search Overlay -->
-                <div class="recall-sim-search-drawer" id="sim-search-drawer">
-                  <div class="search-input-wrap">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="sim-search-input" placeholder="Rechercher par titre ou artiste..." autocomplete="off">
-                    <button type="button" id="sim-search-clear">✕</button>
-                  </div>
-                  <div class="search-results-list" id="sim-search-results"></div>
-                </div>
-
-                <!-- Slide-Down Guide Overlay -->
-                <div class="recall-sim-guide-drawer" id="sim-guide-drawer">
-                  <div class="guide-header">
-                    <span data-i18n="sim-guide-title">Guide des Clés & Routines</span>
-                    <button type="button" id="sim-guide-close">✕</button>
-                  </div>
-                  <div class="guide-content">
-                    <div class="guide-row"><span class="guide-badge green">Exacte</span> <span data-i18n="sim-g1">Même clé harmonique. Transition parfaite.</span></div>
-                    <div class="guide-row"><span class="guide-badge cyan">±1 Heure</span> <span data-i18n="sim-g2">Énergie descendante (-1) ou montante (+1).</span></div>
-                    <div class="guide-row"><span class="guide-badge purple">Relatif</span> <span data-i18n="sim-g3">Bascule Majeur / Mineur (A ↔ B) sans fausse note.</span></div>
-                    <div class="guide-row"><span class="guide-badge orange">Boost +2</span> <span data-i18n="sim-g4">Montée d'adrénaline énergique pour peak time.</span></div>
-                    <div class="guide-row"><span class="guide-badge flame">🔥 7x</span> <span data-i18n="sim-g5">Nombre de fois où vous avez joué ce mix en live.</span></div>
-                  </div>
-                </div>
-
-                <!-- Now Playing Card -->
-                <div class="recall-sim-np-card">
-                  <div class="np-card-header">
-                    <div class="np-status-indicator">
-                      <span class="np-pulse-dot"></span>
-                      <span class="np-status-label" data-i18n="sim-now-playing-label">EN COURS</span>
-                    </div>
-
-                    <div class="np-deck-controls">
-                      <span class="np-soft-badge" id="sim-np-soft-badge">SERATO</span>
-                      <button type="button" class="np-deck-btn active" data-deck="auto">AUTO</button>
-                      <button type="button" class="np-deck-btn" data-deck="1">DECK 1</button>
-                      <button type="button" class="np-deck-btn" data-deck="2">DECK 2</button>
-                    </div>
-                  </div>
-
-                  <div class="np-card-body">
-                    <div class="np-vinyl-wrap">
-                      <div class="np-vinyl-disc spinning" id="sim-vinyl-disc">
-                        <div class="np-vinyl-groove"></div>
-                        <div class="np-vinyl-center" id="sim-vinyl-center"></div>
-                      </div>
-                    </div>
-
-                    <div class="np-track-details">
-                      <div class="np-track-title" id="sim-current-title">Rude Boy</div>
-                      <div class="np-track-artist" id="sim-current-artist">Rihanna</div>
-                      
-                      <div class="np-meta-pills">
-                        <span class="sim-key-badge" id="sim-current-key-badge">8A</span>
-                        <span class="sim-bpm-badge" id="sim-current-bpm-badge">102 BPM</span>
-                        <button type="button" class="np-fav-toggle" id="sim-current-fav-btn" title="Ajouter aux favoris">♡</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="np-card-footer">
-                    <button type="button" class="btn-save-combo-pill" id="sim-save-combo-btn">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                      <span data-i18n="sim-save-combo-text">Sauvegarder ce combo</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Filter & Match Counter Bar -->
-                <div class="recall-sim-filter-bar">
-                  <div class="sim-filters-group">
-                    <button type="button" class="sim-filter-pill active" id="sim-pill-bpm" data-i18n="sim-filter-bpm">BPM ±10%</button>
-                    <button type="button" class="sim-filter-pill active" id="sim-pill-harmonic" data-i18n="sim-filter-harm">Harmonie</button>
-                    <button type="button" class="sim-filter-pill" id="sim-pill-favs" data-i18n="sim-filter-favs">Favs</button>
-                  </div>
-
-                  <div class="sim-matches-indicator">
-                    <span id="sim-matches-num" class="matches-num">8</span>
-                    <span id="sim-matches-label" class="matches-lbl" data-i18n="sim-matches-label">matchs</span>
-                  </div>
-                </div>
-
-                <!-- Dynamic Suggestions Scroll List -->
-                <div class="recall-sim-suggestions" id="sim-suggestions-container" role="list">
-                  <!-- Dynamically rendered via main.js -->
-                </div>
-              </div>
-
-              <!-- COMPACT 78px BANDEAU VIEW -->
-              <div class="recall-sim-compact-bar" id="recall-app-compact" style="display: none;">
-                <div class="compact-left">
-                  <div class="recall-logo-disc mini">
-                    <div class="recall-disc-groove"></div>
-                    <div class="recall-disc-macaron"></div>
-                  </div>
-                  
-                  <div class="compact-track-info">
-                    <div class="compact-top-row">
-                      <span class="compact-rank">#1</span>
-                      <span class="compact-flame" id="sim-compact-flame">🔥 7x</span>
-                      <span class="compact-title" id="sim-compact-title">Crazy in Love</span>
-                    </div>
-                    <div class="compact-artist" id="sim-compact-artist">Beyoncé</div>
-                  </div>
-                </div>
-
-                <div class="compact-right">
-                  <span class="sim-key-badge mini" id="sim-compact-key">7A</span>
-                  <span class="sim-bpm-badge mini" id="sim-compact-bpm">104</span>
-                  
-                  <button type="button" class="compact-expand-btn" id="sim-compact-expand" title="Déplier en fenêtre complète">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="19" y1="12" x2="5" y2="12"></line>
-                      <polyline points="12 19 5 12 12 5"></polyline>
-                      <line x1="5" y1="4" x2="5" y2="20"></line>
-                    </svg>
-                    <span data-i18n="sim-compact-expand">Déplier</span>
-                  </button>
-
-                  <button type="button" class="recall-sim-icon-btn mini" id="sim-compact-settings-btn" title="Paramètres">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Settings Modal Panel (Floats on Top of Stage and Recall App) -->
-            <div id="sim-settings-overlay" class="sim-settings-overlay" aria-hidden="true">
-              <div class="sim-settings-modal" role="dialog" aria-modal="true" aria-labelledby="sim-settings-title">
-                <div class="sim-settings-header">
-                  <div class="sim-settings-header-title">
-                    <div class="sim-settings-icon-wrap">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                    </div>
-                    <span id="sim-settings-title" data-i18n="sim-settings-heading">Paramètres Recall</span>
-                  </div>
-                  <button type="button" class="sim-modal-close" id="sim-settings-close" title="Fermer (Échap)">✕</button>
-                </div>
-
-                <div class="sim-settings-body">
-                  <!-- Section: Logiciel DJ -->
-                  <div class="sim-settings-group">
-                    <div class="sim-settings-label" data-i18n="sim-sett-dj-label">Logiciel DJ Actif</div>
-                    <div class="sim-radio-row">
-                      <button type="button" class="sim-radio-pill active" data-sett-dj="serato">
-                        <span class="sim-radio-dot"></span>
-                        <span>Serato DJ Pro</span>
-                      </button>
-                      <button type="button" class="sim-radio-pill" data-sett-dj="rekordbox">
-                        <span class="sim-radio-dot"></span>
-                        <span>Pioneer Rekordbox</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Section: Format des Clés -->
-                  <div class="sim-settings-group">
-                    <div class="sim-settings-label" data-i18n="sim-sett-key-label">Format des Clés Harmoniques</div>
-                    <div class="sim-radio-row">
-                      <button type="button" class="sim-radio-pill active" data-sett-key="0">
-                        <span class="sim-radio-dot"></span>
-                        <span>Camelot (ex: 8A)</span>
-                      </button>
-                      <button type="button" class="sim-radio-pill" data-sett-key="1">
-                        <span class="sim-radio-dot"></span>
-                        <span>Musicale (ex: Am)</span>
-                      </button>
-                      <button type="button" class="sim-radio-pill" data-sett-key="2">
-                        <span class="sim-radio-dot"></span>
-                        <span>Combiné (8A · Am)</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Section: Tolérance BPM -->
-                  <div class="sim-settings-group">
-                    <div class="sim-settings-label" data-i18n="sim-sett-bpm-label">Tolérance Tempo (BPM)</div>
-                    <div class="sim-radio-row">
-                      <button type="button" class="sim-radio-pill" data-sett-tol="4">±4 %</button>
-                      <button type="button" class="sim-radio-pill" data-sett-tol="6">±6 %</button>
-                      <button type="button" class="sim-radio-pill active" data-sett-tol="10">±10 % (Standard)</button>
-                    </div>
-                  </div>
-
-                  <!-- Section: Algorithme & Options -->
-                  <div class="sim-settings-group">
-                    <div class="sim-settings-label" data-i18n="sim-sett-opt-label">Algorithme & Options</div>
-                    <label class="sim-checkbox-row">
-                      <input type="checkbox" id="sim-opt-cumulate-variants" checked>
-                      <span data-i18n="sim-sett-cumulate-variants">Cumuler les versions & remixes (même clé & BPM)</span>
-                    </label>
-                    <label class="sim-checkbox-row">
-                      <input type="checkbox" id="sim-opt-always-top" checked>
-                      <span data-i18n="sim-sett-always-top">Toujours au premier plan (Floating Window)</span>
-                    </label>
-                    <label class="sim-checkbox-row">
-                      <input type="checkbox" id="sim-opt-hide-played">
-                      <span data-i18n="sim-sett-hide-played">Masquer les morceaux déjà joués dans la session</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div class="sim-settings-footer">
-                  <button type="button" class="btn-save-settings" id="sim-settings-save" data-i18n="sim-sett-save">Enregistrer et fermer</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Context Hint Caption below the Simulator -->
-            <div class="sim-caption-bar">
-              <span class="sim-caption-icon">🎛️</span>
-              <span data-i18n="sim-interactive-hint">Simulation interactive temps réel : cliquez sur n'importe quel morceau pour l'enchaîner, filtrez par BPM et harmonie, ou ouvrez les réglages (⚙️) pour tester le fond obscurci et le format des clés.</span>
-            </div>
-
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -495,6 +167,7 @@
        Section: Mockups & Real DJ Environments
        ======================================================================== -->
   <section id="mockups" class="section mockups-section">
+    <div id="demo" style="position: absolute; top: -80px; left: 0;"></div>
     <div class="container">
       <div class="section-header-center">
         <span class="section-tag" data-i18n="mockups-tag">EN SITUATION RÉELLE</span>
@@ -1071,7 +744,7 @@
 
         <ul class="footer-links">
           <li><a href="#features" data-i18n="nav-features">Fonctionnalités</a></li>
-          <li><a href="#demo" data-i18n="nav-demo">Démonstration</a></li>
+          <li><a href="#mockups" data-i18n="nav-demo">Démonstration</a></li>
           <li><a href="#compatibility" data-i18n="nav-compatibility">Compatibilité</a></li>
           <li><a href="#download" data-i18n="nav-download">Télécharger</a></li>
           <li><a href="#faq" data-i18n="nav-faq">FAQ</a></li>
@@ -1104,7 +777,7 @@
     </div>
 
     <ul class="mobile-nav-links">
-      <li><a href="#demo" class="mobile-nav-link" data-i18n="nav-demo">Démonstration</a></li>
+      <li><a href="#mockups" class="mobile-nav-link" data-i18n="nav-demo">Démonstration</a></li>
       <li><a href="#features" class="mobile-nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
       <li><a href="#compatibility" class="mobile-nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
       <li><a href="#problem" class="mobile-nav-link" data-i18n="nav-problem">Pourquoi Recall&nbsp;?</a></li>
