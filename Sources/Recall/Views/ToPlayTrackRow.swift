@@ -41,7 +41,7 @@ public struct ToPlayTrackRow: View {
                 }
                 .buttonStyle(.plain)
                 .onHover { isTrashHovered = $0 }
-                .help("Supprimer de la liste des morceaux à jouer")
+                .help("Retirer de ma Sélec")
             }
             
             // 2. Infos Titre & Artiste

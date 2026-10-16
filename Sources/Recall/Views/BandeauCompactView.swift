@@ -71,7 +71,7 @@ public struct BandeauCompactView: View {
             VStack(alignment: .leading, spacing: 2) {
                 if let match = topSuggestion {
                     HStack(spacing: 4) {
-                        Text(settings.isToPlayFilterActive ? "#1 À JOUER" : "#1")
+                        Text(settings.isToPlayFilterActive ? "#1 SÉLEC" : "#1")
                             .font(.system(size: 8.5, weight: .black, design: .rounded))
                             .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : Color.accentCyan)
                             .padding(.horizontal, 3.5)
@@ -181,7 +181,7 @@ public struct BandeauCompactView: View {
                     }
                 } else if settings.isToPlayFilterActive {
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("Aucun morceau à jouer")
+                        Text("Aucun morceau en sélec")
                             .font(.system(size: 10.5, weight: .bold))
                             .foregroundColor(Color(hex: "#FFB300"))
                         Text("Glissez un morceau ici")
@@ -316,7 +316,7 @@ public struct BandeauCompactView: View {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundColor(Color.accentCyan)
-                                Text("Ajouter aux morceaux à jouer")
+                                Text("Ajouter à la sélec")
                                     .font(.system(size: 9.5, weight: .bold))
                                     .foregroundColor(.white)
                             }

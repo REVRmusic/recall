@@ -197,7 +197,7 @@ public class ToPlayService: ObservableObject {
             let existing = tracks.remove(at: existingIndex)
             tracks.insert(existing, at: 0)
             saveToDisk()
-            showToast("« \(track.displayTitle) » déjà dans vos morceaux à jouer")
+            showToast("« \(track.displayTitle) » déjà dans votre Sélec")
             UserSettings.shared.isToPlayFilterActive = true
             return true
         }
@@ -205,7 +205,7 @@ public class ToPlayService: ObservableObject {
         let toPlay = ToPlayTrack(from: track)
         tracks.insert(toPlay, at: 0)
         saveToDisk()
-        showToast("« \(track.displayTitle) » ajouté aux morceaux à jouer")
+        showToast("« \(track.displayTitle) » ajouté à votre Sélec")
         UserSettings.shared.isToPlayFilterActive = true
         NSSound(named: "Pop")?.play()
         return true
@@ -344,7 +344,7 @@ public class ToPlayService: ObservableObject {
             tracks.removeAll()
             saveToDisk()
         }
-        showToast("Liste des morceaux à jouer vidée")
+        showToast("Sélec vidée")
     }
     
     /// Récupère la liste sous forme de [Track] avec les relations harmoniques et de BPM calculées

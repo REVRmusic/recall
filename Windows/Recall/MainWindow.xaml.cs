@@ -133,8 +133,8 @@ namespace Recall
                 }
 
                 ListSuggestions.ItemsSource = toPlayList;
-                TxtMatchCount.Text = $"{toPlayList.Count} à jouer";
-                ChkFilterToPlay.Content = toPlayList.Count > 0 ? $"À Jouer ({toPlayList.Count})" : "À Jouer";
+                TxtMatchCount.Text = $"{toPlayList.Count} sélec";
+                ChkFilterToPlay.Content = toPlayList.Count > 0 ? $"Sélec ({toPlayList.Count})" : "Sélec";
 
                 var topToPlay = toPlayList.FirstOrDefault();
                 if (topToPlay != null)
@@ -146,7 +146,7 @@ namespace Recall
                 }
                 else
                 {
-                    TxtCompactTitle.Text = "Aucun morceau à jouer";
+                    TxtCompactTitle.Text = "Aucun morceau en sélec";
                     TxtCompactArtist.Text = "Glissez un morceau ici";
                     TxtCompactKey.Text = "--";
                     TxtCompactBpm.Text = "-- BPM";
@@ -158,7 +158,7 @@ namespace Recall
                 ListSuggestions.ItemsSource = _monitor.Suggestions;
                 TxtMatchCount.Text = $"{_monitor.Suggestions.Count} matchs";
                 int toPlayTotal = ToPlayService.Shared.GetTracks().Count;
-                ChkFilterToPlay.Content = toPlayTotal > 0 ? $"À Jouer ({toPlayTotal})" : "À Jouer";
+                ChkFilterToPlay.Content = toPlayTotal > 0 ? $"Sélec ({toPlayTotal})" : "Sélec";
 
                 // Vue compacte
                 var topSuggestion = _monitor.Suggestions.FirstOrDefault();

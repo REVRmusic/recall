@@ -161,10 +161,10 @@ public struct MainFloatingView: View {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 32, weight: .semibold))
                                 .foregroundColor(Color.accentCyan)
-                            Text("Ajouter aux morceaux à jouer")
+                            Text("Ajouter à la Sélec")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(.white)
-                            Text("Déposez le fichier pour le préparer")
+                            Text("Déposez le morceau dans votre sélection")
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(.white.opacity(0.75))
                         }

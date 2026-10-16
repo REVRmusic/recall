@@ -209,7 +209,7 @@
                         <CheckBox x:Name="ChkFilterBpm" Content="BPM ±8%" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
                         <CheckBox x:Name="ChkFilterHarmonie" Content="Harmonie" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
                         <CheckBox x:Name="ChkFilterFavs" Content="Favs" Style="{StaticResource FilterChipStyle}" Click="FilterChanged" Margin="0,0,6,0"/>
-                        <CheckBox x:Name="ChkFilterToPlay" Content="À Jouer" Style="{StaticResource ToPlayChipStyle}" Click="FilterChanged"/>
+                        <CheckBox x:Name="ChkFilterToPlay" Content="Sélec" Style="{StaticResource ToPlayChipStyle}" Click="FilterChanged"/>
                     </StackPanel>
 
                     <TextBlock x:Name="TxtMatchCount" Text="0 matchs" FontSize="10" FontWeight="SemiBold" Foreground="#9CA3AF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -225,7 +225,7 @@
                             <Border CornerRadius="6" Background="#161B22" BorderBrush="#252B37" BorderThickness="1" Margin="0,2" Padding="6,4">
                                 <Border.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="🗑 Supprimer de la liste à jouer" Click="DeleteToPlay_Click" />
+                                        <MenuItem Header="🗑 Retirer de la sélec" Click="DeleteToPlay_Click" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <Grid>
@@ -295,8 +295,8 @@
                 <Border BorderBrush="#14C8B0" BorderThickness="2" CornerRadius="14" Margin="6" Background="#2214C8B0">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="✚" FontSize="32" Foreground="#14C8B0" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Ajouter aux morceaux à jouer" FontSize="13" FontWeight="Bold" Foreground="White" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Déposez le fichier pour le préparer" FontSize="10" Foreground="#A0AEC0" Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Ajouter à la Sélec" FontSize="13" FontWeight="Bold" Foreground="White" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Déposez le morceau dans votre sélection" FontSize="10" Foreground="#A0AEC0" Margin="0,2,0,0" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
             </Border>

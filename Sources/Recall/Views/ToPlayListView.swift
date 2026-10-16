@@ -56,11 +56,11 @@ public struct ToPlayListView: View {
                             .foregroundColor(Color(hex: "#FFB300").opacity(0.9))
                     }
                     
-                    Text("Aucun morceau à jouer")
+                    Text("Aucun morceau dans votre Sélec")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white.opacity(0.9))
                     
-                    Text("Faites glisser un morceau depuis Serato directement sur l'interface pour le garder sous la main.")
+                    Text("Faites glisser un morceau depuis Serato ou Rekordbox pour l'ajouter à votre sélection de sets.")
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.45))
                         .multilineTextAlignment(.center)
@@ -80,7 +80,7 @@ public struct ToPlayListView: View {
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.white.opacity(0.75))
                     
-                    Text("Désactivez les filtres BPM ou Harmonie pour voir l'intégralité de vos \(toPlayService.tracks.count) morceaux à jouer.")
+                    Text("Désactivez les filtres BPM ou Harmonie pour voir l'intégralité de votre sélection (\(toPlayService.tracks.count) morceaux).")
                         .font(.system(size: 9))
                         .foregroundColor(.white.opacity(0.4))
                         .multilineTextAlignment(.center)
@@ -92,7 +92,7 @@ public struct ToPlayListView: View {
                 // Sous-barre d'action rapide pour vider la liste si plusieurs morceaux
                 if toPlayService.tracks.count >= 2 {
                     HStack {
-                        Text("\(displayedTracks.count) morceau\(displayedTracks.count > 1 ? "x" : "") à jouer")
+                        Text("\(displayedTracks.count) morceau\(displayedTracks.count > 1 ? "x" : "") en sélec")
                             .font(.system(size: 9, weight: .semibold))
                             .foregroundColor(.white.opacity(0.45))
                         
@@ -106,7 +106,7 @@ public struct ToPlayListView: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "trash")
                                     .font(.system(size: 7.5))
-                                Text("Tout vider")
+                                Text("Vider la sélec")
                                     .font(.system(size: 8, weight: .semibold))
                             }
                             .foregroundColor(.white.opacity(0.35))
@@ -116,7 +116,7 @@ public struct ToPlayListView: View {
                             .cornerRadius(4)
                         }
                         .buttonStyle(.plain)
-                        .help("Vider intégralement la liste des morceaux à jouer")
+                        .help("Vider intégralement votre sélection de set")
                     }
                     .padding(.horizontal, 12)
                     .padding(.top, 2)

@@ -47,10 +47,10 @@ public struct FilterBarView: View {
                 settings.isFavoritesFilterActive.toggle()
             }
             
-            // Filtre / Onglet Morceaux À Jouer
+            // Filtre / Onglet Morceaux Sélec
             filterTogglePill(
-                title: toPlayService.tracks.isEmpty ? "À Jouer" : "À Jouer (\(toPlayService.tracks.count))",
-                shortTitle: toPlayService.tracks.isEmpty ? "À jouer" : "\(toPlayService.tracks.count) à jouer",
+                title: toPlayService.tracks.isEmpty ? "Sélec" : "Sélec (\(toPlayService.tracks.count))",
+                shortTitle: toPlayService.tracks.isEmpty ? "Sélec" : "\(toPlayService.tracks.count) sélec",
                 icon: "bookmark.fill",
                 isActive: settings.isToPlayFilterActive,
                 accentColor: Color(hex: "#FFB300")
@@ -62,7 +62,7 @@ public struct FilterBarView: View {
             
             // Compteur de résultats
             let countLabel = settings.isToPlayFilterActive ?
-                (suggestionsCount > 1 ? "à jouer" : "à jouer") :
+                "sélec" :
                 (suggestionsCount > 1 ? "matchs" : "match")
             
             ViewThatFits(in: .horizontal) {
