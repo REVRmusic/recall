@@ -41,6 +41,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     
     public func applicationWillTerminate(_ notification: Notification) {
         SeratoMonitorService.shared.stopMonitoring()
+        UserDefaults.standard.synchronize()
     }
     
     // MARK: - Configuration de la Barre de Menus macOS (Menu Bar)
