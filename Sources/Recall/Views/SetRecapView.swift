@@ -407,33 +407,20 @@ public struct SetRecapView: View {
             
             Spacer()
             
-            // Poignée visuelle de déplacement
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
-                    .font(.system(size: 8.5, weight: .bold))
-                Text("Déplacer")
-                    .font(.system(size: 9, weight: .bold))
-            }
-            .foregroundColor(.white.opacity(0.35))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(Color.white.opacity(0.04))
-            .cornerRadius(10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 0.8)
-            )
-            .help("Cliquer et glisser pour déplacer la fenêtre")
-            
-            Spacer()
-            
             if let closeAction = onClose {
                 Button(action: closeAction) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.45))
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.08))
+                            .frame(width: 24, height: 24)
+                        
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white.opacity(0.75))
+                    }
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
                 .help("Fermer la fenêtre (Esc ou Cmd+W)")
             }
         }
