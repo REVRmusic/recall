@@ -515,21 +515,7 @@ public struct SetRecapView: View {
     }
     
     private var mixPaceBadge: some View {
-        let avgSec = stats.averageTimePerTrackSeconds
-        let (label, icon, color): (String, String, Color) = {
-            guard stats.totalTracksCount >= 2 else {
-                return ("En attente", "hourglass", Color.white.opacity(0.5))
-            }
-            if avgSec < 90 {
-                return ("⚡️ Quick Mix", "bolt.fill", Color.orange)
-            } else if avgSec < 180 {
-                return ("🔥 Dynamique", "flame.fill", Color.red)
-            } else if avgSec < 300 {
-                return ("🌊 Progressif", "waveform.path", Color.accentCyan)
-            } else {
-                return ("🧘 Deep / Long Blend", "wind", Color.purple)
-            }
-        }()
+        let (label, icon, color) = mixPaceInfo(avgSec: stats.averageTimePerTrackSeconds, totalTracks: stats.totalTracksCount)
         
         return HStack(spacing: 4) {
             Image(systemName: icon)
@@ -546,6 +532,27 @@ public struct SetRecapView: View {
             RoundedRectangle(cornerRadius: 5)
                 .stroke(color.opacity(0.4), lineWidth: 0.8)
         )
+    }
+    
+    private func mixPaceInfo(avgSec: Double, totalTracks: Int) -> (label: String, icon: String, color: Color) {
+        guard totalTracks >= 2 else {
+            return ("En attente", "hourglass", Color.white.opacity(0.5))
+        }
+        if avgSec < 45 {
+            return ("⚡️ Quick Mix", "bolt.fill", Color.orange)
+        } else if avgSec < 60 {
+            // Dynamique : strictement moins de 1 minute par morceau
+            return ("🔥 Dynamique", "flame.fill", Color.red)
+        } else if avgSec < 120 {
+            // 1m00 à 2m00 : mix cadencé / club actif
+            return ("🎯 Rythmé", "music.note", Color(hex: "#FF9F43"))
+        } else if avgSec < 240 {
+            // 2m00 à 4m00 : transitions progressives / morceaux développés
+            return ("🌊 Progressif", "waveform.path", Color.accentCyan)
+        } else {
+            // Plus de 4m00 : blends longs, house/techno étirée
+            return ("🧘 Deep / Long Blend", "wind", Color.purple)
+        }
     }
     
     // MARK: - 3. Grille des indicateurs
@@ -1015,7 +1022,8 @@ public struct SetRecapView: View {
         lines.append("⏱ Durée totale : \(formatDuration(stats.totalDurationSeconds))")
         lines.append("🎵 Morceaux joués : \(stats.totalTracksCount) tracks")
         if stats.totalTracksCount > 0 {
-            lines.append("🎚 Vitesse de mix : \(formatMinutesSeconds(stats.averageTimePerTrackSeconds)) / track (\(String(format: "%.1f", stats.tracksPerHour)) tracks/h)")
+            let pace = mixPaceInfo(avgSec: stats.averageTimePerTrackSeconds, totalTracks: stats.totalTracksCount).label
+            lines.append("🎚 Vitesse de mix : \(formatMinutesSeconds(stats.averageTimePerTrackSeconds)) / track (\(String(format: "%.1f", stats.tracksPerHour)) tracks/h • \(pace))")
         }
         if stats.averageBpm > 0 {
             lines.append("⚡️ BPM moyen : \(String(format: "%.1f", stats.averageBpm)) BPM (\(Int(stats.minBpm.rounded())) - \(Int(stats.maxBpm.rounded())) BPM)")
