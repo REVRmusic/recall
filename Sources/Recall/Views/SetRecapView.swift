@@ -170,12 +170,19 @@ public struct SetRecapStats {
             guard !art.isEmpty,
                   art.lowercased() != "artiste inconnu",
                   art.lowercased() != "unknown artist",
-                  art.lowercased() != "unknown" else { continue }
-            artistCounts[art, default: 0] += 1
-            if let existing = artistLatestDate[art] {
-                artistLatestDate[art] = max(existing, tr.playedAt)
+                  art.lowercased() != "unknown",
+                  !TrackMetadataCleaner.isJunkOrPromoArtist(art),
+                  !TrackMetadataCleaner.isKnownGenericGenre(art) else { continue }
+            
+            // Regroupement intelligent par artiste principal (ex: "Drake, Hamza" -> "Drake", "Drake ft. 21 Savage" -> "Drake")
+            let primary = TrackMetadataCleaner.extractPrimaryArtist(art)
+            let countedName = !primary.isEmpty ? primary : art
+            
+            artistCounts[countedName, default: 0] += 1
+            if let existing = artistLatestDate[countedName] {
+                artistLatestDate[countedName] = max(existing, tr.playedAt)
             } else {
-                artistLatestDate[art] = tr.playedAt
+                artistLatestDate[countedName] = tr.playedAt
             }
         }
         
@@ -205,7 +212,16 @@ public struct SetRecapStats {
                   g.lowercased() != "genre inconnu",
                   g.lowercased() != "inconnu",
                   g.lowercased() != "other",
-                  g.lowercased() != "autre" else { continue }
+                  g.lowercased() != "autre",
+                  !TrackMetadataCleaner.isJunkOrPromoArtist(g) else { continue }
+            
+            // Si le genre correspond en réalité au nom de l'artiste résolu, ne pas le compter comme genre musical
+            let artLower = tr.displayArtist.lowercased()
+            let primaryLower = TrackMetadataCleaner.extractPrimaryArtist(tr.displayArtist).lowercased()
+            if g.lowercased() == artLower || (!primaryLower.isEmpty && g.lowercased() == primaryLower) {
+                continue
+            }
+            
             let formatted = g.capitalized
             genreCounts[formatted, default: 0] += 1
             if let existing = genreLatestDate[formatted] {

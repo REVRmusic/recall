@@ -55,7 +55,15 @@ public struct ToPlayTrack: Codable, Identifiable, Hashable {
         return CamelotKey.parse(rawKey)
     }
     
+    public var smartParsed: (artist: String?, title: String) {
+        return TrackMetadataCleaner.resolve(artist: artist, title: title, fileName: fileName)
+    }
+    
     public var displayTitle: String {
+        let parsed = smartParsed
+        if !parsed.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return parsed.title
+        }
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return trimmed }
         if !fileName.isEmpty {
@@ -65,12 +73,13 @@ public struct ToPlayTrack: Codable, Identifiable, Hashable {
     }
     
     public var displayArtist: String {
-        let trimmed = artist.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty &&
-           trimmed.lowercased() != "artiste inconnu" &&
-           trimmed.lowercased() != "unknown artist" &&
-           trimmed.lowercased() != "unknown" {
-            return trimmed
+        let parsed = smartParsed
+        if let art = parsed.artist, !art.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return art
+        }
+        let clean = TrackMetadataCleaner.cleanArtistName(artist)
+        if !clean.isEmpty && !TrackMetadataCleaner.isJunkOrPromoArtist(clean) && !TrackMetadataCleaner.isKnownGenericGenre(clean) {
+            return clean
         }
         return ""
     }

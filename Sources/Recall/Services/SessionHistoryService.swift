@@ -58,23 +58,12 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
     }
     
     public var smartParsed: (artist: String?, title: String) {
-        let trimmedArtist = artist.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedArtist.isEmpty &&
-           trimmedArtist.lowercased() != "artiste inconnu" &&
-           trimmedArtist.lowercased() != "unknown artist" &&
-           trimmedArtist.lowercased() != "unknown" {
-            let directTitle = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
-                title.trimmingCharacters(in: .whitespacesAndNewlines) :
-                (!fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
-                    (fileName as NSString).deletingPathExtension : "Morceau inconnu")
-            return (trimmedArtist, directTitle)
-        }
-        
-        let sourceString = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
-            title : (!fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
-                (fileName as NSString).deletingPathExtension : "")
-        
-        return Track.parseSmartArtistAndTitle(rawString: sourceString)
+        return TrackMetadataCleaner.resolve(
+            artist: artist,
+            title: title,
+            fileName: fileName,
+            genre: genre
+        )
     }
     
     public var displayTitle: String {
@@ -93,8 +82,9 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         if let art = parsed.artist, !art.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return art
         }
-        if !artist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return artist
+        let clean = TrackMetadataCleaner.cleanArtistName(artist)
+        if !clean.isEmpty && !TrackMetadataCleaner.isJunkOrPromoArtist(clean) && !TrackMetadataCleaner.isKnownGenericGenre(clean) {
+            return clean
         }
         return ""
     }
