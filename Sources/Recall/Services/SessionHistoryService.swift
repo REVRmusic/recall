@@ -329,15 +329,35 @@ public class SessionHistoryService: ObservableObject {
                         genre: val.genre
                     )
                 }
-                .sorted { $0.playedAt > $1.playedAt }
+                .sorted { a, b in
+                    if a.playedAt != b.playedAt {
+                        return a.playedAt > b.playedAt
+                    }
+                    return a.title < b.title
+                }
             
             let titlesSet = Set(validPlaysByTitle.keys)
             
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
-                self.playedTracks = sortedTracks
-                self.playedNormalizedTitles = titlesSet
-                self.playedCount = sortedTracks.count
+                
+                // Ne republie que si le contenu des morceaux a réellement changé (évite les rafraîchissements permanents en boucle)
+                let hasChanged = self.playedTracks.count != sortedTracks.count ||
+                    zip(self.playedTracks, sortedTracks).contains { t1, t2 in
+                        t1.id != t2.id ||
+                        t1.title != t2.title ||
+                        t1.artist != t2.artist ||
+                        t1.playCount != t2.playCount ||
+                        t1.bpm != t2.bpm ||
+                        t1.rawKey != t2.rawKey ||
+                        t1.genre != t2.genre
+                    }
+                
+                if hasChanged {
+                    self.playedTracks = sortedTracks
+                    self.playedNormalizedTitles = titlesSet
+                    self.playedCount = sortedTracks.count
+                }
                 self.isSyncing = false
             }
         }

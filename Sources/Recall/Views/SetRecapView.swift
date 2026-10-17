@@ -103,8 +103,9 @@ public struct SetRecapStats {
         let minBpm = validBpms.min() ?? 0
         let maxBpm = validBpms.max() ?? 0
         
-        // Tonalité dominante
+        // Tonalité dominante (avec horodatage pour départage stable)
         var keyCounts: [String: Int] = [:]
+        var keyLatestDate: [String: Date] = [:]
         for tr in tracks {
             let keyStr: String
             if let cam = tr.camelotKey {
@@ -115,11 +116,26 @@ public struct SetRecapStats {
                 continue
             }
             keyCounts[keyStr, default: 0] += 1
+            if let existing = keyLatestDate[keyStr] {
+                keyLatestDate[keyStr] = max(existing, tr.playedAt)
+            } else {
+                keyLatestDate[keyStr] = tr.playedAt
+            }
         }
         
         let totalTracksWithKey = keyCounts.values.reduce(0, +)
         let sortedKeys: [(key: String, count: Int, percent: Double)] = keyCounts
-            .sorted { $0.value > $1.value }
+            .sorted { a, b in
+                if a.value != b.value {
+                    return a.value > b.value
+                }
+                let dateA = keyLatestDate[a.key] ?? .distantPast
+                let dateB = keyLatestDate[b.key] ?? .distantPast
+                if dateA != dateB {
+                    return dateA > dateB
+                }
+                return a.key < b.key
+            }
             .map { (key: $0.key, count: $0.value, percent: totalTracksWithKey > 0 ? (Double($0.value) / Double(totalTracksWithKey)) * 100.0 : 0.0) }
         
         let dominantKeyRecord = sortedKeys.first
@@ -146,8 +162,9 @@ public struct SetRecapStats {
         let fastest = transitions.min(by: { $0.elapsedSeconds < $1.elapsedSeconds })
         let longest = transitions.max(by: { $0.elapsedSeconds < $1.elapsedSeconds })
         
-        // Top Artistes
+        // Top Artistes (avec horodatage pour départage stable)
         var artistCounts: [String: Int] = [:]
+        var artistLatestDate: [String: Date] = [:]
         for tr in tracks {
             let art = tr.displayArtist.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !art.isEmpty,
@@ -155,16 +172,32 @@ public struct SetRecapStats {
                   art.lowercased() != "unknown artist",
                   art.lowercased() != "unknown" else { continue }
             artistCounts[art, default: 0] += 1
+            if let existing = artistLatestDate[art] {
+                artistLatestDate[art] = max(existing, tr.playedAt)
+            } else {
+                artistLatestDate[art] = tr.playedAt
+            }
         }
         
         let totalArtistPlays = artistCounts.values.reduce(0, +)
         let topArtistsList: [ArtistRecord] = artistCounts
-            .sorted { $0.value > $1.value }
+            .sorted { a, b in
+                if a.value != b.value {
+                    return a.value > b.value
+                }
+                let dateA = artistLatestDate[a.key] ?? .distantPast
+                let dateB = artistLatestDate[b.key] ?? .distantPast
+                if dateA != dateB {
+                    return dateA > dateB
+                }
+                return a.key < b.key
+            }
             .prefix(5)
             .map { ArtistRecord(name: $0.key, count: $0.value, percent: totalArtistPlays > 0 ? (Double($0.value) / Double(totalArtistPlays)) * 100.0 : 0.0) }
         
-        // Top Genres
+        // Top Genres (avec horodatage pour départage stable)
         var genreCounts: [String: Int] = [:]
+        var genreLatestDate: [String: Date] = [:]
         for tr in tracks {
             let g = tr.genre.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !g.isEmpty,
@@ -175,11 +208,26 @@ public struct SetRecapStats {
                   g.lowercased() != "autre" else { continue }
             let formatted = g.capitalized
             genreCounts[formatted, default: 0] += 1
+            if let existing = genreLatestDate[formatted] {
+                genreLatestDate[formatted] = max(existing, tr.playedAt)
+            } else {
+                genreLatestDate[formatted] = tr.playedAt
+            }
         }
         
         let totalGenrePlays = genreCounts.values.reduce(0, +)
         let topGenresList: [GenreRecord] = genreCounts
-            .sorted { $0.value > $1.value }
+            .sorted { a, b in
+                if a.value != b.value {
+                    return a.value > b.value
+                }
+                let dateA = genreLatestDate[a.key] ?? .distantPast
+                let dateB = genreLatestDate[b.key] ?? .distantPast
+                if dateA != dateB {
+                    return dateA > dateB
+                }
+                return a.key < b.key
+            }
             .prefix(5)
             .map { GenreRecord(name: $0.key, count: $0.value, percent: totalGenrePlays > 0 ? (Double($0.value) / Double(totalGenrePlays)) * 100.0 : 0.0) }
         
@@ -218,6 +266,8 @@ public struct SetRecapView: View {
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
     
+    @State private var currentStats: SetRecapStats? = nil
+    
     private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     
     public init(onClose: (() -> Void)? = nil, onOpenTracklist: (() -> Void)? = nil) {
@@ -226,7 +276,9 @@ public struct SetRecapView: View {
     }
     
     private var stats: SetRecapStats {
-        _ = currentTime // force refresh
+        if let s = currentStats {
+            return s
+        }
         return SetRecapStats.compute(
             from: sessionService.playedTracks,
             sessionStartTime: sessionService.sessionStartTime
@@ -286,8 +338,24 @@ public struct SetRecapView: View {
                 )
             }
         )
+        .onAppear {
+            currentStats = SetRecapStats.compute(
+                from: sessionService.playedTracks,
+                sessionStartTime: sessionService.sessionStartTime
+            )
+        }
         .onReceive(timer) { newTime in
             currentTime = newTime
+            currentStats = SetRecapStats.compute(
+                from: sessionService.playedTracks,
+                sessionStartTime: sessionService.sessionStartTime
+            )
+        }
+        .onReceive(sessionService.$playedTracks) { tracks in
+            currentStats = SetRecapStats.compute(
+                from: tracks,
+                sessionStartTime: sessionService.sessionStartTime
+            )
         }
     }
     

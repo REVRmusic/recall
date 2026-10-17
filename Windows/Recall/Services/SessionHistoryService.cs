@@ -149,18 +149,25 @@ namespace Recall.Services
             double minBpm = validBpms.Count > 0 ? validBpms.Min() : 0.0;
             double maxBpm = validBpms.Count > 0 ? validBpms.Max() : 0.0;
 
-            // Clés
+            // Clés (avec départage stable)
             var keyCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var keyLatestDate = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in tracks)
             {
                 string k = t.DisplayKey;
                 if (!string.IsNullOrEmpty(k) && k != "--")
                 {
                     keyCounts[k] = keyCounts.GetValueOrDefault(k, 0) + 1;
+                    if (!keyLatestDate.TryGetValue(k, out var existingDate) || t.PlayedAt > existingDate)
+                    {
+                        keyLatestDate[k] = t.PlayedAt;
+                    }
                 }
             }
             int totalKeys = keyCounts.Values.Sum();
             var sortedKeys = keyCounts.OrderByDescending(kv => kv.Value)
+                                      .ThenByDescending(kv => keyLatestDate.GetValueOrDefault(kv.Key, DateTime.MinValue))
+                                      .ThenBy(kv => kv.Key)
                                       .Select(kv => (Key: kv.Key, Count: kv.Value, Percent: totalKeys > 0 ? (kv.Value * 100.0 / totalKeys) : 0.0))
                                       .ToList();
 
@@ -185,16 +192,23 @@ namespace Recall.Services
             var fastest = transitions.OrderBy(t => t.ElapsedSeconds).FirstOrDefault();
             var longest = transitions.OrderByDescending(t => t.ElapsedSeconds).FirstOrDefault();
 
-            // Top Artistes
+            // Top Artistes (avec départage stable)
             var artistCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var artistLatestDate = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in tracks)
             {
                 string a = t.DisplayArtist.Trim();
                 if (string.IsNullOrEmpty(a) || a.Equals("artiste inconnu", StringComparison.OrdinalIgnoreCase) || a.Equals("unknown", StringComparison.OrdinalIgnoreCase)) continue;
                 artistCounts[a] = artistCounts.GetValueOrDefault(a, 0) + 1;
+                if (!artistLatestDate.TryGetValue(a, out var existingDate) || t.PlayedAt > existingDate)
+                {
+                    artistLatestDate[a] = t.PlayedAt;
+                }
             }
             int totalArtistPlays = artistCounts.Values.Sum();
             var topArtists = artistCounts.OrderByDescending(kv => kv.Value)
+                                         .ThenByDescending(kv => artistLatestDate.GetValueOrDefault(kv.Key, DateTime.MinValue))
+                                         .ThenBy(kv => kv.Key)
                                          .Take(5)
                                          .Select(kv => new RankedRecord
                                          {
@@ -203,18 +217,24 @@ namespace Recall.Services
                                              Percent = totalArtistPlays > 0 ? (kv.Value * 100.0 / totalArtistPlays) : 0.0
                                          }).ToList();
 
-            // Top Genres (User Request #1)
+            // Top Genres (avec départage stable)
             var genreCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var genreLatestDate = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             foreach (var t in tracks)
             {
                 string g = t.Genre.Trim();
                 if (string.IsNullOrEmpty(g) || g.Equals("unknown", StringComparison.OrdinalIgnoreCase) || g.Equals("inconnu", StringComparison.OrdinalIgnoreCase) || g.Equals("other", StringComparison.OrdinalIgnoreCase)) continue;
-                // Capitalize first letter
                 string formatted = char.ToUpper(g[0]) + (g.Length > 1 ? g.Substring(1).ToLowerInvariant() : "");
                 genreCounts[formatted] = genreCounts.GetValueOrDefault(formatted, 0) + 1;
+                if (!genreLatestDate.TryGetValue(formatted, out var existingDate) || t.PlayedAt > existingDate)
+                {
+                    genreLatestDate[formatted] = t.PlayedAt;
+                }
             }
             int totalGenrePlays = genreCounts.Values.Sum();
             var topGenres = genreCounts.OrderByDescending(kv => kv.Value)
+                                       .ThenByDescending(kv => genreLatestDate.GetValueOrDefault(kv.Key, DateTime.MinValue))
+                                       .ThenBy(kv => kv.Key)
                                        .Take(5)
                                        .Select(kv => new RankedRecord
                                        {
@@ -399,9 +419,28 @@ namespace Recall.Services
 
                     App.Current?.Dispatcher.Invoke(() =>
                     {
-                        PlayedTracks = sorted;
-                        _playedNormalizedTitles = titlesSet;
-                        PlayedCount = sorted.Count;
+                        bool hasChanged = PlayedTracks.Count != sorted.Count;
+                        if (!hasChanged)
+                        {
+                            for (int i = 0; i < sorted.Count; i++)
+                            {
+                                var t1 = PlayedTracks[i];
+                                var t2 = sorted[i];
+                                if (t1.Id != t2.Id || t1.Title != t2.Title || t1.Artist != t2.Artist ||
+                                    t1.PlayCount != t2.PlayCount || t1.Bpm != t2.Bpm || t1.RawKey != t2.RawKey || t1.Genre != t2.Genre)
+                                {
+                                    hasChanged = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (hasChanged)
+                        {
+                            PlayedTracks = sorted;
+                            _playedNormalizedTitles = titlesSet;
+                            PlayedCount = sorted.Count;
+                        }
                         _isSyncing = false;
                     });
                 }
