@@ -180,8 +180,8 @@ public class UserSettings: ObservableObject {
         } else {
             self.glassTranslucency = 0.50
         }
-        let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.both.rawValue
-        self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .both
+        let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.cmdOption.rawValue
+        self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .cmdOption
         
         #if os(macOS)
         updateAppDockIcon()
@@ -294,7 +294,7 @@ public class UserSettings: ObservableObject {
         playedTrackColorHex = "#0FA2FF"
         playedTrackStyle = "both"
         playedMinDurationSeconds = 25
-        hotKeyPreset = .both
+        hotKeyPreset = .cmdOption
         djTheme = .cyanNeon
         glassOpacity = 0.96
     }

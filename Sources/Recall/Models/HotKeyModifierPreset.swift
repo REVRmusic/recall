@@ -2,8 +2,8 @@ import Foundation
 
 /// Modes et préréglages pour les raccourcis clavier globaux système (Hotkeys)
 public enum HotKeyModifierPreset: String, CaseIterable, Identifiable {
+    case cmdOption = "cmdOption" // ⌥⌘ (Cmd + Option) - Recommandé, 100% zéro conflit Serato & Rekordbox
     case both = "both"           // Les deux (⌥⌘ et ⇧⌘ simultanément)
-    case cmdOption = "cmdOption" // ⌥⌘ (Cmd + Option) - Garanti zéro conflit Serato & Rekordbox
     case cmdShift = "cmdShift"   // ⇧⌘ (Cmd + Shift) - Dédié Rekordbox
     case disabled = "disabled"   // Désactivé
     
@@ -11,10 +11,10 @@ public enum HotKeyModifierPreset: String, CaseIterable, Identifiable {
     
     public var title: String {
         switch self {
-        case .both:
-            return "Les deux (⇧⌘ & ⌥⌘)"
         case .cmdOption:
             return "⌥⌘ (Cmd + Option)"
+        case .both:
+            return "Les deux (⇧⌘ & ⌥⌘)"
         case .cmdShift:
             return "⇧⌘ (Cmd + Shift)"
         case .disabled:
@@ -24,10 +24,10 @@ public enum HotKeyModifierPreset: String, CaseIterable, Identifiable {
     
     public var subtitle: String {
         switch self {
-        case .both:
-            return "Flexibilité maximale • Supporte ⇧⌘ et ⌥⌘ simultanément"
         case .cmdOption:
-            return "Anti-conflit garanti Rekordbox & Serato (Recommandé en live)"
+            return "100% zéro conflit • Libre de tout raccourci natif Serato & Rekordbox"
+        case .both:
+            return "Flexibilité maximale • Supporte ⌥⌘ et ⇧⌘ simultanément"
         case .cmdShift:
             return "Touches directes ⇧⌘ (attention aux raccourcis natifs Rekordbox/Serato)"
         case .disabled:

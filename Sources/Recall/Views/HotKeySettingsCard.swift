@@ -16,7 +16,7 @@ public struct HotKeySettingsCard: View {
                 } icon: {
                     Image(systemName: "command.square.fill")
                         .font(.system(size: 11))
-                        .foregroundColor(Color.accentCyan)
+                        .foregroundColor(settings.accentColor)
                 }
                 
                 Spacer()
@@ -24,10 +24,10 @@ public struct HotKeySettingsCard: View {
                 // Badge du mode actif
                 Text(settings.hotKeyPreset.title)
                     .font(.system(size: 9.5, weight: .bold))
-                    .foregroundColor(settings.hotKeyPreset == .disabled ? .white.opacity(0.4) : Color.accentCyan)
+                    .foregroundColor(settings.hotKeyPreset == .disabled ? .white.opacity(0.4) : settings.accentColor)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(settings.hotKeyPreset == .disabled ? Color.white.opacity(0.06) : Color.accentCyan.opacity(0.18))
+                    .background(settings.hotKeyPreset == .disabled ? Color.white.opacity(0.06) : settings.accentColor.opacity(0.18))
                     .cornerRadius(4)
             }
             
@@ -44,20 +44,40 @@ public struct HotKeySettingsCard: View {
                         HStack(spacing: 8) {
                             ZStack {
                                 Circle()
-                                    .stroke(settings.hotKeyPreset == preset ? Color.accentCyan : Color.white.opacity(0.25), lineWidth: 1.5)
+                                    .stroke(settings.hotKeyPreset == preset ? settings.accentColor : Color.white.opacity(0.25), lineWidth: 1.5)
                                     .frame(width: 12, height: 12)
                                 
                                 if settings.hotKeyPreset == preset {
                                     Circle()
-                                        .fill(Color.accentCyan)
+                                        .fill(settings.accentColor)
                                         .frame(width: 6, height: 6)
                                 }
                             }
                             
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(preset.title)
-                                    .font(.system(size: 10, weight: settings.hotKeyPreset == preset ? .bold : .medium))
-                                    .foregroundColor(settings.hotKeyPreset == preset ? .white : .white.opacity(0.75))
+                                HStack(spacing: 6) {
+                                    Text(preset.title)
+                                        .font(.system(size: 10, weight: settings.hotKeyPreset == preset ? .bold : .medium))
+                                        .foregroundColor(settings.hotKeyPreset == preset ? .white : .white.opacity(0.75))
+                                    
+                                    if preset == .cmdOption {
+                                        HStack(spacing: 2.5) {
+                                            Image(systemName: "checkmark.seal.fill")
+                                                .font(.system(size: 7))
+                                            Text("RECOMMANDÉ")
+                                                .font(.system(size: 7.5, weight: .heavy, design: .rounded))
+                                        }
+                                        .foregroundColor(settings.accentColor)
+                                        .padding(.horizontal, 4.5)
+                                        .padding(.vertical, 1.5)
+                                        .background(settings.accentColor.opacity(0.18))
+                                        .cornerRadius(3.5)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 3.5)
+                                                .stroke(settings.accentColor.opacity(0.55), lineWidth: 0.6)
+                                        )
+                                    }
+                                }
                                 
                                 Text(preset.subtitle)
                                     .font(.system(size: 8.5))
@@ -68,11 +88,11 @@ public struct HotKeySettingsCard: View {
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
-                        .background(settings.hotKeyPreset == preset ? Color.accentCyan.opacity(0.12) : Color.white.opacity(0.03))
+                        .background(settings.hotKeyPreset == preset ? settings.accentColor.opacity(0.12) : Color.white.opacity(0.03))
                         .cornerRadius(5)
                         .overlay(
                             RoundedRectangle(cornerRadius: 5)
-                                .stroke(settings.hotKeyPreset == preset ? Color.accentCyan.opacity(0.50) : Color.clear, lineWidth: 1)
+                                .stroke(settings.hotKeyPreset == preset ? settings.accentColor.opacity(0.50) : Color.clear, lineWidth: 1)
                         )
                     }
                     .buttonStyle(.plain)
@@ -110,7 +130,7 @@ public struct HotKeySettingsCard: View {
                 HStack(alignment: .top, spacing: 5) {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 9))
-                        .foregroundColor(Color.accentCyan.opacity(0.85))
+                        .foregroundColor(settings.accentColor.opacity(0.85))
                         .padding(.top, 1)
                     
                     Text("Astuce Sécurité DJ : Dans Rekordbox, ⇧⌘R déclenche Jump Reverse (saut arrière platine 1), et dans Serato, ⇧⌘F active la recherche de caisse. Le mode ⌥⌘ (Cmd + Option) est 100% libre et garanti sans conflit en plein mix.")
@@ -119,7 +139,7 @@ public struct HotKeySettingsCard: View {
                         .lineSpacing(1.2)
                 }
                 .padding(6)
-                .background(Color.accentCyan.opacity(0.06))
+                .background(settings.accentColor.opacity(0.06))
                 .cornerRadius(5)
             }
         }
@@ -129,7 +149,7 @@ public struct HotKeySettingsCard: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 9))
-                .foregroundColor(Color.accentCyan)
+                .foregroundColor(settings.accentColor)
                 .frame(width: 14)
             
             Text(title)
