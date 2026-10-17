@@ -259,6 +259,9 @@ public struct BandeauCompactView: View {
             // Bouton de réinitialisation de session rapide
             SessionResetHeaderButton()
             
+            // Bouton Statistiques du mix (Set Recap)
+            SetRecapHeaderButton()
+            
             // 3. Bouton TRÈS VISIBLE "Déplier" pour restaurer la fenêtre complète
             Button {
                 withAnimation(.easeInOut(duration: 0.28)) {

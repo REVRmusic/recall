@@ -124,6 +124,14 @@ public class SetRecapWindowController: NSWindowController, NSWindowDelegate, Obs
         isVisible = false
     }
     
+    public func toggle() {
+        if isVisible && (window?.isVisible == true) {
+            closeWindow()
+        } else {
+            show()
+        }
+    }
+    
     public func windowWillClose(_ notification: Notification) {
         isVisible = false
     }

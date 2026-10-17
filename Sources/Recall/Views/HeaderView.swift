@@ -28,6 +28,9 @@ public struct HeaderView: View {
                 
                 // Bouton Nouvelle session / Remise à zéro des morceaux déjà joués
                 SessionResetHeaderButton()
+                
+                // Bouton Statistiques du mix (Set Recap)
+                SetRecapHeaderButton()
             }
             .fixedSize(horizontal: true, vertical: false)
             .padding(.leading, 1)
@@ -304,4 +307,39 @@ struct SessionResetHeaderButton: View {
               "Démarrer une nouvelle session : Remettre à zéro l'historique des morceaux joués")
     }
 }
+
+/// Bouton tactile et élégant pour ouvrir la modale des statistiques du mix (Set Recap)
+struct SetRecapHeaderButton: View {
+    @ObservedObject private var recapWindow = SetRecapWindowController.shared
+    @EnvironmentObject var settings: UserSettings
+    @State private var isHovered: Bool = false
+    
+    var body: some View {
+        Button {
+            recapWindow.toggle()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(recapWindow.isVisible ? settings.accentColor.opacity(0.25) : Color.white.opacity(isHovered ? 0.08 : 0.04))
+                    .frame(width: 20, height: 20)
+                
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.system(size: 8.5, weight: .bold))
+                    .foregroundColor(recapWindow.isVisible ? settings.accentColor : .white.opacity(isHovered ? 0.85 : 0.55))
+            }
+            .overlay(
+                Circle()
+                    .stroke(
+                        recapWindow.isVisible ? settings.accentColor.opacity(0.65) : Color.white.opacity(isHovered ? 0.15 : 0.08),
+                        lineWidth: 0.8
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .onHover { isHovered = $0 }
+        .help("Statistiques du Mix (Set Recap) : durée, artistes, genres et tonalités")
+    }
+}
+
 
