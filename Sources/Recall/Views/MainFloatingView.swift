@@ -79,7 +79,7 @@ public struct MainFloatingView: View {
     }
     
     public var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             // Teinte d'ambiance avec opacité réglable sur le verre dépoli natif macOS de la fenêtre
             Color.darkBg.opacity(settings.effectiveGlassTintOpacity)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -115,6 +115,7 @@ public struct MainFloatingView: View {
             if settings.isCompactMode {
                 // Mode bandeau compact ouvert sur la droite de l'écran
                 BandeauCompactView()
+                    .transition(.opacity)
             } else {
                 VStack(spacing: 0) {
                     // Barre d'en-tête (Logo Recall, Bouton Réduire bien visible, Actions)
@@ -148,6 +149,9 @@ public struct MainFloatingView: View {
                         )
                     }
                 }
+                .frame(minHeight: FloatingWindowController.minNormalHeight, alignment: .top)
+                .clipped()
+                .transition(.opacity)
             }
             
             // Overlay visuel lors du survol d'un glisser de morceau audio

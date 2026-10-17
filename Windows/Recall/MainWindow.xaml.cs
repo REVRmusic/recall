@@ -432,6 +432,8 @@ namespace Recall
             _settings.Save();
 
             var workArea = SystemParameters.WorkArea;
+            double targetHeight;
+            double targetWidth;
 
             if (compact)
             {
@@ -439,22 +441,31 @@ namespace Recall
                 if (Width >= MinNormalWidth) _lastNormalWidth = Width;
                 NormalViewGrid.Visibility = Visibility.Collapsed;
                 CompactViewGrid.Visibility = Visibility.Visible;
-                Height = CompactHeight;
+                targetHeight = CompactHeight;
                 MinWidth = MinCompactWidth;
-                Width = Math.Max(MinCompactWidth, Width >= MinCompactWidth ? Width : DefaultCompactWidth);
+                targetWidth = Math.Max(MinCompactWidth, Width >= MinCompactWidth ? Width : DefaultCompactWidth);
             }
             else
             {
                 CompactViewGrid.Visibility = Visibility.Collapsed;
                 NormalViewGrid.Visibility = Visibility.Visible;
-                Height = Math.Max(MinNormalHeight, _lastNormalHeight);
+                targetHeight = Math.Max(MinNormalHeight, _lastNormalHeight);
                 MinWidth = MinNormalWidth;
-                Width = Math.Max(MinNormalWidth, _lastNormalWidth);
+                targetWidth = Math.Max(MinNormalWidth, _lastNormalWidth);
             }
 
-            // Toujours calé en bas à droite
-            Left = workArea.Right - Width;
-            Top = workArea.Bottom - Height;
+            var duration = TimeSpan.FromMilliseconds(280);
+            var ease = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut };
+
+            var heightAnim = new System.Windows.Media.Animation.DoubleAnimation(targetHeight, duration) { EasingFunction = ease };
+            var widthAnim = new System.Windows.Media.Animation.DoubleAnimation(targetWidth, duration) { EasingFunction = ease };
+            var leftAnim = new System.Windows.Media.Animation.DoubleAnimation(workArea.Right - targetWidth, duration) { EasingFunction = ease };
+            var topAnim = new System.Windows.Media.Animation.DoubleAnimation(workArea.Bottom - targetHeight, duration) { EasingFunction = ease };
+
+            BeginAnimation(HeightProperty, heightAnim);
+            BeginAnimation(WidthProperty, widthAnim);
+            BeginAnimation(LeftProperty, leftAnim);
+            BeginAnimation(TopProperty, topAnim);
         }
 
         private void BtnCollapse_Click(object sender, RoutedEventArgs e) => SetCompactMode(true);

@@ -2,6 +2,7 @@ import Foundation
 import Carbon
 import AppKit
 import Combine
+import SwiftUI
 
 public extension Notification.Name {
     static let recallTriggerSearch = Notification.Name("recallTriggerSearch")
@@ -174,8 +175,10 @@ public final class GlobalHotKeyService: ObservableObject {
     /// Action 2 : Basculer entre mode normal et bandeau compact
     public func performToggleCompact() {
         let newCompact = !UserSettings.shared.isCompactMode
-        UserSettings.shared.isCompactMode = newCompact
-        FloatingWindowController.shared.toggleCompactMode(newCompact)
+        withAnimation(.easeInOut(duration: 0.28)) {
+            UserSettings.shared.isCompactMode = newCompact
+            FloatingWindowController.shared.toggleCompactMode(newCompact)
+        }
         FloatingWindowController.shared.show()
     }
     
@@ -186,8 +189,10 @@ public final class GlobalHotKeyService: ObservableObject {
         
         // Si la fenêtre est en bandeau compact, on bascule en mode normal pour avoir l'espace d'afficher les résultats
         if UserSettings.shared.isCompactMode {
-            UserSettings.shared.isCompactMode = false
-            FloatingWindowController.shared.toggleCompactMode(false)
+            withAnimation(.easeInOut(duration: 0.28)) {
+                UserSettings.shared.isCompactMode = false
+                FloatingWindowController.shared.toggleCompactMode(false)
+            }
         }
         
         NotificationCenter.default.post(name: .recallTriggerSearch, object: nil)

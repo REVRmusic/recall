@@ -117,6 +117,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     private var hasPositionedOnLaunch: Bool = false
     private var lastNormalHeight: CGFloat = 530
     private var lastNormalWidth: CGFloat = 360
+    private var isAnimatingModeChange: Bool = false
     
     public var effectiveMaxWidth: CGFloat {
         if let screen = window?.screen ?? NSScreen.main {
@@ -244,9 +245,11 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         let currentFrame = window.frame
         
         UserSettings.shared.isCompactMode = compact
+        isAnimatingModeChange = true
         
         let targetWidth: CGFloat
         let targetHeight: CGFloat
+        let duration: TimeInterval = 0.28
         
         if compact {
             // Sauvegarder les dimensions normales si elles étaient valides
@@ -263,11 +266,20 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
             let desiredW = currentFrame.size.width >= minW ? currentFrame.size.width : Self.defaultCompactWidth
             targetWidth = max(minW, min(effectiveMaxWidth, desiredW))
             
+            // Déverrouille immédiatement la hauteur minimale vers celle du bandeau pour permettre l'animation fluide vers le bas
             window.minSize = NSSize(width: minW, height: Self.bandeauHeight)
             let x = visibleFrame.maxX - targetWidth
             let y = visibleFrame.minY
             let newFrame = NSRect(x: x, y: y, width: targetWidth, height: targetHeight)
-            window.setFrame(newFrame, display: true)
+            
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = duration
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                context.allowsImplicitAnimation = true
+                window.animator().setFrame(newFrame, display: true)
+            }, completionHandler: { [weak self] in
+                self?.isAnimatingModeChange = false
+            })
         } else {
             // Rétablir la hauteur et largeur normales
             let desiredH = lastNormalHeight >= Self.minNormalHeight ? lastNormalHeight : Self.defaultNormalHeight
@@ -277,11 +289,24 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
             let desiredW = lastNormalWidth >= minW ? lastNormalWidth : Self.defaultNormalWidth
             targetWidth = max(minW, min(effectiveMaxWidth, desiredW))
             
-            window.minSize = NSSize(width: minW, height: Self.minNormalHeight)
             let x = visibleFrame.maxX - targetWidth
             let y = visibleFrame.minY
             let newFrame = NSRect(x: x, y: y, width: targetWidth, height: targetHeight)
-            window.setFrame(newFrame, display: true)
+            
+            // NE PAS forcer window.minSize.height = minNormalHeight avant l'animation,
+            // sinon Cocoa bloque la hauteur et saute brutalement de 54pt à 227pt sans fluidité.
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = duration
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                context.allowsImplicitAnimation = true
+                window.animator().setFrame(newFrame, display: true)
+            }, completionHandler: { [weak self] in
+                guard let self = self, let win = self.window else { return }
+                self.isAnimatingModeChange = false
+                if !UserSettings.shared.isCompactMode {
+                    win.minSize = NSSize(width: minW, height: Self.minNormalHeight)
+                }
+            })
         }
     }
     
@@ -300,6 +325,9 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     // MARK: - Redimensionnement Interactif et Bascule Dynamique
     
     public func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+        if isAnimatingModeChange {
+            return frameSize
+        }
         guard let screen = sender.screen ?? NSScreen.main else { return frameSize }
         let visibleFrame = screen.visibleFrame
         let maxH = min(Self.maxHeight, visibleFrame.height)
@@ -345,6 +373,9 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func windowDidResize(_ notification: Notification) {
+        if isAnimatingModeChange {
+            return
+        }
         guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
         var frame = window.frame

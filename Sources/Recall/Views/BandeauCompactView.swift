@@ -237,7 +237,7 @@ public struct BandeauCompactView: View {
                FavoriteCombosService.normalize(d1.displayTitle) != FavoriteCombosService.normalize(d2.displayTitle) {
                 let isFav = FavoriteCombosService.shared.isComboFavorite(track1: d1, track2: d2)
                 Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    withAnimation(.easeInOut(duration: 0.28)) {
                         if settings.isCompactMode {
                             settings.isCompactMode = false
                             FloatingWindowController.shared.toggleCompactMode(false)
@@ -261,7 +261,7 @@ public struct BandeauCompactView: View {
             
             // 3. Bouton TRÈS VISIBLE "Déplier" pour restaurer la fenêtre complète
             Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                withAnimation(.easeInOut(duration: 0.28)) {
                     settings.isCompactMode = false
                     FloatingWindowController.shared.toggleCompactMode(false)
                 }

@@ -38,7 +38,7 @@ public struct HeaderView: View {
             HStack(spacing: 2.5) {
                 // Bouton Réduire : texte + icône si large, ou icône seule si fenêtre étroite
                 Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    withAnimation(.easeInOut(duration: 0.28)) {
                         settings.isCompactMode = true
                         FloatingWindowController.shared.toggleCompactMode(true)
                     }
