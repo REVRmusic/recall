@@ -61,10 +61,10 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
     
     private var dimmingWindow: NSWindow?
     
-    private let defaultWidth: CGFloat = 380
-    private let defaultHeight: CGFloat = 560
-    private let minWidth: CGFloat = 350
-    private let minHeight: CGFloat = 440
+    private let defaultWidth: CGFloat = 680
+    private let defaultHeight: CGFloat = 610
+    private let minWidth: CGFloat = 620
+    private let minHeight: CGFloat = 520
     
     public init() {
         let panel = SettingsPanel(
@@ -77,7 +77,7 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         super.init(window: panel)
         
         panel.minSize = NSSize(width: minWidth, height: minHeight)
-        panel.maxSize = NSSize(width: 700, height: 1000)
+        panel.maxSize = NSSize(width: 850, height: 1000)
         
         panel.delegate = self
         panel.title = "Paramètres Recall"
@@ -190,16 +190,20 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             mainWindow.orderFrontRegardless()
         }
         
-        // 4. Positionnement au centre de l'écran principal
+        // 4. Positionnement au centre de l'écran principal avec dimensions confortables
         if !panel.isVisible {
             if let screen = NSScreen.main {
                 let screenFrame = screen.visibleFrame
-                let w = panel.frame.width >= minWidth ? panel.frame.width : defaultWidth
-                let h = panel.frame.height >= minHeight ? panel.frame.height : defaultHeight
+                let currentW = panel.frame.width
+                let currentH = panel.frame.height
+                // Si la fenêtre avait l'ancienne taille étroite (< 600) ou hors limites, appliquer defaultWidth/Height
+                let w = (currentW < minWidth || currentW > 850) ? defaultWidth : currentW
+                let h = (currentH < minHeight || currentH > 900) ? defaultHeight : currentH
                 let x = screenFrame.midX - (w / 2.0)
                 let y = screenFrame.midY - (h / 2.0)
                 panel.setFrame(NSRect(x: x, y: y, width: w, height: h), display: true)
             } else {
+                panel.setFrame(NSRect(x: 0, y: 0, width: defaultWidth, height: defaultHeight), display: true)
                 panel.center()
             }
         }
