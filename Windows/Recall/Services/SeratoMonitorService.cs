@@ -284,7 +284,49 @@ namespace Recall.Services
         public void UpdateFilteredSuggestions()
         {
             var settings = UserSettings.Shared;
-            var list = settings.IsFavoritesFilterActive ? _favoriteSuggestions : _historySuggestions;
+            List<Track> list;
+
+            if (settings.IsFavoritesFilterActive)
+            {
+                list = _favoriteSuggestions.ToList();
+            }
+            else
+            {
+                var combined = _historySuggestions.ToList();
+                foreach (var fav in _favoriteSuggestions)
+                {
+                    string normFav = FavoriteCombosService.Normalize(fav.DisplayTitle);
+                    var existing = combined.FirstOrDefault(t =>
+                        FavoriteCombosService.Normalize(t.DisplayTitle) == normFav ||
+                        (!string.IsNullOrEmpty(fav.FileName) && !string.IsNullOrEmpty(t.FileName) && FavoriteCombosService.Normalize(t.FileName) == FavoriteCombosService.Normalize(fav.FileName))
+                    );
+
+                    if (existing != null)
+                    {
+                        existing.IsFavorite = true;
+                    }
+                    else
+                    {
+                        combined.Add(fav);
+                    }
+                }
+
+                double GetRankingScore(Track trk)
+                {
+                    if (trk.TransitionCount >= 2)
+                        return trk.TransitionCount + (trk.IsFavorite ? 0.05 : 0.0);
+                    if (trk.IsFavorite)
+                        return trk.TransitionCount == 1 ? 1.55 : 1.50;
+                    if (trk.TransitionCount == 1)
+                        return 1.0;
+                    return 0.0;
+                }
+
+                list = combined.OrderByDescending(GetRankingScore)
+                               .ThenByDescending(t => t.PlayedAt)
+                               .ThenBy(t => t.DisplayTitle)
+                               .ToList();
+            }
 
             // Filtre Harmonique
             if (settings.IsHarmonicFilterActive)

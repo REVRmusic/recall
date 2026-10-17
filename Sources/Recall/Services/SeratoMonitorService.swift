@@ -331,11 +331,45 @@ public class SeratoMonitorService: ObservableObject {
                 self.suggestions = favs
             } else {
                 var combined = routines
+                for f in favs {
+                    let norm = FavoriteCombosService.normalize(f.displayTitle)
+                    if let idx = combined.firstIndex(where: { FavoriteCombosService.normalize($0.displayTitle) == norm }) {
+                        combined[idx].isFavorite = true
+                    } else {
+                        combined.append(f)
+                    }
+                }
+                
                 let existingIds = Set(combined.map { $0.id })
                 for h in harmonic where !existingIds.contains(h.id) {
                     combined.append(h)
                     if combined.count >= maxResults { break }
                 }
+                
+                func rekordboxRankingScore(for trk: Track) -> Double {
+                    if trk.transitionCount >= 2 {
+                        return Double(trk.transitionCount) + (trk.isFavorite ? 0.05 : 0.0)
+                    }
+                    if trk.isFavorite {
+                        return trk.transitionCount == 1 ? 1.55 : 1.50
+                    }
+                    if trk.transitionCount == 1 {
+                        return 1.0
+                    }
+                    return 0.0
+                }
+                
+                combined.sort(by: { (t1: Track, t2: Track) -> Bool in
+                    let s1 = rekordboxRankingScore(for: t1)
+                    let s2 = rekordboxRankingScore(for: t2)
+                    if abs(s1 - s2) > 0.001 { return s1 > s2 }
+                    let time1 = t1.playedAt?.timeIntervalSince1970 ?? 0
+                    let time2 = t2.playedAt?.timeIntervalSince1970 ?? 0
+                    if time1 != time2 { return time1 > time2 }
+                    return t1.displayTitle < t2.displayTitle
+                })
+                
+                self.historySuggestions = combined
                 self.suggestions = combined
             }
             
@@ -432,9 +466,55 @@ public class SeratoMonitorService: ObservableObject {
             }
             
             let finalFavorites = pureFavoritesList
+            
+            // 3. Intégration et priorisation des combos favoris dans la liste classique :
+            // Les combos favoris sont intégrés et classés juste au-dessus des enchaînements
+            // réalisés une seule fois (1x) pour s'inscrire naturellement dans la routine du DJ.
+            var combinedClassic = pureHistoryList
+            for fav in finalFavorites {
+                let norm = FavoriteCombosService.normalize(fav.displayTitle)
+                if let existingIndex = combinedClassic.firstIndex(where: {
+                    FavoriteCombosService.normalize($0.displayTitle) == norm ||
+                    (!fav.fileName.isEmpty && !$0.fileName.isEmpty && FavoriteCombosService.normalize($0.fileName) == FavoriteCombosService.normalize(fav.fileName))
+                }) {
+                    combinedClassic[existingIndex].isFavorite = true
+                } else {
+                    combinedClassic.append(fav)
+                }
+            }
+            
+            func rankingScore(for trk: Track) -> Double {
+                if trk.transitionCount >= 2 {
+                    return Double(trk.transitionCount) + (trk.isFavorite ? 0.05 : 0.0)
+                }
+                if trk.isFavorite {
+                    // Les combos favoris (1x ou 0x) sont positionnés au-dessus des 1x (score 1.0)
+                    return trk.transitionCount == 1 ? 1.55 : 1.50
+                }
+                if trk.transitionCount == 1 {
+                    return 1.0
+                }
+                return 0.0
+            }
+            
+            combinedClassic.sort(by: { (t1: Track, t2: Track) -> Bool in
+                let s1 = rankingScore(for: t1)
+                let s2 = rankingScore(for: t2)
+                if abs(s1 - s2) > 0.001 {
+                    return s1 > s2
+                }
+                let time1 = t1.playedAt?.timeIntervalSince1970 ?? 0
+                let time2 = t2.playedAt?.timeIntervalSince1970 ?? 0
+                if time1 != time2 {
+                    return time1 > time2
+                }
+                return t1.displayTitle < t2.displayTitle
+            })
+            
+            let finalHistory = combinedClassic
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
-                self.historySuggestions = pureHistoryList
+                self.historySuggestions = finalHistory
                 self.favoriteSuggestions = finalFavorites
                 self.updateActiveSuggestions()
                 self.isLoading = false
