@@ -592,148 +592,7 @@ public struct SettingsSheetView: View {
             DJThemeSettingsCard()
         }
         
-        // CARTE 2 : Comportement de la Fenêtre
-        settingCard {
-            VStack(alignment: .leading, spacing: 12) {
-                sectionHeader(icon: "macwindow", title: "Fenêtre & Positionnement")
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Toujours au premier plan (Floating Window)")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.90))
-                        Text("Conserve la fenêtre Recall au-dessus de Rekordbox ou Serato pendant le mix.")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.50))
-                    }
-                    
-                    Spacer()
-                    
-                    Toggle("", isOn: $settings.alwaysOnTop)
-                        .toggleStyle(.switch)
-                        .tint(settings.accentColor)
-                        .scaleEffect(0.90)
-                        .onChange(of: settings.alwaysOnTop) { val in
-                            FloatingWindowController.shared.updateAlwaysOnTop(val)
-                        }
-                }
-                
-                Divider()
-                    .background(Color.white.opacity(0.08))
-                
-                SettingActionButton(
-                    icon: "arrow.down.right.and.arrow.up.left",
-                    title: "Recentrer Recall en bas à droite de l'écran principal"
-                ) {
-                    FloatingWindowController.shared.positionAtBottomRight()
-                }
-            }
-        }
-    }
-    
-    // MARK: ==========================================
-    // MARK: ONGLET 3 : SESSION & EN DIRECT
-    // MARK: ==========================================
-    
-    @ViewBuilder
-    private var sessionTabContent: some View {
-        // CARTE 1 : Détection & Filtrage
-        settingCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    sectionHeader(icon: "clock.arrow.circlepath", title: "Détection en Direct de la Session")
-                    
-                    Spacer()
-                    
-                    Text("\(sessionService.playedCount) morceaux joués")
-                        .font(.system(size: 10.5, weight: .heavy, design: .rounded))
-                        .foregroundColor(sessionService.playedCount > 0 ? settings.accentColor : .white.opacity(0.45))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(sessionService.playedCount > 0 ? settings.accentColor.opacity(0.18) : Color.white.opacity(0.06))
-                        .cornerRadius(5)
-                }
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Masquer automatiquement les morceaux déjà joués")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.90))
-                        Text("Retire les titres déjà passés de la liste de suggestions pour éviter les doublons.")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.50))
-                    }
-                    
-                    Spacer()
-                    
-                    Toggle("", isOn: $settings.hidePlayedTracks)
-                        .toggleStyle(.switch)
-                        .tint(settings.accentColor)
-                        .scaleEffect(0.90)
-                }
-                
-                Divider()
-                    .background(Color.white.opacity(0.08))
-                
-                // Délai anti-préécoute
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Délai de validation (anti-préécoute au casque)")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.90))
-                            Text("Un morceau doit tourner au moins \(settings.playedMinDurationSeconds)s pour être mémorisé comme joué (25s par défaut).")
-                                .font(.system(size: 9.5))
-                                .foregroundColor(.white.opacity(0.50))
-                        }
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 4) {
-                            if settings.playedMinDurationSeconds == 25 {
-                                Text("Recommandé")
-                                    .font(.system(size: 8.5, weight: .bold))
-                                    .foregroundColor(settings.accentColor.opacity(0.85))
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 2)
-                                    .background(settings.accentColor.opacity(0.15))
-                                    .cornerRadius(4)
-                            }
-                            
-                            Text("\(settings.playedMinDurationSeconds) sec")
-                                .font(.system(size: 11, weight: .heavy, design: .rounded))
-                                .foregroundColor(settings.accentColor)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 2.5)
-                                .background(settings.accentColor.opacity(0.20))
-                                .cornerRadius(5)
-                        }
-                    }
-                    
-                    CustomSlider(
-                        value: Binding(
-                            get: { Double(settings.playedMinDurationSeconds) },
-                            set: { newVal in
-                                settings.playedMinDurationSeconds = Int(newVal)
-                                monitor.triggerSessionResync()
-                            }
-                        ),
-                        range: 5...90,
-                        step: 5
-                    )
-                    
-                    HStack(spacing: 6) {
-                        quickSecondButton(seconds: 10, label: "10s (Ultra rapide)")
-                        quickSecondButton(seconds: 15, label: "15s")
-                        quickSecondButton(seconds: 25, label: "25s (Défaut DJ)", isDefault: true)
-                        quickSecondButton(seconds: 45, label: "45s")
-                        quickSecondButton(seconds: 60, label: "60s (Mix posé)")
-                    }
-                }
-            }
-        }
-        
-        // CARTE 2 : Marquage Visuel & Couleur
+        // CARTE 2 : Marquage Visuel des Morceaux Joués
         settingCard {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader(icon: "eyedropper.halffull", title: "Marquage Visuel des Morceaux Joués")
@@ -907,7 +766,148 @@ public struct SettingsSheetView: View {
             }
         }
         
-        // CARTE 3 : Outils de Session
+        // CARTE 3 : Comportement de la Fenêtre
+        settingCard {
+            VStack(alignment: .leading, spacing: 12) {
+                sectionHeader(icon: "macwindow", title: "Fenêtre & Positionnement")
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Toujours au premier plan (Floating Window)")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.90))
+                        Text("Conserve la fenêtre Recall au-dessus de Rekordbox ou Serato pendant le mix.")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.white.opacity(0.50))
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $settings.alwaysOnTop)
+                        .toggleStyle(.switch)
+                        .tint(settings.accentColor)
+                        .scaleEffect(0.90)
+                        .onChange(of: settings.alwaysOnTop) { val in
+                            FloatingWindowController.shared.updateAlwaysOnTop(val)
+                        }
+                }
+                
+                Divider()
+                    .background(Color.white.opacity(0.08))
+                
+                SettingActionButton(
+                    icon: "arrow.down.right.and.arrow.up.left",
+                    title: "Recentrer Recall en bas à droite de l'écran principal"
+                ) {
+                    FloatingWindowController.shared.positionAtBottomRight()
+                }
+            }
+        }
+    }
+    
+    // MARK: ==========================================
+    // MARK: ONGLET 3 : SESSION & EN DIRECT
+    // MARK: ==========================================
+    
+    @ViewBuilder
+    private var sessionTabContent: some View {
+        // CARTE 1 : Détection & Filtrage
+        settingCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    sectionHeader(icon: "clock.arrow.circlepath", title: "Détection en Direct de la Session")
+                    
+                    Spacer()
+                    
+                    Text("\(sessionService.playedCount) morceaux joués")
+                        .font(.system(size: 10.5, weight: .heavy, design: .rounded))
+                        .foregroundColor(sessionService.playedCount > 0 ? settings.accentColor : .white.opacity(0.45))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(sessionService.playedCount > 0 ? settings.accentColor.opacity(0.18) : Color.white.opacity(0.06))
+                        .cornerRadius(5)
+                }
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Masquer automatiquement les morceaux déjà joués")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.90))
+                        Text("Retire les titres déjà passés de la liste de suggestions pour éviter les doublons.")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.white.opacity(0.50))
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $settings.hidePlayedTracks)
+                        .toggleStyle(.switch)
+                        .tint(settings.accentColor)
+                        .scaleEffect(0.90)
+                }
+                
+                Divider()
+                    .background(Color.white.opacity(0.08))
+                
+                // Délai anti-préécoute
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Délai de validation (anti-préécoute au casque)")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.90))
+                            Text("Un morceau doit tourner au moins \(settings.playedMinDurationSeconds)s pour être mémorisé comme joué (25s par défaut).")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.50))
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 4) {
+                            if settings.playedMinDurationSeconds == 25 {
+                                Text("Recommandé")
+                                    .font(.system(size: 8.5, weight: .bold))
+                                    .foregroundColor(settings.accentColor.opacity(0.85))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(settings.accentColor.opacity(0.15))
+                                    .cornerRadius(4)
+                            }
+                            
+                            Text("\(settings.playedMinDurationSeconds) sec")
+                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .foregroundColor(settings.accentColor)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2.5)
+                                .background(settings.accentColor.opacity(0.20))
+                                .cornerRadius(5)
+                        }
+                    }
+                    
+                    CustomSlider(
+                        value: Binding(
+                            get: { Double(settings.playedMinDurationSeconds) },
+                            set: { newVal in
+                                settings.playedMinDurationSeconds = Int(newVal)
+                                monitor.triggerSessionResync()
+                            }
+                        ),
+                        range: 5...90,
+                        step: 5
+                    )
+                    
+                    HStack(spacing: 6) {
+                        quickSecondButton(seconds: 10, label: "10s (Ultra rapide)")
+                        quickSecondButton(seconds: 15, label: "15s")
+                        quickSecondButton(seconds: 25, label: "25s (Défaut DJ)", isDefault: true)
+                        quickSecondButton(seconds: 45, label: "45s")
+                        quickSecondButton(seconds: 60, label: "60s (Mix posé)")
+                    }
+                }
+            }
+        }
+        
+        // CARTE 2 : Outils de Session & Récapitulatif
         settingCard {
             VStack(alignment: .leading, spacing: 10) {
                 sectionHeader(icon: "wrench.and.screwdriver.fill", title: "Outils de Session & Récapitulatif")
