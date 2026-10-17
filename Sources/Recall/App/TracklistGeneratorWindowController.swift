@@ -104,7 +104,16 @@ public class TracklistGeneratorWindowController: NSWindowController, NSWindowDel
     public func show() {
         guard let panel = window else { return }
         
-        panel.center()
+        let screen = FloatingWindowController.shared.currentScreen
+        if !panel.isVisible || panel.screen != screen {
+            let vf = screen.visibleFrame
+            let w = panel.frame.width
+            let h = panel.frame.height
+            let x = vf.midX - (w / 2.0)
+            let y = vf.midY - (h / 2.0)
+            panel.setFrame(NSRect(x: x, y: y, width: w, height: h), display: true)
+        }
+        
         panel.orderFrontRegardless()
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

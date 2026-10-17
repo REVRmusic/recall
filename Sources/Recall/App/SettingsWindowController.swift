@@ -159,20 +159,23 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
         self.dimmingWindow = dimWindow
     }
     
-    /// Ouvre les paramètres au milieu de l'écran avec un fond obscurci doux sur l'ensemble de l'écran
+    /// Retourne l'écran sur lequel se trouve actuellement l'application Recall
+    private func getTargetScreen() -> NSScreen {
+        return FloatingWindowController.shared.currentScreen
+    }
+    
+    /// Ouvre les paramètres au milieu de l'écran avec un fond obscurci doux sur l'écran actif de Recall
     public func show() {
         guard let panel = window else { return }
         
-        // 1. Calcul du cadre recouvrant tous les écrans connectés
-        var totalScreenFrame = NSScreen.screens.first?.frame ?? NSRect(x: 0, y: 0, width: 2560, height: 1440)
-        for screen in NSScreen.screens.dropFirst() {
-            totalScreenFrame = totalScreenFrame.union(screen.frame)
-        }
+        // 1. Détection de l'écran exact sur lequel se trouve Recall
+        let targetScreen = getTargetScreen()
         
         // 2. Affichage et animation du fond obscurci translucide et flouté (effet verre dépoli)
+        // Recouvre exactement l'écran sur lequel se trouve Recall
         if let dim = dimmingWindow {
             dim.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.normalWindow)) + 1)
-            dim.setFrame(totalScreenFrame, display: true)
+            dim.setFrame(targetScreen.frame, display: true)
             dim.alphaValue = 0
             dim.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { context in
@@ -190,22 +193,17 @@ public class SettingsWindowController: NSWindowController, NSWindowDelegate, Obs
             mainWindow.orderFrontRegardless()
         }
         
-        // 4. Positionnement au centre de l'écran principal avec dimensions confortables
-        if !panel.isVisible {
-            if let screen = NSScreen.main {
-                let screenFrame = screen.visibleFrame
-                let currentW = panel.frame.width
-                let currentH = panel.frame.height
-                // Si la fenêtre avait l'ancienne taille étroite (< 600) ou hors limites, appliquer defaultWidth/Height
-                let w = (currentW < minWidth || currentW > 850) ? defaultWidth : currentW
-                let h = (currentH < minHeight || currentH > 900) ? defaultHeight : currentH
-                let x = screenFrame.midX - (w / 2.0)
-                let y = screenFrame.midY - (h / 2.0)
-                panel.setFrame(NSRect(x: x, y: y, width: w, height: h), display: true)
-            } else {
-                panel.setFrame(NSRect(x: 0, y: 0, width: defaultWidth, height: defaultHeight), display: true)
-                panel.center()
-            }
+        // 4. Positionnement au centre de l'écran actif de Recall avec dimensions confortables
+        if !panel.isVisible || panel.screen != targetScreen {
+            let screenFrame = targetScreen.visibleFrame
+            let currentW = panel.frame.width
+            let currentH = panel.frame.height
+            // Si la fenêtre avait l'ancienne taille étroite (< 600) ou hors limites, appliquer defaultWidth/Height
+            let w = (currentW < minWidth || currentW > 850) ? defaultWidth : currentW
+            let h = (currentH < minHeight || currentH > 900) ? defaultHeight : currentH
+            let x = screenFrame.midX - (w / 2.0)
+            let y = screenFrame.midY - (h / 2.0)
+            panel.setFrame(NSRect(x: x, y: y, width: w, height: h), display: true)
         }
         
         // 5. Affichage de la fenêtre des paramètres au-dessus de tout

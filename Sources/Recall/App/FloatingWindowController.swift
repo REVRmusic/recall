@@ -119,18 +119,29 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     private var lastNormalWidth: CGFloat = 360
     private var isAnimatingModeChange: Bool = false
     
-    public var effectiveMaxWidth: CGFloat {
-        if let screen = window?.screen ?? NSScreen.main {
-            return min(Self.maxWidth, screen.visibleFrame.width)
+    /// Retourne l'écran (NSScreen) sur lequel se trouve actuellement la fenêtre Recall
+    public var currentScreen: NSScreen {
+        if let win = window {
+            if let s = win.screen {
+                return s
+            }
+            let center = NSPoint(x: win.frame.midX, y: win.frame.midY)
+            if let matched = NSScreen.screens.first(where: { NSPointInRect(center, $0.frame) }) {
+                return matched
+            }
+            if let matched = NSScreen.screens.first(where: { NSPointInRect(win.frame.origin, $0.frame) }) {
+                return matched
+            }
         }
-        return Self.maxWidth
+        return NSScreen.main ?? NSScreen.screens.first ?? NSScreen()
+    }
+    
+    public var effectiveMaxWidth: CGFloat {
+        return min(Self.maxWidth, currentScreen.visibleFrame.width)
     }
     
     public var effectiveMaxHeight: CGFloat {
-        if let screen = window?.screen ?? NSScreen.main {
-            return min(Self.maxHeight, screen.visibleFrame.height)
-        }
-        return Self.maxHeight
+        return min(Self.maxHeight, currentScreen.visibleFrame.height)
     }
     
     public init() {
@@ -218,7 +229,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func positionAtBottomRight() {
-        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
+        guard let window = self.window else { return }
+        let screen = currentScreen
         let visibleFrame = screen.visibleFrame
         let isCompact = UserSettings.shared.isCompactMode
         let targetHeight = isCompact ? Self.bandeauHeight : Self.defaultNormalHeight
@@ -240,7 +252,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func toggleCompactMode(_ compact: Bool) {
-        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
+        guard let window = self.window else { return }
+        let screen = currentScreen
         let visibleFrame = screen.visibleFrame
         let currentFrame = window.frame
         
@@ -328,7 +341,7 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         if isAnimatingModeChange {
             return frameSize
         }
-        guard let screen = sender.screen ?? NSScreen.main else { return frameSize }
+        let screen = currentScreen
         let visibleFrame = screen.visibleFrame
         let maxH = min(Self.maxHeight, visibleFrame.height)
         let maxW = min(Self.maxWidth, visibleFrame.width)
@@ -376,7 +389,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         if isAnimatingModeChange {
             return
         }
-        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
+        guard let window = self.window else { return }
+        let screen = currentScreen
         let visibleFrame = screen.visibleFrame
         var frame = window.frame
         var adjusted = false
@@ -424,7 +438,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func windowDidEndLiveResize(_ notification: Notification) {
-        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
+        guard let window = self.window else { return }
+        let screen = currentScreen
         let visibleFrame = screen.visibleFrame
         let frame = window.frame
         
@@ -443,7 +458,8 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     }
     
     public func windowDidMove(_ notification: Notification) {
-        guard let window = self.window, let screen = window.screen ?? NSScreen.main else { return }
+        guard let window = self.window else { return }
+        let screen = currentScreen
         let visibleFrame = screen.visibleFrame
         var frame = window.frame
         var adjusted = false
