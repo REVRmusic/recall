@@ -330,26 +330,13 @@ public struct BandeauCompactView: View {
     }
 }
 
-/// Mini affichage de l'icône vinyle pour le bandeau
+/// Mini affichage de l'icône vinyle pour le bandeau adapté au thème DJ actif
 private struct AppIconMiniView: View {
-    private var appIcon: NSImage? {
-        if let icon = NSImage(named: NSImage.applicationIconName) {
-            return icon
-        }
-        if let path = Bundle.main.path(forResource: "AppIcon", ofType: "png"),
-           let icon = NSImage(contentsOfFile: path) {
-            return icon
-        }
-        if let path = Bundle.main.path(forResource: "AppIcon", ofType: "icns"),
-           let icon = NSImage(contentsOfFile: path) {
-            return icon
-        }
-        return NSApp.applicationIconImage
-    }
+    @ObservedObject private var settings = UserSettings.shared
     
     var body: some View {
         Group {
-            if let icon = appIcon {
+            if let icon = settings.djTheme.iconImage {
                 Image(nsImage: icon)
                     .resizable()
                     .interpolation(.high)
@@ -358,7 +345,7 @@ private struct AppIconMiniView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 5))
             } else {
                 Circle()
-                    .fill(Color.accentCyan)
+                    .fill(settings.accentColor)
                     .frame(width: 22, height: 22)
             }
         }

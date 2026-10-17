@@ -109,7 +109,12 @@ public class UserSettings: ObservableObject {
         didSet { UserDefaults.standard.set(includeDiagonalInHarmonicFilter, forKey: "includeDiagonalInHarmonicFilter") }
     }
     @Published public var djTheme: DJTheme {
-        didSet { UserDefaults.standard.set(djTheme.rawValue, forKey: "djTheme") }
+        didSet {
+            UserDefaults.standard.set(djTheme.rawValue, forKey: "djTheme")
+            #if os(macOS)
+            updateAppDockIcon()
+            #endif
+        }
     }
     /// Degré de translucidité du verre dépoli (0.0 = Noir opaque, 1.0 = Translucidité maximale)
     @Published public var glassTranslucency: Double {
@@ -177,7 +182,22 @@ public class UserSettings: ObservableObject {
         }
         let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.both.rawValue
         self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .both
+        
+        #if os(macOS)
+        updateAppDockIcon()
+        #endif
     }
+    
+    #if os(macOS)
+    /// Met à jour dynamiquement l'icône de l'application dans le Dock macOS pour refléter le thème DJ choisi
+    public func updateAppDockIcon() {
+        DispatchQueue.main.async {
+            if let icon = self.djTheme.iconImage {
+                NSApplication.shared.applicationIconImage = icon
+            }
+        }
+    }
+    #endif
     
     public var defaultDatabasePath: String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path

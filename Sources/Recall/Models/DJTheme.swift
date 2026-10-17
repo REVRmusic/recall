@@ -93,3 +93,35 @@ public enum DJTheme: String, CaseIterable, Identifiable {
         }
     }
 }
+
+#if os(macOS)
+import AppKit
+
+extension DJTheme {
+    /// Image native de l'icône de l'application adaptée aux couleurs de ce thème
+    public var iconImage: NSImage? {
+        let resourceName = "AppIcon_\(rawValue)"
+        
+        // 1. Recherche dans les ressources du bundle de l'application
+        if let path = Bundle.main.path(forResource: resourceName, ofType: "png"),
+           let icon = NSImage(contentsOfFile: path) {
+            return icon
+        }
+        
+        // 2. Recherche directe dans le dossier Resources/ (support environnement de dev local)
+        let localPath = "Resources/\(resourceName).png"
+        if let icon = NSImage(contentsOfFile: localPath) {
+            return icon
+        }
+        
+        // 3. Fallback sur l'icône standard
+        if let path = Bundle.main.path(forResource: "AppIcon", ofType: "png"),
+           let icon = NSImage(contentsOfFile: path) {
+            return icon
+        }
+        
+        return NSApp.applicationIconImage
+    }
+}
+#endif
+

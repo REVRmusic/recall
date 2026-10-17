@@ -25,6 +25,11 @@ fi
 if [ -f "$DIR/Resources/AppIcon.png" ]; then
     cp "$DIR/Resources/AppIcon.png" "$RESOURCES_DIR/AppIcon.png"
 fi
+for icon_variant in "$DIR/Resources/AppIcon_"*.png; do
+    if [ -f "$icon_variant" ]; then
+        cp "$icon_variant" "$RESOURCES_DIR/"
+    fi
+done
 
 # Copie du binaire compilé
 BIN_DIR="$(swift build --show-bin-path -c release)"

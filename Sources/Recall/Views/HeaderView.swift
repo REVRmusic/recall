@@ -178,26 +178,13 @@ struct CloseHeaderButton: View {
     }
 }
 
-/// Affiche la véritable icône de l'application Recall (vinyle avec centre dégradé cyan/bleu)
+/// Affiche la véritable icône de l'application Recall adaptée au thème DJ actif
 struct AppIconImageView: View {
-    private var appIcon: NSImage? {
-        if let icon = NSImage(named: NSImage.applicationIconName) {
-            return icon
-        }
-        if let path = Bundle.main.path(forResource: "AppIcon", ofType: "png"),
-           let icon = NSImage(contentsOfFile: path) {
-            return icon
-        }
-        if let path = Bundle.main.path(forResource: "AppIcon", ofType: "icns"),
-           let icon = NSImage(contentsOfFile: path) {
-            return icon
-        }
-        return NSApp.applicationIconImage
-    }
+    @EnvironmentObject var settings: UserSettings
     
     var body: some View {
         Group {
-            if let icon = appIcon {
+            if let icon = settings.djTheme.iconImage {
                 Image(nsImage: icon)
                     .resizable()
                     .interpolation(.high)
@@ -209,7 +196,7 @@ struct AppIconImageView: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.accentCyan, Color.accentBlue],
+                                colors: [settings.accentColor, settings.accentSecondaryColor],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
