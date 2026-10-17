@@ -156,8 +156,38 @@ namespace Recall.Services
             }
         }
 
-        public List<Track> FetchRoutineTransitions(Track currentTrack, int lookbackDays, int maxCount)
+        public List<Track> FetchRoutineTransitions(Track currentTrack, int lookbackDays, int maxCount, string direction = "next")
         {
+            if (direction == "all")
+            {
+                var nextList = FetchRoutineTransitions(currentTrack, lookbackDays, maxCount * 2, "next");
+                var prevList = FetchRoutineTransitions(currentTrack, lookbackDays, maxCount * 2, "previous");
+
+                var map = new Dictionary<string, Track>(StringComparer.OrdinalIgnoreCase);
+                foreach (var trk in nextList)
+                {
+                    map[trk.DisplayTitle] = trk;
+                }
+
+                foreach (var trk in prevList)
+                {
+                    if (map.TryGetValue(trk.DisplayTitle, out var existing))
+                    {
+                        existing.TransitionCount += trk.TransitionCount;
+                        existing.Direction = "all";
+                    }
+                    else
+                    {
+                        map[trk.DisplayTitle] = trk;
+                    }
+                }
+
+                var list = new List<Track>(map.Values);
+                list.Sort((a, b) => b.TransitionCount.CompareTo(a.TransitionCount));
+                if (list.Count > maxCount) list = list.GetRange(0, maxCount);
+                return list;
+            }
+
             var result = new List<Track>();
             using var db = OpenDatabase();
             if (db == null) return result;
@@ -195,17 +225,22 @@ namespace Recall.Services
 
             try
             {
-                // Requête optimisée : trouve les morceaux ayant succédé au morceau cible (ou ses variantes si activé) dans la même session
+                string joinClause = direction == "previous"
+                    ? @"JOIN history_entry target_e ON target_e.session_id = curr_e.session_id
+                                                  AND target_e.id < curr_e.id
+                                                  AND (curr_e.start_time - target_e.start_time) BETWEEN 30 AND 2700"
+                    : @"JOIN history_entry target_e ON target_e.session_id = curr_e.session_id
+                                                  AND target_e.id > curr_e.id
+                                                  AND (target_e.start_time - curr_e.start_time) BETWEEN 30 AND 2700";
+
                 string sql = $@"
-                    SELECT next_e.name, next_e.artist, next_e.bpm, next_e.key,
-                           next_e.file_name, next_e.portable_id, COUNT(*) as transition_count
+                    SELECT target_e.name, target_e.artist, target_e.bpm, target_e.key,
+                           target_e.file_name, target_e.portable_id, COUNT(*) as transition_count
                     FROM history_entry curr_e
-                    JOIN history_entry next_e ON next_e.session_id = curr_e.session_id
-                                             AND next_e.id > curr_e.id
-                                             AND (next_e.start_time - curr_e.start_time) BETWEEN 30 AND 2700
+                    {joinClause}
                     WHERE curr_e.start_time >= {cutoffTime}
                       AND {matchCondition}
-                    GROUP BY LOWER(next_e.name), LOWER(next_e.artist)
+                    GROUP BY LOWER(target_e.name), LOWER(target_e.artist)
                     ORDER BY transition_count DESC
                     LIMIT {maxCount};";
 
@@ -237,7 +272,8 @@ namespace Recall.Services
                         FileName = fileName,
                         PortableId = portableId,
                         FilePath = ResolveAudioFilePath(portableId, fileName),
-                        TransitionCount = count
+                        TransitionCount = count,
+                        Direction = direction
                     };
 
                     if (currentTrack.CamelotKey != null && candidate.CamelotKey != null)
@@ -279,22 +315,18 @@ namespace Recall.Services
                 using (var cmd = db.CreateCommand())
                 {
                     cmd.CommandText = $@"
-                        SELECT ifnull(name, ''), ifnull(file_name, ''), (end_time - start_time) as duration
+                        SELECT ifnull(name, ''), ifnull(file_name, '')
                         FROM history_entry
-                        WHERE session_id = {latestSessionId};";
+                        WHERE session_id = {latestSessionId} AND played = 1;";
 
                     using var reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
                         string name = reader.GetString(0);
                         string fileName = reader.GetString(1);
-                        long dur = reader.IsDBNull(2) ? 0 : reader.GetInt64(2);
 
-                        if (dur >= minDurationSec || dur == 0)
-                        {
-                            if (!string.IsNullOrWhiteSpace(name)) set.Add(name.Trim());
-                            else if (!string.IsNullOrWhiteSpace(fileName)) set.Add(Path.GetFileNameWithoutExtension(fileName).Trim());
-                        }
+                        if (!string.IsNullOrWhiteSpace(name)) set.Add(name.Trim());
+                        else if (!string.IsNullOrWhiteSpace(fileName)) set.Add(Path.GetFileNameWithoutExtension(fileName).Trim());
                     }
                 }
             }
@@ -512,9 +544,29 @@ namespace Recall.Services
                     string genre = reader.GetString(9);
 
                     DateTime startDate = DateTimeOffset.FromUnixTimeSeconds(startUnix).LocalDateTime;
-                    DateTime? endDate = endUnix > startUnix ? DateTimeOffset.FromUnixTimeSeconds(endUnix).LocalDateTime : null;
-                    double duration = endUnix > startUnix ? (double)(endUnix - startUnix) : Math.Max(0.0, nowUnix - startUnix);
-                    bool isCurrent = endUnix <= startUnix;
+                    DateTime? endDate = null;
+                    double duration = 0.0;
+                    bool isCurrent = false;
+
+                    if (endUnix > startUnix)
+                    {
+                        endDate = DateTimeOffset.FromUnixTimeSeconds(endUnix).LocalDateTime;
+                        duration = (double)(endUnix - startUnix);
+                    }
+                    else
+                    {
+                        long elapsed = nowUnix - startUnix;
+                        if (elapsed >= 0 && elapsed <= 900)
+                        {
+                            isCurrent = true;
+                            duration = elapsed;
+                        }
+                        else
+                        {
+                            isCurrent = false;
+                            duration = 180.0;
+                        }
+                    }
 
                     string cleanTitle = !string.IsNullOrEmpty(name) ? name : Path.GetFileNameWithoutExtension(fn);
 

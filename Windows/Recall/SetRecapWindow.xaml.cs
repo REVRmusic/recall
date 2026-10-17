@@ -21,19 +21,34 @@ namespace Recall
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
-            _timer.Tick += (s, e) => UpdateStatsUI();
+            _timer.Tick += (s, e) =>
+            {
+                // OPTIMISATION CPU : si aucun morceau ne joue, stopper le rafraîchissement récurrent
+                if (!_history.IsCurrentlyPlaying) return;
+                UpdateStatsUI();
+            };
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            _history.PropertyChanged += History_PropertyChanged;
             _history.SyncWithDatabase();
             UpdateStatsUI();
             _timer.Start();
         }
 
+        private void History_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SessionHistoryService.PlayedTracks) || e.PropertyName == nameof(SessionHistoryService.IsCurrentlyPlaying))
+            {
+                Dispatcher.Invoke(UpdateStatsUI);
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
+            _history.PropertyChanged -= History_PropertyChanged;
             _timer.Stop();
         }
 
@@ -64,6 +79,7 @@ namespace Recall
 
             if (stats.TotalTracksCount == 0)
             {
+                DotStatus.Fill = new SolidColorBrush(Color.FromArgb(76, 255, 255, 255));
                 TxtSessionStatus.Text = "Mix non démarré (en attente du 1er morceau)";
                 TxtTotalDuration.Text = "00m 00s";
                 TxtTotalTracks.Text = "0";
@@ -87,7 +103,16 @@ namespace Recall
                 return;
             }
 
-            TxtSessionStatus.Text = stats.IsLiveSession ? "Session en direct" : "Session enregistrée";
+            if (stats.IsLiveSession)
+            {
+                DotStatus.Fill = new SolidColorBrush(Color.FromRgb(34, 197, 94));
+                TxtSessionStatus.Text = "Session en direct";
+            }
+            else
+            {
+                DotStatus.Fill = new SolidColorBrush(Color.FromRgb(249, 115, 22));
+                TxtSessionStatus.Text = "En pause";
+            }
             TxtTotalDuration.Text = FormatDuration(stats.TotalDurationSeconds);
             TxtTotalTracks.Text = stats.TotalTracksCount.ToString();
             TxtAvgTimePerTrack.Text = FormatMinutesSeconds(stats.AverageTimePerTrackSeconds);
@@ -235,7 +260,7 @@ namespace Recall
                 CornerRadius = new CornerRadius(2),
                 Height = 4,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Width = Math.Max(4, Math.Min(60, percent * 1.5))
+                Width = Math.Max(4, Math.Min(60, (percent / 100.0) * 60.0))
             };
             var barContainer = new Grid { VerticalAlignment = VerticalAlignment.Center };
             barContainer.Children.Add(barBg);

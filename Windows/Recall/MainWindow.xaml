@@ -142,6 +142,33 @@
             </Setter>
         </Style>
 
+        <!-- Sélecteur de Direction de Transition Pills (Après, Avant, Tout) -->
+        <Style x:Key="DirectionPillStyle" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="8.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="#1E232D" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="1,0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2A3344"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4A5568"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#6B7280"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Filtre Pilule BPM (Cyan) -->
         <Style x:Key="FilterChipBpmStyle" TargetType="CheckBox">
             <Setter Property="Cursor" Value="Hand"/>
@@ -374,7 +401,7 @@
 
                     <!-- Droite : Actions Circulaires & Réduire -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="BtnCollapse" Content="→ Réduire" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact (Ctrl+Shift+C)" Margin="0,0,4,0"/>
+                        <Button x:Name="BtnCollapse" Content="↓ Réduire" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact (Ctrl+Shift+C)" Margin="0,0,4,0"/>
                         <Button x:Name="BtnSearch" Content="🔍" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSearch_Click" ToolTip="Rechercher un morceau dans la bibliothèque (Ctrl+Shift+F)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnStats" Content="📊" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnStats_Click" ToolTip="Statistiques du mix - Set Recap (Ctrl+Shift+S)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnGuide" Content="?" FontSize="10" FontWeight="Bold" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnGuide_Click" ToolTip="Guide et légende des symboles" Margin="0,0,3,0"/>
@@ -457,6 +484,15 @@
                 <!-- 3. Barre de Filtres avec Icônes & Compteur -->
                 <Grid Grid.Row="2" Margin="10,0,10,5">
                     <StackPanel Orientation="Horizontal">
+                        <!-- Sélecteur de direction d'enchaînement (Après / Avant / Tout) -->
+                        <Border Background="#161B22" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="5" Padding="2" Margin="0,0,6,0">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RadDirNext" Content="→ Après" Style="{StaticResource DirectionPillStyle}" GroupName="TransitionDir" IsChecked="True" Click="DirectionChanged" ToolTip="Transitions suivantes : Morceaux joués APRÈS (Par défaut)"/>
+                                <RadioButton x:Name="RadDirPrev" Content="← Avant" Style="{StaticResource DirectionPillStyle}" GroupName="TransitionDir" Click="DirectionChanged" ToolTip="Transitions inversées : Morceaux joués AVANT (Introductions)"/>
+                                <RadioButton x:Name="RadDirAll" Content="⇄ Tout" Style="{StaticResource DirectionPillStyle}" GroupName="TransitionDir" Click="DirectionChanged" ToolTip="Toutes les transitions : Avant et Après combinés"/>
+                            </StackPanel>
+                        </Border>
+
                         <CheckBox x:Name="ChkFilterBpm" Content="⏱ BPM ±8%" Style="{StaticResource FilterChipBpmStyle}" Click="FilterChanged" Margin="0,0,5,0"/>
                         <CheckBox x:Name="ChkFilterHarmonie" Content="☯ Harmonie" Style="{StaticResource FilterChipHarmonieStyle}" Click="FilterChanged" Margin="0,0,5,0"/>
                         <CheckBox x:Name="ChkFilterFavs" Content="❤️ Favs" Style="{StaticResource FilterChipFavsStyle}" Click="FilterChanged" Margin="0,0,5,0"/>
@@ -548,7 +584,7 @@
 
                 <!-- Actions Déplier & Fermer -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BtnExpand" Content="← Déplier" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnExpand_Click" ToolTip="Déplier la fenêtre Recall" Margin="0,0,4,0"/>
+                    <Button x:Name="BtnExpand" Content="↑ Déplier" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnExpand_Click" ToolTip="Déplier la fenêtre Recall" Margin="0,0,4,0"/>
                     <Button Content="✕" Style="{StaticResource HeaderCloseBtnStyle}" Click="BtnClose_Click"/>
                 </StackPanel>
             </Grid>

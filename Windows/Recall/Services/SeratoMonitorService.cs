@@ -273,7 +273,7 @@ namespace Recall.Services
             }
 
             // 1. Récupération de l'historique Serato
-            _historySuggestions = _dbService.FetchRoutineTransitions(CurrentTrack, settings.HistoryDaysLookback, settings.MaxSuggestions);
+            _historySuggestions = _dbService.FetchRoutineTransitions(CurrentTrack, settings.HistoryDaysLookback, settings.MaxSuggestions, settings.TransitionDirection);
 
             // 2. Récupération des favoris manuels
             _favoriteSuggestions = FavoriteCombosService.Shared.GetFavoriteSuggestionsFor(CurrentTrack);

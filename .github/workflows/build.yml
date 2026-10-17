@@ -102,7 +102,7 @@ jobs:
           release-assets/Recall-macOS.zip
           release-assets/Recall-Windows-x64.zip
           release-assets/Recall.exe
-        name: Recall ${{ github.ref_name }} — Précision Serato Live, Thèmes Dynamiques & Menus
+        name: Recall ${{ github.ref_name }} — Transitions Inversées, Priorité Favoris & Bilan Amélioré
         draft: false
         prerelease: false
 

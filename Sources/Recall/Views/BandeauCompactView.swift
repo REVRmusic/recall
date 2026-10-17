@@ -138,10 +138,18 @@ public struct BandeauCompactView: View {
                             .fixedSize(horizontal: true, vertical: false)
                         }
                         
-                        // Badge Compteur d'enchaînements historiques
+                        // Badge Compteur d'enchaînements historiques (ex: 🔥 8x, ← 8x, ⇄ 8x)
                         if match.transitionCount > 0 {
                             HStack(spacing: 1.5) {
-                                if match.transitionCount >= 3 {
+                                if match.direction == .previous {
+                                    Image(systemName: "arrow.left")
+                                        .font(.system(size: 6.5, weight: .bold))
+                                        .foregroundColor(match.transitionCount >= 3 ? Color.accentFire : Color.accentCyan)
+                                } else if match.direction == .all {
+                                    Image(systemName: "arrow.left.and.right")
+                                        .font(.system(size: 6.5, weight: .bold))
+                                        .foregroundColor(match.transitionCount >= 3 ? Color.accentFire : Color.accentCyan)
+                                } else if match.transitionCount >= 3 {
                                     Image(systemName: "flame.fill")
                                         .font(.system(size: 6.5))
                                         .foregroundColor(Color.accentFire)
@@ -271,7 +279,7 @@ public struct BandeauCompactView: View {
             } label: {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 4) {
-                        Image(systemName: "arrow.left.to.line")
+                        Image(systemName: "arrow.up.to.line")
                             .font(.system(size: 9.5, weight: .bold))
                         Text("Déplier")
                             .font(.system(size: 10, weight: .heavy))
@@ -285,7 +293,7 @@ public struct BandeauCompactView: View {
                             .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
                     )
                     
-                    Image(systemName: "arrow.left.to.line")
+                    Image(systemName: "arrow.up.to.line")
                         .font(.system(size: 9.5, weight: .bold))
                         .frame(width: 24, height: 24)
                         .background(Color.accentCyan.opacity(0.2))

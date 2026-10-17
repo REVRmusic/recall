@@ -48,7 +48,7 @@ public struct HeaderView: View {
                 } label: {
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 3) {
-                            Image(systemName: "arrow.right.to.line")
+                            Image(systemName: "arrow.down.to.line")
                                 .font(.system(size: 8.5, weight: .bold))
                             Text("Réduire")
                                 .font(.system(size: 9.5, weight: .heavy))
@@ -62,7 +62,7 @@ public struct HeaderView: View {
                                 .stroke(Color.accentCyan.opacity(0.65), lineWidth: 1)
                         )
                         
-                        Image(systemName: "arrow.right.to.line")
+                        Image(systemName: "arrow.down.to.line")
                             .font(.system(size: 9, weight: .bold))
                             .foregroundColor(Color.accentCyan)
                             .frame(width: 21, height: 21)
@@ -76,7 +76,7 @@ public struct HeaderView: View {
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
-                .help("Réduire Recall en petit bandeau sur la droite de l'écran")
+                .help("Réduire Recall en mode bandeau compact")
                 
                 // Bouton Recherche dans la bibliothèque
                 Button {

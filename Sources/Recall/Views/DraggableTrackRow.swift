@@ -105,7 +105,7 @@ public struct DraggableTrackRow: View {
                             .stroke(settings.playedTrackColor.opacity(0.55), lineWidth: 0.8)
                     )
                     .fixedSize(horizontal: true, vertical: false)
-                    .help("Déjà joué lors de votre session en cours (durée > \(settings.playedMinDurationSeconds)s)")
+                    .help("Déjà joué lors de votre session en cours")
                 }
                 
                 // Badge Combinaison Favorite
@@ -130,10 +130,18 @@ public struct DraggableTrackRow: View {
                     .help("Combinaison favorite manuelle enregistrée")
                 }
                 
-                // Badge Compteur d'enchaînements historiques (ex: 🔥 8x)
+                // Badge Compteur d'enchaînements historiques (ex: 🔥 8x, ← 8x, ⇄ 8x)
                 if track.transitionCount > 0 {
                     HStack(spacing: 2) {
-                        if track.transitionCount >= 3 {
+                        if track.direction == .previous {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 7, weight: .bold))
+                                .foregroundColor(track.transitionCount >= 3 ? Color.accentFire : Color.accentCyan)
+                        } else if track.direction == .all {
+                            Image(systemName: "arrow.left.and.right")
+                                .font(.system(size: 7, weight: .bold))
+                                .foregroundColor(track.transitionCount >= 3 ? Color.accentFire : Color.accentCyan)
+                        } else if track.transitionCount >= 3 {
                             Image(systemName: "flame.fill")
                                 .font(.system(size: 7))
                                 .foregroundColor(Color.accentFire)
@@ -281,7 +289,14 @@ public struct DraggableTrackRow: View {
         let count = track.transitionCount
         let currentTitle = monitor.currentTrack?.displayTitle ?? "le morceau en cours"
         let routineInfo = count >= 3 ? " • Routine favorite 🔥" : ""
-        return "Enchaîné \(count) fois juste après « \(currentTitle) » dans vos sets réels\(routineInfo)"
+        switch track.direction {
+        case .previous:
+            return "Enchaîné \(count) fois juste AVANT « \(currentTitle) » dans vos sets réels\(routineInfo)"
+        case .all:
+            return "Enchaîné \(count) fois avec « \(currentTitle) » (avant ou après) dans vos sets réels\(routineInfo)"
+        case .next:
+            return "Enchaîné \(count) fois juste APRÈS « \(currentTitle) » dans vos sets réels\(routineInfo)"
+        }
     }
     
     private func camelotTooltip(for track: Track) -> String {

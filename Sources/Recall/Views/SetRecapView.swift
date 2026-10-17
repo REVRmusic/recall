@@ -76,26 +76,13 @@ public struct SetRecapStats {
         
         let totalPlays = tracks.reduce(0) { $0 + $1.playCount }
         
-        // Calcul temporel précis
-        let earliestPlayed = tracks.map { $0.playedAt }.min() ?? sessionStartTime
+        // Calcul temporel haute précision basé sur les intervalles réels de lecture
         let now = Date()
-        let latestPlayed = tracks.map { $0.playedAt }.max() ?? now
-        let isLive = now.timeIntervalSince(latestPlayed) < 20 * 60 // Actif si dernier morceau dans les 20 min
+        let (totalDuration, isLive) = SessionHistoryService.computeTotalPlaybackDuration(from: tracks, now: now)
+        let effectiveDuration = max(totalDuration, tracks.isEmpty ? 0.0 : 1.0)
         
-        let totalDuration: Double
-        if isLive {
-            let startPoint = min(sessionStartTime, earliestPlayed)
-            totalDuration = max(60.0, now.timeIntervalSince(startPoint))
-        } else {
-            // Session terminée ou en pause : durée réelle couverte par les morceaux du mix
-            let lastTrack = tracks.max(by: { $0.playedAt < $1.playedAt })
-            let lastTrackDuration = (lastTrack?.durationSeconds ?? 0) > 0 ? (lastTrack?.durationSeconds ?? 180.0) : 180.0
-            let effectiveEnd = latestPlayed.addingTimeInterval(lastTrackDuration)
-            totalDuration = max(60.0, effectiveEnd.timeIntervalSince(earliestPlayed))
-        }
-        
-        let avgTimePerTrack = totalDuration / Double(count)
-        let tracksPerHour = (Double(count) / totalDuration) * 3600.0
+        let avgTimePerTrack = count > 0 && effectiveDuration > 0 ? effectiveDuration / Double(count) : 0
+        let tracksPerHour = effectiveDuration > 0 ? (Double(count) / effectiveDuration) * 3600.0 : 0
         
         // BPM
         let validBpms = tracks.map { $0.bpm }.filter { $0 > 0 }
@@ -355,6 +342,9 @@ public struct SetRecapView: View {
             )
         }
         .onReceive(timer) { newTime in
+            // OPTIMISATION CPU MAJEURE : Si aucun morceau n'est en cours de lecture,
+            // on stoppe le rafraîchissement récurrent du timer (0% CPU)
+            guard stats.isLiveSession else { return }
             currentTime = newTime
             currentStats = SetRecapStats.compute(
                 from: sessionService.playedTracks,
@@ -364,6 +354,12 @@ public struct SetRecapView: View {
         .onReceive(sessionService.$playedTracks) { tracks in
             currentStats = SetRecapStats.compute(
                 from: tracks,
+                sessionStartTime: sessionService.sessionStartTime
+            )
+        }
+        .onReceive(sessionService.$isCurrentlyPlaying) { _ in
+            currentStats = SetRecapStats.compute(
+                from: sessionService.playedTracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
         }
@@ -409,7 +405,7 @@ public struct SetRecapView: View {
                         .fill(stats.totalTracksCount == 0 ? Color.white.opacity(0.3) : (stats.isLiveSession ? Color.green : Color.orange))
                         .frame(width: 6, height: 6)
                     
-                    Text(stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "Session enregistrée"))
+                    Text(stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause"))
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.55))
                 }
@@ -733,12 +729,14 @@ public struct SetRecapView: View {
                                         .fill(Color.white.opacity(0.06))
                                         .frame(height: 4)
                                     
+                                    let ratio = max(0.0, min(1.0, gen.percent / 100.0))
                                     RoundedRectangle(cornerRadius: 2)
                                         .fill(index == 0 ? Color.accentCyan : Color.purple.opacity(0.85))
-                                        .frame(width: max(4, geo.size.width * CGFloat(min(1.0, gen.percent / 100.0) * 2.0)), height: 4)
+                                        .frame(width: max(4, min(geo.size.width, geo.size.width * CGFloat(ratio))), height: 4)
                                 }
                             }
                             .frame(width: 60, height: 4)
+                            .clipped()
                             
                             HStack(spacing: 2) {
                                 Text("\(gen.count)")
@@ -823,12 +821,14 @@ public struct SetRecapView: View {
                                         .fill(Color.white.opacity(0.06))
                                         .frame(height: 4)
                                     
+                                    let ratio = max(0.0, min(1.0, art.percent / 100.0))
                                     RoundedRectangle(cornerRadius: 2)
                                         .fill(index == 0 ? Color.accentCyan : Color.purple.opacity(0.8))
-                                        .frame(width: max(4, geo.size.width * CGFloat(min(1.0, art.percent / 100.0) * 2.5)), height: 4)
+                                        .frame(width: max(4, min(geo.size.width, geo.size.width * CGFloat(ratio))), height: 4)
                                 }
                             }
                             .frame(width: 60, height: 4)
+                            .clipped()
                             
                             HStack(spacing: 2) {
                                 Text("\(art.count)")
@@ -896,12 +896,14 @@ public struct SetRecapView: View {
                                     .fill(Color.white.opacity(0.06))
                                     .frame(height: 3)
                                 
+                                let ratio = max(0.0, min(1.0, item.percent / 100.0))
                                 RoundedRectangle(cornerRadius: 2)
                                     .fill(Color.purple)
-                                    .frame(width: max(2, geo.size.width * CGFloat(item.percent / 100.0)), height: 3)
+                                    .frame(width: max(2, min(geo.size.width, geo.size.width * CGFloat(ratio))), height: 3)
                             }
                         }
                         .frame(height: 3)
+                        .clipped()
                     }
                     .padding(8)
                     .frame(maxWidth: .infinity)

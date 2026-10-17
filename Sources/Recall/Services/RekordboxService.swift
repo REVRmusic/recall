@@ -58,6 +58,8 @@ public class RekordboxService: ObservableObject {
     private var tracksList: [Track] = []
     // transitionMap[fromTrackId][toTrackId] = count
     private var transitionMap: [String: [String: Int]] = [:]
+    // reverseTransitionMap[toTrackId][fromTrackId] = count
+    private var reverseTransitionMap: [String: [String: Int]] = [:]
     private var lastXmlModificationDate: Date? = nil
     
     public init() {
@@ -133,6 +135,7 @@ public class RekordboxService: ObservableObject {
                         self.tracksById = parserDelegate.tracksById
                         self.tracksList = parserDelegate.tracksList
                         self.transitionMap = parserDelegate.transitionMap
+                        self.reverseTransitionMap = parserDelegate.reverseTransitionMap
                         self.totalTracksCount = parserDelegate.tracksList.count
                         self.totalPlaylistsCount = parserDelegate.playlistCount
                         self.totalTransitionsCount = parserDelegate.totalTransitionsCount
@@ -157,6 +160,7 @@ public class RekordboxService: ObservableObject {
     /// Trouve les meilleures suggestions pour un morceau de référence dans Rekordbox
     public func findNextSuggestions(
         for currentTrack: Track,
+        direction: TransitionDirection = UserSettings.shared.transitionDirection,
         maxResults: Int = UserSettings.shared.maxSuggestions,
         minTransitions: Int = UserSettings.shared.minTransitionsCount,
         tolerancePercent: Double = UserSettings.shared.bpmTolerancePercent,
@@ -175,7 +179,6 @@ public class RekordboxService: ObservableObject {
         
         // --- 1. ROUTINES D'ENCHAÎNEMENTS (Historique Rekordbox) ---
         let cumulateVariants = UserSettings.shared.cumulateVariantSuggestions
-        var cumulatedNextEntries: [String: Int] = [:]
         var variantTrackIds = Set<String>()
         if let refId = refTrackId {
             variantTrackIds.insert(refId)
@@ -219,19 +222,48 @@ public class RekordboxService: ObservableObject {
             }
         }
         
-        for vId in variantTrackIds {
-            if let entries = transitionMap[vId] {
-                for (nextId, count) in entries {
-                    // Ne pas suggérer une autre version du même morceau
-                    guard !variantTrackIds.contains(nextId) else { continue }
-                    cumulatedNextEntries[nextId, default: 0] += count
+        var nextEntries: [String: Int] = [:]
+        var prevEntries: [String: Int] = [:]
+        
+        if direction == .next || direction == .all {
+            for vId in variantTrackIds {
+                if let entries = transitionMap[vId] {
+                    for (nextId, count) in entries {
+                        guard !variantTrackIds.contains(nextId) else { continue }
+                        nextEntries[nextId, default: 0] += count
+                    }
                 }
             }
         }
         
-        if !cumulatedNextEntries.isEmpty {
-            for (nextId, count) in cumulatedNextEntries where count >= minTransitions {
-                guard var targetTrack = tracksById[nextId] else { continue }
+        if direction == .previous || direction == .all {
+            for vId in variantTrackIds {
+                if let entries = reverseTransitionMap[vId] {
+                    for (prevId, count) in entries {
+                        guard !variantTrackIds.contains(prevId) else { continue }
+                        prevEntries[prevId, default: 0] += count
+                    }
+                }
+            }
+        }
+        
+        let allCandidateIds = Set(nextEntries.keys).union(prevEntries.keys)
+        if !allCandidateIds.isEmpty {
+            for candId in allCandidateIds {
+                let nextCount = nextEntries[candId] ?? 0
+                let prevCount = prevEntries[candId] ?? 0
+                let totalCount = nextCount + prevCount
+                guard totalCount >= minTransitions else { continue }
+                guard var targetTrack = tracksById[candId] else { continue }
+                
+                let trackDir: TransitionDirection
+                if nextCount > 0 && prevCount > 0 {
+                    trackDir = .all
+                } else if prevCount > 0 {
+                    trackDir = .previous
+                } else {
+                    trackDir = .next
+                }
                 
                 // Calcul de la compatibilité harmonique et du BPM
                 var rel: HarmonicRelation? = nil
@@ -255,7 +287,8 @@ public class RekordboxService: ObservableObject {
                     guard pct <= tolerancePercent else { continue }
                 }
                 
-                targetTrack.transitionCount = count
+                targetTrack.transitionCount = totalCount
+                targetTrack.direction = trackDir
                 targetTrack.matchType = MatchType.routineSequence
                 targetTrack.harmonicRelation = rel
                 targetTrack.bpmDiff = bpmDiff
@@ -936,7 +969,8 @@ public class RekordboxService: ObservableObject {
                 fileName: d1.track.fileName,
                 durationSeconds: Double(d1.elapsedSec),
                 bpm: d1.track.bpm,
-                rawKey: d1.track.rawKey
+                rawKey: d1.track.rawKey,
+                isCurrentlyPlaying: d1.elapsedSec > 0
             )
         }
         if let d2 = d2Info, d2.elapsedSec >= threshold {
@@ -946,7 +980,8 @@ public class RekordboxService: ObservableObject {
                 fileName: d2.track.fileName,
                 durationSeconds: Double(d2.elapsedSec),
                 bpm: d2.track.bpm,
-                rawKey: d2.track.rawKey
+                rawKey: d2.track.rawKey,
+                isCurrentlyPlaying: d2.elapsedSec > 0
             )
         }
         
@@ -969,6 +1004,8 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
     var tracksList: [Track] = []
     // transitionMap[fromTrackId][toTrackId] = count
     var transitionMap: [String: [String: Int]] = [:]
+    // reverseTransitionMap[toTrackId][fromTrackId] = count
+    var reverseTransitionMap: [String: [String: Int]] = [:]
     
     var playlistCount: Int = 0
     var totalTransitionsCount: Int = 0
@@ -1052,6 +1089,11 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
                     var destMap = transitionMap[fromKey] ?? [:]
                     destMap[toKey, default: 0] += 1
                     transitionMap[fromKey] = destMap
+                    
+                    var revMap = reverseTransitionMap[toKey] ?? [:]
+                    revMap[fromKey, default: 0] += 1
+                    reverseTransitionMap[toKey] = revMap
+                    
                     totalTransitionsCount += 1
                 }
             }

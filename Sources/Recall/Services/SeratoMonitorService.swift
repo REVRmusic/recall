@@ -77,6 +77,15 @@ public class SeratoMonitorService: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+            
+        UserSettings.shared.$transitionDirection
+            .dropFirst()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshSuggestions()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     public func startMonitoring() {
@@ -313,9 +322,11 @@ public class SeratoMonitorService: ObservableObject {
             let harmFilter = UserSettings.shared.isHarmonicFilterActive
             let bpmFilter = UserSettings.shared.isBpmFilterActive
             let favOnly = UserSettings.shared.isFavoritesFilterActive
+            let direction = UserSettings.shared.transitionDirection
             
             let (routines, favs, harmonic) = RekordboxService.shared.findNextSuggestions(
                 for: ref,
+                direction: direction,
                 maxResults: maxResults,
                 minTransitions: minTransitions,
                 tolerancePercent: bpmTol,
@@ -376,7 +387,7 @@ public class SeratoMonitorService: ObservableObject {
             // Secours intelligent : si la collection XML Rekordbox n'a pas encore de routines enregistrées,
             // proposer les transitions historiques connues depuis la base locale Serato
             if self.suggestions.isEmpty {
-                let seratoTransitions = self.dbService.fetchTransitions(for: ref, daysLookback: 365, maxResults: maxResults)
+                let seratoTransitions = self.dbService.fetchTransitions(for: ref, direction: direction, daysLookback: 365, maxResults: maxResults)
                 if !seratoTransitions.isEmpty {
                     self.suggestions = seratoTransitions
                 }
@@ -389,10 +400,12 @@ public class SeratoMonitorService: ObservableObject {
         // --- 2. Mode Serato DJ Pro ---
         let days = UserSettings.shared.historyDaysLookback
         let maxResults = UserSettings.shared.maxSuggestions
+        let direction = UserSettings.shared.transitionDirection
         
         Task.detached(priority: .userInitiated) { [dbService] in
             let historyResults = dbService.fetchTransitions(
                 for: ref,
+                direction: direction,
                 daysLookback: days,
                 maxResults: maxResults
             )

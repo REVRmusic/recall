@@ -15,6 +15,10 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
     public let rawKey: String
     public let genre: String
     
+    public let isCurrentlyPlaying: Bool
+    public let startTime: Date
+    public let endTime: Date?
+    
     public init(
         id: String = UUID().uuidString,
         title: String,
@@ -25,7 +29,10 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         playCount: Int = 1,
         bpm: Double = 0.0,
         rawKey: String = "",
-        genre: String = ""
+        genre: String = "",
+        isCurrentlyPlaying: Bool = false,
+        startTime: Date? = nil,
+        endTime: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -37,6 +44,13 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         self.bpm = bpm
         self.rawKey = rawKey
         self.genre = genre
+        self.isCurrentlyPlaying = isCurrentlyPlaying
+        self.startTime = startTime ?? playedAt
+        self.endTime = endTime
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case id, title, artist, fileName, playedAt, durationSeconds, playCount, bpm, rawKey, genre, isCurrentlyPlaying, startTime, endTime
     }
     
     public init(from decoder: Decoder) throws {
@@ -51,6 +65,9 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         bpm = (try? container.decode(Double.self, forKey: .bpm)) ?? 0.0
         rawKey = (try? container.decode(String.self, forKey: .rawKey)) ?? ""
         genre = (try? container.decode(String.self, forKey: .genre)) ?? ""
+        isCurrentlyPlaying = (try? container.decode(Bool.self, forKey: .isCurrentlyPlaying)) ?? false
+        startTime = (try? container.decode(Date.self, forKey: .startTime)) ?? playedAt
+        endTime = try? container.decodeIfPresent(Date.self, forKey: .endTime)
     }
     
     public var camelotKey: CamelotKey? {
@@ -125,6 +142,62 @@ public class SessionHistoryService: ObservableObject {
     @Published public private(set) var sessionStartTime: Date
     @Published public private(set) var playedCount: Int = 0
     @Published public private(set) var lastResetTime: Date? = nil
+    @Published public private(set) var isCurrentlyPlaying: Bool = false
+    
+    /// Calcule la durée cumulée réelle de lecture en fusionnant les intervalles de chevauchement (transitions / blends)
+    /// et en excluant les pauses ou temps morts où aucun morceau ne jouait.
+    nonisolated public static func computeTotalPlaybackDuration(
+        from tracks: [SessionPlayedTrack],
+        now: Date = Date()
+    ) -> (duration: Double, isPlayingNow: Bool) {
+        guard !tracks.isEmpty else { return (0.0, false) }
+        
+        var intervals: [(start: Date, end: Date)] = []
+        var hasActivePlayback = false
+        
+        for track in tracks {
+            let start = track.startTime
+            let end: Date
+            if track.isCurrentlyPlaying {
+                hasActivePlayback = true
+                end = max(start, now)
+            } else if let e = track.endTime {
+                end = max(start, e)
+            } else {
+                let dur = track.durationSeconds > 0 ? track.durationSeconds : 180.0
+                end = start.addingTimeInterval(dur)
+            }
+            if end > start {
+                intervals.append((start: start, end: end))
+            }
+        }
+        
+        guard !intervals.isEmpty else { return (0.0, hasActivePlayback) }
+        
+        // Tri chronologique des intervalles
+        intervals.sort { $0.start < $1.start }
+        
+        // Fusion des intervalles en cas de chevauchement (transitions / crossfades)
+        var merged: [(start: Date, end: Date)] = []
+        var current = intervals[0]
+        
+        for i in 1..<intervals.count {
+            let next = intervals[i]
+            if next.start <= current.end {
+                current.end = max(current.end, next.end)
+            } else {
+                merged.append(current)
+                current = next
+            }
+        }
+        merged.append(current)
+        
+        let totalSeconds = merged.reduce(0.0) { sum, interval in
+            sum + max(0.0, interval.end.timeIntervalSince(interval.start))
+        }
+        
+        return (totalSeconds, hasActivePlayback)
+    }
     
     private let dbService: SeratoDatabaseService
     private var isSyncing: Bool = false
@@ -205,7 +278,10 @@ public class SessionHistoryService: ObservableObject {
         durationSeconds: Double = 30.0,
         bpm: Double = 0.0,
         rawKey: String = "",
-        genre: String = ""
+        genre: String = "",
+        isCurrentlyPlaying: Bool = true,
+        startTime: Date? = nil,
+        endTime: Date? = nil
     ) {
         let norm = FavoriteCombosService.normalize(title)
         guard !norm.isEmpty else { return }
@@ -228,7 +304,10 @@ public class SessionHistoryService: ObservableObject {
                 playCount: existing.playCount + 1,
                 bpm: bpm > 0 ? bpm : existing.bpm,
                 rawKey: !rawKey.isEmpty ? rawKey : existing.rawKey,
-                genre: !genre.isEmpty ? genre : existing.genre
+                genre: !genre.isEmpty ? genre : existing.genre,
+                isCurrentlyPlaying: isCurrentlyPlaying,
+                startTime: startTime ?? existing.startTime,
+                endTime: endTime
             )
         } else {
             let newPlayed = SessionPlayedTrack(
@@ -241,68 +320,56 @@ public class SessionHistoryService: ObservableObject {
                 playCount: 1,
                 bpm: bpm,
                 rawKey: rawKey,
-                genre: genre
+                genre: genre,
+                isCurrentlyPlaying: isCurrentlyPlaying,
+                startTime: startTime ?? now,
+                endTime: endTime
             )
             playedTracks.insert(newPlayed, at: 0)
         }
         playedCount = playedTracks.count
+        self.isCurrentlyPlaying = playedTracks.contains(where: { $0.isCurrentlyPlaying })
     }
     
     // MARK: - Synchronisation & Détection Pré-écoute vs Lecture Réelle
     
-    /// Interroge l'historique Serato et applique la vérité du statut officiel Serato (playedFlag == 1)
-    /// pour éliminer 100% des faux positifs de pré-écoute au casque.
+    /// Interroge l'historique Serato et applique la vérité absolue du statut officiel Serato (playedFlag == 1)
+    /// pour éliminer 100% des faux positifs de pré-écoute au casque et des durées arbitraires.
     public func syncWithDatabase(dbService: SeratoDatabaseService) {
         guard !isSyncing else { return }
         isSyncing = true
         
         let start = sessionStartTime
-        let thresholdSeconds = Double(UserSettings.shared.playedMinDurationSeconds)
         
-        Task.detached(priority: .utility) { [dbService, start, thresholdSeconds] in
+        Task.detached(priority: .utility) { [dbService, start] in
             let rawEntries = dbService.fetchSessionEntries(since: start)
             
-            // FILTRAGE HAUTE PRÉCISION ANTI FAUX-POSITIFS :
-            // 1. Priorité absolue au statut officiel Serato (entry.playedFlag == 1) :
-            //    Dès que Serato indique played == 1 (fader ouvert vers le master pendant le seuil de validation),
-            //    Recall valide le morceau comme joué avec un mini-tampon de 3.0s (évite les micro-erreurs de cue/loading).
-            // 2. Exclusion catégorique des pré-écoutes terminées (entry.playedFlag == 0) :
-            //    Si la piste est terminée sans fader ouvert (played == 0), Recall ne la marque JAMAIS comme jouée,
-            //    quelle que soit la durée de la pré-écoute au casque !
-            // 3. Fallback intelligent en cours de lecture :
-            //    Tant que la piste tourne en direct sur la platine (entry.isCurrentlyPlaying == true et played == 0),
-            //    le réglage utilisateur playedMinDurationSeconds sert de filet de sécurité si Serato tarde à flusher
-            //    sa base SQLite (mode WAL). Dès que la piste se termine, si Serato la close avec played == 0,
-            //    elle est immédiatement et automatiquement rejetée.
-            var validPlaysByTitle: [String: (title: String, artist: String, fileName: String, bpm: Double, rawKey: String, genre: String, lastTime: Date, maxDuration: Double, count: Int)] = [:]
+            // FILTRAGE HAUTE PRÉCISION BASÉ EXCLUSIVEMENT SUR LE STATUT JOOUÉ :
+            // 1. Seul le statut officiel Serato certifié (entry.playedFlag == 1, fader ouvert vers le master)
+            //    garantit qu'un morceau a réellement été diffusé dans le mix (avec tampon de 3.0s anti-rebond).
+            // 2. Rejet catégorique si playedFlag == 0 : qu'une piste soit terminée ou encore sur la platine,
+            //    si Serato indique played == 0, elle n'a JAMAIS été jouée vers le master (pré-écoute au casque).
+            var validPlaysByTitle: [String: (title: String, artist: String, fileName: String, bpm: Double, rawKey: String, genre: String, lastTime: Date, maxDuration: Double, count: Int, isPlaying: Bool, startTime: Date, endTime: Date?)] = [:]
             
             for entry in rawEntries {
-                let duration = entry.durationSeconds
-                let isGenuinePlay: Bool
-                
-                if entry.playedFlag == 1 {
-                    // 1. Statut officiel Serato certifié (fader ouvert vers le master)
-                    isGenuinePlay = duration >= 3.0
-                } else if !entry.isCurrentlyPlaying {
-                    // 2. Piste terminée / éjectée avec played == 0 : rejet catégorique (pré-écoute au casque)
-                    isGenuinePlay = false
-                } else {
-                    // 3. Piste en cours de lecture : fallback intelligent sur le seuil utilisateur
-                    isGenuinePlay = duration >= thresholdSeconds
-                }
-                
-                guard isGenuinePlay else { continue }
+                guard entry.playedFlag == 1 && entry.durationSeconds >= 3.0 else { continue }
                 
                 let norm = FavoriteCombosService.normalize(entry.title)
                 guard !norm.isEmpty else { continue }
                 
+                let isTrackCurrentlyPlaying = entry.isCurrentlyPlaying
+                
                 if var existing = validPlaysByTitle[norm] {
                     existing.lastTime = max(existing.lastTime, entry.startTime)
-                    existing.maxDuration = max(existing.maxDuration, duration)
+                    existing.maxDuration = max(existing.maxDuration, entry.durationSeconds)
                     existing.count += 1
                     if existing.bpm <= 0 && entry.bpm > 0 { existing.bpm = entry.bpm }
                     if existing.rawKey.isEmpty && !entry.rawKey.isEmpty { existing.rawKey = entry.rawKey }
                     if existing.genre.isEmpty && !entry.genre.isEmpty { existing.genre = entry.genre }
+                    if isTrackCurrentlyPlaying {
+                        existing.isPlaying = true
+                        existing.endTime = nil
+                    }
                     validPlaysByTitle[norm] = existing
                 } else {
                     validPlaysByTitle[norm] = (
@@ -313,8 +380,11 @@ public class SessionHistoryService: ObservableObject {
                         rawKey: entry.rawKey,
                         genre: entry.genre,
                         lastTime: entry.startTime,
-                        maxDuration: duration,
-                        count: 1
+                        maxDuration: entry.durationSeconds,
+                        count: 1,
+                        isPlaying: isTrackCurrentlyPlaying,
+                        startTime: entry.startTime,
+                        endTime: entry.endTime
                     )
                 }
             }
@@ -331,7 +401,10 @@ public class SessionHistoryService: ObservableObject {
                         playCount: val.count,
                         bpm: val.bpm,
                         rawKey: val.rawKey,
-                        genre: val.genre
+                        genre: val.genre,
+                        isCurrentlyPlaying: val.isPlaying,
+                        startTime: val.startTime,
+                        endTime: val.endTime
                     )
                 }
                 .sorted { a, b in
@@ -342,12 +415,14 @@ public class SessionHistoryService: ObservableObject {
                 }
             
             let titlesSet = Set(validPlaysByTitle.keys)
+            let anyPlaying = sortedTracks.contains(where: { $0.isCurrentlyPlaying })
             
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
                 
-                // Ne republie que si le contenu des morceaux a réellement changé (évite les rafraîchissements permanents en boucle)
+                // Ne republie que si le contenu des morceaux ou l'état de lecture a changé
                 let hasChanged = self.playedTracks.count != sortedTracks.count ||
+                    self.isCurrentlyPlaying != anyPlaying ||
                     zip(self.playedTracks, sortedTracks).contains { t1, t2 in
                         t1.id != t2.id ||
                         t1.title != t2.title ||
@@ -355,13 +430,15 @@ public class SessionHistoryService: ObservableObject {
                         t1.playCount != t2.playCount ||
                         t1.bpm != t2.bpm ||
                         t1.rawKey != t2.rawKey ||
-                        t1.genre != t2.genre
+                        t1.genre != t2.genre ||
+                        t1.isCurrentlyPlaying != t2.isCurrentlyPlaying
                     }
                 
                 if hasChanged {
                     self.playedTracks = sortedTracks
                     self.playedNormalizedTitles = titlesSet
                     self.playedCount = sortedTracks.count
+                    self.isCurrentlyPlaying = anyPlaying
                 }
                 self.isSyncing = false
             }

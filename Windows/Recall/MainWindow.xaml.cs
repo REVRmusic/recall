@@ -419,6 +419,19 @@ namespace Recall
             ChkFilterFavs.IsChecked = _settings.IsFavoritesFilterActive;
             ChkFilterToPlay.IsChecked = _settings.IsToPlayFilterActive;
 
+            if (_settings.TransitionDirection == "previous")
+            {
+                RadDirPrev.IsChecked = true;
+            }
+            else if (_settings.TransitionDirection == "all")
+            {
+                RadDirAll.IsChecked = true;
+            }
+            else
+            {
+                RadDirNext.IsChecked = true;
+            }
+
             if (_settings.IsCompactMode)
             {
                 SetCompactMode(true);
@@ -562,6 +575,24 @@ namespace Recall
             {
                 _monitor.UpdateFilteredSuggestions();
             }
+        }
+
+        private void DirectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (RadDirPrev.IsChecked == true)
+            {
+                _settings.TransitionDirection = "previous";
+            }
+            else if (RadDirAll.IsChecked == true)
+            {
+                _settings.TransitionDirection = "all";
+            }
+            else
+            {
+                _settings.TransitionDirection = "next";
+            }
+            _settings.Save();
+            _monitor.RefreshSuggestions();
         }
 
         private void BtnSaveCombo_Click(object sender, RoutedEventArgs e)

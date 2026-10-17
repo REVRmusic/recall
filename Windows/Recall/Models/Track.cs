@@ -21,6 +21,7 @@ namespace Recall.Models
         public DateTime? PlayedAt { get; set; }
 
         public int TransitionCount { get; set; } = 0;
+        public string Direction { get; set; } = "next";
         public HarmonicRelation? HarmonicRelation { get; set; }
         public double? BpmDiff { get; set; }
         public bool IsFavorite { get; set; } = false;

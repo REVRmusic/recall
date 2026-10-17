@@ -248,14 +248,79 @@ public func fetchActiveDecks() -> ActiveDecksState {
     
     // MARK: - Algorithme de Suggestions d'Enchaînements STRICTEMENT basé sur l'Historique
     
-    /// Calcule le Top des enchaînements réels joués après le morceau de référence
+    /// Calcule le Top des enchaînements réels joués après ou avant le morceau de référence
     /// dans les sessions Serato sur la période configurée (ex: 360 jours).
     /// EXCLUSION STRICTE : Ne s'appuie JAMAIS sur le nombre total de lectures de la bibliothèque (metadata).
     public func fetchTransitions(
         for referenceTrack: Track,
+        direction: TransitionDirection = .next,
         daysLookback: Int = 360,
         maxResults: Int = 30
     ) -> [Track] {
+        // --- MODE TOUT (AVANT + APRÈS COMBINÉS) ---
+        if direction == .all {
+            let nextResults = fetchTransitions(
+                for: referenceTrack,
+                direction: .next,
+                daysLookback: daysLookback,
+                maxResults: maxResults * 2
+            )
+            let prevResults = fetchTransitions(
+                for: referenceTrack,
+                direction: .previous,
+                daysLookback: daysLookback,
+                maxResults: maxResults * 2
+            )
+            
+            var mergedMap: [String: Track] = [:]
+            
+            for trk in nextResults {
+                let key = normalizeTitle(trk.displayTitle)
+                mergedMap[key] = trk
+            }
+            
+            for trk in prevResults {
+                let key = normalizeTitle(trk.displayTitle)
+                if var existing = mergedMap[key] {
+                    existing.transitionCount += trk.transitionCount
+                    existing.direction = .all
+                    if let p1 = existing.playedAt, let p2 = trk.playedAt {
+                        existing.playedAt = max(p1, p2)
+                    } else {
+                        existing.playedAt = existing.playedAt ?? trk.playedAt
+                    }
+                    mergedMap[key] = existing
+                } else {
+                    mergedMap[key] = trk
+                }
+            }
+            
+            var combined = Array(mergedMap.values)
+            combined.sort(by: { (t1: Track, t2: Track) -> Bool in
+                if t1.transitionCount != t2.transitionCount {
+                    return t1.transitionCount > t2.transitionCount
+                }
+                let time1 = t1.playedAt?.timeIntervalSince1970 ?? 0
+                let time2 = t2.playedAt?.timeIntervalSince1970 ?? 0
+                if time1 != time2 {
+                    return time1 > time2
+                }
+                return t1.displayTitle < t2.displayTitle
+            })
+            
+            let sliced = Array(combined.prefix(maxResults))
+            return sliced.map { track in
+                var updated = track
+                if let refCamelot = referenceTrack.camelotKey, let trkCamelot = track.camelotKey {
+                    updated.harmonicRelation = refCamelot.relationship(with: trkCamelot)
+                }
+                if referenceTrack.bpm > 0 && track.bpm > 0 {
+                    updated.bpmDiff = track.bpm - referenceTrack.bpm
+                }
+                return updated
+            }
+        }
+        
         guard let db = openDatabase() else { return [] }
         defer { sqlite3_close(db) }
         
@@ -295,7 +360,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
             referenceTrack: referenceTrack,
             variantInfo: variantInfo,
             minStartTime: minStartTimeUnix,
-            limit: maxResults
+            limit: maxResults,
+            direction: direction
         )
         
         for match in directMatches {
@@ -315,7 +381,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
                     baseTitle: baseTitle,
                     excludeAssetId: referenceTrack.assetId,
                     minStartTime: minStartTimeUnix,
-                    limit: maxResults - suggestions.count
+                    limit: maxResults - suggestions.count,
+                    direction: direction
                 )
                 
                 for match in variantMatches {
@@ -328,14 +395,15 @@ public func fetchActiveDecks() -> ActiveDecksState {
             }
         }
         
-        // --- NIVEAU 3 : Routines enchaînées (Track A -> Track B -> Track C à N+2 dans la même session) ---
+        // --- NIVEAU 3 : Routines enchaînées (N+2 ou N-2 dans la même session) ---
         if suggestions.count < maxResults {
             let sequenceMatches = querySecondarySessionTransitions(
                 db: db,
                 referenceTrack: referenceTrack,
                 minStartTime: minStartTimeUnix,
                 limit: maxResults - suggestions.count,
-                excludeTitles: seenTitles
+                excludeTitles: seenTitles,
+                direction: direction
             )
             
             for seqMatch in sequenceMatches {
@@ -475,13 +543,14 @@ public func fetchActiveDecks() -> ActiveDecksState {
     
     // MARK: - Requêtes SQL de Transitions Historiques
     
-    /// Niveau 1 : Morceau joué immédiatement après (N+1) dans la même session (avec cumul des variantes si activé)
+    /// Niveau 1 : Morceau joué immédiatement après (N+1) ou avant (N-1) dans la même session (avec cumul des variantes si activé)
     private func queryDirectTransitions(
         db: OpaquePointer,
         referenceTrack: Track,
         variantInfo: (assetIds: [Int], fileNames: [String], names: [String], baseTitle: String)?,
         minStartTime: Int64,
-        limit: Int
+        limit: Int,
+        direction: TransitionDirection = .next
     ) -> [Track] {
         let whereTarget: String
         let whereExcludeSelf: String
@@ -512,193 +581,360 @@ public func fetchActiveDecks() -> ActiveDecksState {
             whereExcludeSelf = "AND (h2.asset_id != tp.asset_id OR (h2.file_name != tp.file_name AND h2.file_name != ''))"
         }
         
-        let sql = """
-        WITH target_plays AS (
-            SELECT id, session_id, asset_id, file_name, name, start_time
-            FROM history_entry
-            WHERE \(whereTarget)
-              AND start_time >= \(minStartTime)
-        ),
-        next_plays AS (
-            SELECT 
-                h2.id as next_id,
-                h2.asset_id as next_asset_id,
-                coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
-                h2.artist as next_artist,
-                h2.bpm as next_bpm,
-                h2.key as next_key,
-                h2.file_name as next_file_name,
-                h2.portable_id as next_portable_id,
-                h2.start_time as next_start_time
-            FROM target_plays tp
-            JOIN history_entry h2 ON h2.session_id = tp.session_id
-                AND h2.start_time > tp.start_time
-                AND h2.start_time <= tp.start_time + 1200
-                AND h2.id != tp.id
-                \(whereExcludeSelf)
-                AND h2.played = 1
-            WHERE h2.id = (
-                SELECT sub.id FROM history_entry sub
-                WHERE sub.session_id = tp.session_id
-                  AND sub.start_time > tp.start_time
-                  AND sub.played = 1
-                ORDER BY sub.start_time ASC
-                LIMIT 1
+        let sql: String
+        if direction == .previous {
+            sql = """
+            WITH target_plays AS (
+                SELECT id, session_id, asset_id, file_name, name, start_time
+                FROM history_entry
+                WHERE \(whereTarget)
+                  AND start_time >= \(minStartTime)
+            ),
+            prev_plays AS (
+                SELECT 
+                    h2.id as prev_id,
+                    h2.asset_id as prev_asset_id,
+                    coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
+                    h2.artist as prev_artist,
+                    h2.bpm as prev_bpm,
+                    h2.key as prev_key,
+                    h2.file_name as prev_file_name,
+                    h2.portable_id as prev_portable_id,
+                    h2.start_time as prev_start_time
+                FROM target_plays tp
+                JOIN history_entry h2 ON h2.session_id = tp.session_id
+                    AND h2.start_time < tp.start_time
+                    AND h2.start_time >= tp.start_time - 1200
+                    AND h2.id != tp.id
+                    \(whereExcludeSelf)
+                    AND h2.played = 1
+                WHERE h2.id = (
+                    SELECT sub.id FROM history_entry sub
+                    WHERE sub.session_id = tp.session_id
+                      AND sub.start_time < tp.start_time
+                      AND sub.played = 1
+                    ORDER BY sub.start_time DESC
+                    LIMIT 1
+                )
             )
-        )
-        SELECT 
-            clean_title,
-            next_artist,
-            avg(next_bpm) as avg_bpm,
-            next_key,
-            next_file_name,
-            next_portable_id,
-            next_asset_id,
-            count(*) as transition_count,
-            max(next_start_time) as last_played_time
-        FROM next_plays
-        WHERE clean_title != ''
-        GROUP BY clean_title, next_artist
-        ORDER BY transition_count DESC, last_played_time DESC
-        LIMIT \(limit);
-        """
+            SELECT 
+                clean_title,
+                prev_artist,
+                avg(prev_bpm) as avg_bpm,
+                prev_key,
+                prev_file_name,
+                prev_portable_id,
+                prev_asset_id,
+                count(*) as transition_count,
+                max(prev_start_time) as last_played_time
+            FROM prev_plays
+            WHERE clean_title != ''
+            GROUP BY clean_title, prev_artist
+            ORDER BY transition_count DESC, last_played_time DESC
+            LIMIT \(limit);
+            """
+        } else {
+            sql = """
+            WITH target_plays AS (
+                SELECT id, session_id, asset_id, file_name, name, start_time
+                FROM history_entry
+                WHERE \(whereTarget)
+                  AND start_time >= \(minStartTime)
+            ),
+            next_plays AS (
+                SELECT 
+                    h2.id as next_id,
+                    h2.asset_id as next_asset_id,
+                    coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
+                    h2.artist as next_artist,
+                    h2.bpm as next_bpm,
+                    h2.key as next_key,
+                    h2.file_name as next_file_name,
+                    h2.portable_id as next_portable_id,
+                    h2.start_time as next_start_time
+                FROM target_plays tp
+                JOIN history_entry h2 ON h2.session_id = tp.session_id
+                    AND h2.start_time > tp.start_time
+                    AND h2.start_time <= tp.start_time + 1200
+                    AND h2.id != tp.id
+                    \(whereExcludeSelf)
+                    AND h2.played = 1
+                WHERE h2.id = (
+                    SELECT sub.id FROM history_entry sub
+                    WHERE sub.session_id = tp.session_id
+                      AND sub.start_time > tp.start_time
+                      AND sub.played = 1
+                    ORDER BY sub.start_time ASC
+                    LIMIT 1
+                )
+            )
+            SELECT 
+                clean_title,
+                next_artist,
+                avg(next_bpm) as avg_bpm,
+                next_key,
+                next_file_name,
+                next_portable_id,
+                next_asset_id,
+                count(*) as transition_count,
+                max(next_start_time) as last_played_time
+            FROM next_plays
+            WHERE clean_title != ''
+            GROUP BY clean_title, next_artist
+            ORDER BY transition_count DESC, last_played_time DESC
+            LIMIT \(limit);
+            """
+        }
         
-        return executeTransitionQuery(db: db, sql: sql, matchType: .directTransition)
+        return executeTransitionQuery(db: db, sql: sql, matchType: .directTransition, direction: direction)
     }
     
-    /// Niveau 2 : Morceau joué après une variante du titre de base (ex: Radio Edit vs Club Mix)
+    /// Niveau 2 : Morceau joué après ou avant une variante du titre de base (ex: Radio Edit vs Club Mix)
     private func queryBaseTitleTransitions(
         db: OpaquePointer,
         baseTitle: String,
         excludeAssetId: Int?,
         minStartTime: Int64,
-        limit: Int
+        limit: Int,
+        direction: TransitionDirection = .next
     ) -> [Track] {
         let safeBase = escapeSql(baseTitle)
         let excludeId = excludeAssetId ?? -1
         
-        let sql = """
-        WITH target_plays AS (
-            SELECT id, session_id, asset_id, file_name, start_time
-            FROM history_entry
-            WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
-              AND (asset_id != \(excludeId) OR \(excludeId) <= 0)
-              AND start_time >= \(minStartTime)
-        ),
-        next_plays AS (
-            SELECT 
-                h2.id as next_id,
-                h2.asset_id as next_asset_id,
-                coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
-                h2.artist as next_artist,
-                h2.bpm as next_bpm,
-                h2.key as next_key,
-                h2.file_name as next_file_name,
-                h2.portable_id as next_portable_id,
-                h2.start_time as next_start_time
-            FROM target_plays tp
-            JOIN history_entry h2 ON h2.session_id = tp.session_id
-                AND h2.start_time > tp.start_time
-                AND h2.start_time <= tp.start_time + 1200
-                AND h2.id != tp.id
-                AND h2.name NOT LIKE '%\(safeBase)%'
-                AND h2.file_name NOT LIKE '%\(safeBase)%'
-                AND h2.played = 1
-            WHERE h2.id = (
-                SELECT sub.id FROM history_entry sub
-                WHERE sub.session_id = tp.session_id
-                  AND sub.start_time > tp.start_time
-                  AND sub.played = 1
-                ORDER BY sub.start_time ASC
-                LIMIT 1
+        let sql: String
+        if direction == .previous {
+            sql = """
+            WITH target_plays AS (
+                SELECT id, session_id, asset_id, file_name, start_time
+                FROM history_entry
+                WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
+                  AND (asset_id != \(excludeId) OR \(excludeId) <= 0)
+                  AND start_time >= \(minStartTime)
+            ),
+            prev_plays AS (
+                SELECT 
+                    h2.id as prev_id,
+                    h2.asset_id as prev_asset_id,
+                    coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
+                    h2.artist as prev_artist,
+                    h2.bpm as prev_bpm,
+                    h2.key as prev_key,
+                    h2.file_name as prev_file_name,
+                    h2.portable_id as prev_portable_id,
+                    h2.start_time as prev_start_time
+                FROM target_plays tp
+                JOIN history_entry h2 ON h2.session_id = tp.session_id
+                    AND h2.start_time < tp.start_time
+                    AND h2.start_time >= tp.start_time - 1200
+                    AND h2.id != tp.id
+                    AND h2.name NOT LIKE '%\(safeBase)%'
+                    AND h2.file_name NOT LIKE '%\(safeBase)%'
+                    AND h2.played = 1
+                WHERE h2.id = (
+                    SELECT sub.id FROM history_entry sub
+                    WHERE sub.session_id = tp.session_id
+                      AND sub.start_time < tp.start_time
+                      AND sub.played = 1
+                    ORDER BY sub.start_time DESC
+                    LIMIT 1
+                )
             )
-        )
-        SELECT 
-            clean_title,
-            next_artist,
-            avg(next_bpm) as avg_bpm,
-            next_key,
-            next_file_name,
-            next_portable_id,
-            next_asset_id,
-            count(*) as transition_count,
-            max(next_start_time) as last_played_time
-        FROM next_plays
-        WHERE clean_title != ''
-        GROUP BY clean_title, next_artist
-        ORDER BY transition_count DESC, last_played_time DESC
-        LIMIT \(limit);
-        """
+            SELECT 
+                clean_title,
+                prev_artist,
+                avg(prev_bpm) as avg_bpm,
+                prev_key,
+                prev_file_name,
+                prev_portable_id,
+                prev_asset_id,
+                count(*) as transition_count,
+                max(prev_start_time) as last_played_time
+            FROM prev_plays
+            WHERE clean_title != ''
+            GROUP BY clean_title, prev_artist
+            ORDER BY transition_count DESC, last_played_time DESC
+            LIMIT \(limit);
+            """
+        } else {
+            sql = """
+            WITH target_plays AS (
+                SELECT id, session_id, asset_id, file_name, start_time
+                FROM history_entry
+                WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
+                  AND (asset_id != \(excludeId) OR \(excludeId) <= 0)
+                  AND start_time >= \(minStartTime)
+            ),
+            next_plays AS (
+                SELECT 
+                    h2.id as next_id,
+                    h2.asset_id as next_asset_id,
+                    coalesce(nullif(h2.name, ''), h2.file_name) as clean_title,
+                    h2.artist as next_artist,
+                    h2.bpm as next_bpm,
+                    h2.key as next_key,
+                    h2.file_name as next_file_name,
+                    h2.portable_id as next_portable_id,
+                    h2.start_time as next_start_time
+                FROM target_plays tp
+                JOIN history_entry h2 ON h2.session_id = tp.session_id
+                    AND h2.start_time > tp.start_time
+                    AND h2.start_time <= tp.start_time + 1200
+                    AND h2.id != tp.id
+                    AND h2.name NOT LIKE '%\(safeBase)%'
+                    AND h2.file_name NOT LIKE '%\(safeBase)%'
+                    AND h2.played = 1
+                WHERE h2.id = (
+                    SELECT sub.id FROM history_entry sub
+                    WHERE sub.session_id = tp.session_id
+                      AND sub.start_time > tp.start_time
+                      AND sub.played = 1
+                    ORDER BY sub.start_time ASC
+                    LIMIT 1
+                )
+            )
+            SELECT 
+                clean_title,
+                next_artist,
+                avg(next_bpm) as avg_bpm,
+                next_key,
+                next_file_name,
+                next_portable_id,
+                next_asset_id,
+                count(*) as transition_count,
+                max(next_start_time) as last_played_time
+            FROM next_plays
+            WHERE clean_title != ''
+            GROUP BY clean_title, next_artist
+            ORDER BY transition_count DESC, last_played_time DESC
+            LIMIT \(limit);
+            """
+        }
         
-        return executeTransitionQuery(db: db, sql: sql, matchType: .sameSongVariant)
+        return executeTransitionQuery(db: db, sql: sql, matchType: .sameSongVariant, direction: direction)
     }
     
-    /// Niveau 3 : Deuxième morceau enchaîné dans la même session (N+2 - Routine de set)
+    /// Niveau 3 : Deuxième morceau enchaîné dans la même session (N+2 ou N-2 - Routine de set)
     private func querySecondarySessionTransitions(
         db: OpaquePointer,
         referenceTrack: Track,
         minStartTime: Int64,
         limit: Int,
-        excludeTitles: Set<String>
+        excludeTitles: Set<String>,
+        direction: TransitionDirection = .next
     ) -> [Track] {
         let safeFileName = escapeSql(referenceTrack.fileName)
         let assetId = referenceTrack.assetId ?? -1
         let safeTitle = escapeSql(referenceTrack.displayTitle)
         let safeRawTitle = escapeSql(referenceTrack.title)
         
-        let sql = """
-        WITH target_plays AS (
-            SELECT id, session_id, asset_id, file_name, start_time
-            FROM history_entry
-            WHERE (
-                (asset_id > 0 AND asset_id = \(assetId))
-                OR (file_name != '' AND file_name = '\(safeFileName)')
-                OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
+        let sql: String
+        if direction == .previous {
+            sql = """
+            WITH target_plays AS (
+                SELECT id, session_id, asset_id, file_name, start_time
+                FROM history_entry
+                WHERE (
+                    (asset_id > 0 AND asset_id = \(assetId))
+                    OR (file_name != '' AND file_name = '\(safeFileName)')
+                    OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
+                )
+                AND start_time >= \(minStartTime)
+            ),
+            second_prev_plays AS (
+                SELECT 
+                    h3.id as prev_id,
+                    h3.asset_id as prev_asset_id,
+                    coalesce(nullif(h3.name, ''), h3.file_name) as clean_title,
+                    h3.artist as prev_artist,
+                    h3.bpm as prev_bpm,
+                    h3.key as prev_key,
+                    h3.file_name as prev_file_name,
+                    h3.portable_id as prev_portable_id,
+                    h3.start_time as prev_start_time
+                FROM target_plays tp
+                JOIN history_entry h3 ON h3.session_id = tp.session_id
+                    AND h3.start_time < tp.start_time
+                    AND h3.start_time >= tp.start_time - 1500
+                    AND h3.played = 1
+                WHERE (
+                    SELECT count(*) FROM history_entry middle
+                    WHERE middle.session_id = tp.session_id
+                      AND middle.start_time < tp.start_time
+                      AND middle.start_time > h3.start_time
+                      AND middle.played = 1
+                ) = 1
             )
-            AND start_time >= \(minStartTime)
-        ),
-        second_next_plays AS (
             SELECT 
-                h3.id as next_id,
-                h3.asset_id as next_asset_id,
-                coalesce(nullif(h3.name, ''), h3.file_name) as clean_title,
-                h3.artist as next_artist,
-                h3.bpm as next_bpm,
-                h3.key as next_key,
-                h3.file_name as next_file_name,
-                h3.portable_id as next_portable_id,
-                h3.start_time as next_start_time
-            FROM target_plays tp
-            JOIN history_entry h3 ON h3.session_id = tp.session_id
-                AND h3.start_time > tp.start_time
-                AND h3.start_time <= tp.start_time + 1500
-                AND h3.played = 1
-            WHERE (
-                SELECT count(*) FROM history_entry middle
-                WHERE middle.session_id = tp.session_id
-                  AND middle.start_time > tp.start_time
-                  AND middle.start_time < h3.start_time
-                  AND middle.played = 1
-            ) = 1
-        )
-        SELECT 
-            clean_title,
-            next_artist,
-            avg(next_bpm) as avg_bpm,
-            next_key,
-            next_file_name,
-            next_portable_id,
-            next_asset_id,
-            count(*) as transition_count,
-            max(next_start_time) as last_played_time
-        FROM second_next_plays
-        WHERE clean_title != ''
-        GROUP BY clean_title, next_artist
-        ORDER BY transition_count DESC, last_played_time DESC
-        LIMIT \(limit * 2);
-        """
+                clean_title,
+                prev_artist,
+                avg(prev_bpm) as avg_bpm,
+                prev_key,
+                prev_file_name,
+                prev_portable_id,
+                prev_asset_id,
+                count(*) as transition_count,
+                max(prev_start_time) as last_played_time
+            FROM second_prev_plays
+            WHERE clean_title != ''
+            GROUP BY clean_title, prev_artist
+            ORDER BY transition_count DESC, last_played_time DESC
+            LIMIT \(limit * 2);
+            """
+        } else {
+            sql = """
+            WITH target_plays AS (
+                SELECT id, session_id, asset_id, file_name, start_time
+                FROM history_entry
+                WHERE (
+                    (asset_id > 0 AND asset_id = \(assetId))
+                    OR (file_name != '' AND file_name = '\(safeFileName)')
+                    OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
+                )
+                AND start_time >= \(minStartTime)
+            ),
+            second_next_plays AS (
+                SELECT 
+                    h3.id as next_id,
+                    h3.asset_id as next_asset_id,
+                    coalesce(nullif(h3.name, ''), h3.file_name) as clean_title,
+                    h3.artist as next_artist,
+                    h3.bpm as next_bpm,
+                    h3.key as next_key,
+                    h3.file_name as next_file_name,
+                    h3.portable_id as next_portable_id,
+                    h3.start_time as next_start_time
+                FROM target_plays tp
+                JOIN history_entry h3 ON h3.session_id = tp.session_id
+                    AND h3.start_time > tp.start_time
+                    AND h3.start_time <= tp.start_time + 1500
+                    AND h3.played = 1
+                WHERE (
+                    SELECT count(*) FROM history_entry middle
+                    WHERE middle.session_id = tp.session_id
+                      AND middle.start_time > tp.start_time
+                      AND middle.start_time < h3.start_time
+                      AND middle.played = 1
+                ) = 1
+            )
+            SELECT 
+                clean_title,
+                next_artist,
+                avg(next_bpm) as avg_bpm,
+                next_key,
+                next_file_name,
+                next_portable_id,
+                next_asset_id,
+                count(*) as transition_count,
+                max(next_start_time) as last_played_time
+            FROM second_next_plays
+            WHERE clean_title != ''
+            GROUP BY clean_title, next_artist
+            ORDER BY transition_count DESC, last_played_time DESC
+            LIMIT \(limit * 2);
+            """
+        }
         
-        let candidates = executeTransitionQuery(db: db, sql: sql, matchType: .routineSequence)
+        let candidates = executeTransitionQuery(db: db, sql: sql, matchType: .routineSequence, direction: direction)
         var filtered: [Track] = []
         for track in candidates {
             let key = normalizeTitle(track.displayTitle)
@@ -713,7 +949,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
     private func executeTransitionQuery(
         db: OpaquePointer,
         sql: String,
-        matchType: MatchType
+        matchType: MatchType,
+        direction: TransitionDirection = .next
     ) -> [Track] {
         var results: [Track] = []
         var stmt: OpaquePointer?
@@ -728,6 +965,8 @@ public func fetchActiveDecks() -> ActiveDecksState {
                 let portableId = sqlite3_column_text(stmt, 5).map { String(cString: $0) } ?? ""
                 let assetId = Int(sqlite3_column_int64(stmt, 6))
                 let count = Int(sqlite3_column_int64(stmt, 7))
+                let lastPlayedUnix = sqlite3_column_int64(stmt, 8)
+                let playedAt = lastPlayedUnix > 0 ? Date(timeIntervalSince1970: TimeInterval(lastPlayedUnix)) : nil
                 
                 let resolvedPath = resolveTrackFilePath(portableId: portableId, fileName: fileName)
                 
@@ -740,8 +979,10 @@ public func fetchActiveDecks() -> ActiveDecksState {
                     filePath: resolvedPath,
                     fileName: fileName,
                     portableId: portableId,
+                    playedAt: playedAt,
                     transitionCount: count,
-                    matchType: matchType
+                    matchType: matchType,
+                    direction: direction
                 )
                 results.append(track)
             }
@@ -1092,8 +1333,14 @@ public func fetchActiveDecks() -> ActiveDecksState {
                     endDate = Date(timeIntervalSince1970: TimeInterval(endUnix))
                     duration = Double(endUnix - startUnix)
                 } else {
-                    isCurrent = true
-                    duration = max(0.0, nowUnix - Double(startUnix))
+                    let elapsed = nowUnix - Double(startUnix)
+                    if elapsed >= 0 && elapsed <= 900.0 {
+                        isCurrent = true
+                        duration = max(0.0, elapsed)
+                    } else {
+                        isCurrent = false
+                        duration = 180.0
+                    }
                 }
                 
                 let cleanTitle = !name.isEmpty ? name : (fileName as NSString).deletingPathExtension

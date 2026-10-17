@@ -11,6 +11,15 @@ public struct FilterBarView: View {
     
     public var body: some View {
         HStack(spacing: 4) {
+            // Mini sélecteur de direction d'enchaînement (Après / Avant / Tout)
+            directionSegmentedPicker
+            
+            // Séparateur vertical discret
+            Rectangle()
+                .fill(Color.white.opacity(0.12))
+                .frame(width: 1, height: 13)
+                .padding(.horizontal, 1)
+            
             // Filtre BPM ±10%
             filterTogglePill(
                 title: "BPM ±10%",
@@ -131,5 +140,52 @@ public struct FilterBarView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+    
+    private var directionSegmentedPicker: some View {
+        HStack(spacing: 1.5) {
+            ForEach(TransitionDirection.allCases) { dir in
+                let isSelected = settings.transitionDirection == dir
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        settings.transitionDirection = dir
+                    }
+                } label: {
+                    HStack(spacing: 2.5) {
+                        Image(systemName: dir.icon)
+                            .font(.system(size: 7.5, weight: .bold))
+                        if isSelected {
+                            Text(dir.label)
+                                .font(.system(size: 8, weight: .bold))
+                                .fixedSize()
+                        }
+                    }
+                    .padding(.horizontal, isSelected ? 5 : 3.5)
+                    .frame(height: 16)
+                    .background(
+                        isSelected ?
+                            Color.white.opacity(0.18) :
+                            Color.clear
+                    )
+                    .foregroundColor(
+                        isSelected ?
+                            Color.white :
+                            Color.white.opacity(0.40)
+                    )
+                    .cornerRadius(3.5)
+                }
+                .buttonStyle(.plain)
+                .help(dir.tooltip)
+            }
+        }
+        .padding(1.5)
+        .frame(height: 19)
+        .background(Color.white.opacity(0.06))
+        .cornerRadius(5)
+        .overlay(
+            RoundedRectangle(cornerRadius: 5)
+                .stroke(Color.white.opacity(0.10), lineWidth: 0.8)
+        )
+        .fixedSize(horizontal: true, vertical: true)
     }
 }

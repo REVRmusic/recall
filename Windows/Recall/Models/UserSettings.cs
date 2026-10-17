@@ -10,6 +10,7 @@ namespace Recall.Models
         public static UserSettings Shared => _shared ??= Load();
 
         public string DjSoftwareMode { get; set; } = "auto"; // "auto", "serato", "rekordbox"
+        public string TransitionDirection { get; set; } = "next"; // "next", "previous", "all"
         public string RekordboxXmlCustomPath { get; set; } = "";
         public int HistoryDaysLookback { get; set; } = 360;
         public int MaxSuggestions { get; set; } = 30;

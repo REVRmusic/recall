@@ -30,7 +30,7 @@ public struct Track: Identifiable, Hashable {
     public let portableId: String
     public let deck: String?
     public let genre: String
-    public let playedAt: Date?
+    public var playedAt: Date?
     
     // Propriétés spécifiques aux suggestions d'enchaînement
     public var transitionCount: Int
@@ -39,6 +39,7 @@ public struct Track: Identifiable, Hashable {
     public var bpmDiff: Double?
     public var isFavorite: Bool
     public var isPlayedInSession: Bool
+    public var direction: TransitionDirection
     
     public init(
         id: String = UUID().uuidString,
@@ -59,7 +60,8 @@ public struct Track: Identifiable, Hashable {
         harmonicRelation: HarmonicRelation? = nil,
         bpmDiff: Double? = nil,
         isFavorite: Bool = false,
-        isPlayedInSession: Bool = false
+        isPlayedInSession: Bool = false,
+        direction: TransitionDirection = .next
     ) {
         self.id = id
         self.assetId = assetId
@@ -81,6 +83,7 @@ public struct Track: Identifiable, Hashable {
         self.bpmDiff = bpmDiff
         self.isFavorite = isFavorite
         self.isPlayedInSession = isPlayedInSession
+        self.direction = direction
     }
     
     // MARK: - Analyse & Nettoyage Intelligents Artiste / Titre

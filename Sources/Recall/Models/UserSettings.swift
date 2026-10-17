@@ -42,8 +42,44 @@ public enum DJSoftwareMode: String, CaseIterable, Identifiable {
     }
 }
 
+public enum TransitionDirection: String, CaseIterable, Identifiable, Codable {
+    case next = "next"         // → Après (par défaut)
+    case previous = "previous" // ← Avant
+    case all = "all"           // ⇄ Tout
+    
+    public var id: String { rawValue }
+    
+    public var label: String {
+        switch self {
+        case .next: return "Après"
+        case .previous: return "Avant"
+        case .all: return "Tout"
+        }
+    }
+    
+    public var icon: String {
+        switch self {
+        case .next: return "arrow.right"
+        case .previous: return "arrow.left"
+        case .all: return "arrow.left.and.right"
+        }
+    }
+    
+    public var tooltip: String {
+        switch self {
+        case .next: return "Transitions suivantes : Morceaux joués APRÈS (Par défaut)"
+        case .previous: return "Transitions inversées : Morceaux joués AVANT (Introductions)"
+        case .all: return "Toutes les transitions : Avant et Après combinés"
+        }
+    }
+}
+
 public class UserSettings: ObservableObject {
     public static let shared = UserSettings()
+    
+    @Published public var transitionDirection: TransitionDirection {
+        didSet { UserDefaults.standard.set(transitionDirection.rawValue, forKey: "transitionDirection") }
+    }
     
     @Published public var djSoftwareMode: DJSoftwareMode {
         didSet { UserDefaults.standard.set(djSoftwareMode.rawValue, forKey: "djSoftwareMode") }
@@ -149,6 +185,8 @@ public class UserSettings: ObservableObject {
     
     public init() {
         let def = UserDefaults.standard
+        let rawDir = def.string(forKey: "transitionDirection") ?? TransitionDirection.next.rawValue
+        self.transitionDirection = TransitionDirection(rawValue: rawDir) ?? .next
         let rawMode = def.string(forKey: "djSoftwareMode") ?? DJSoftwareMode.auto.rawValue
         self.djSoftwareMode = DJSoftwareMode(rawValue: rawMode) ?? .auto
         self.rekordboxXmlCustomPath = def.string(forKey: "rekordboxXmlCustomPath") ?? ""
@@ -278,6 +316,7 @@ public class UserSettings: ObservableObject {
     }
     
     public func resetToDefaults() {
+        transitionDirection = .next
         djSoftwareMode = .auto
         rekordboxXmlCustomPath = ""
         historyDaysLookback = 360
