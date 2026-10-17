@@ -31,13 +31,17 @@ private class TracklistPanel: NSPanel {
             let h = frame.size.height
             let w = frame.size.width
             
-            // Déplacement fluide de la modale via toute la barre d'en-tête (sauf bouton fermer en haut à droite)
+            // Zone du bouton fermer en haut à droite : ne jamais déclencher de drag
+            let isCloseArea = loc.x >= (w - 60) && loc.y >= (h - 65)
+            if isCloseArea {
+                super.sendEvent(event)
+                return
+            }
+            
+            // Déplacement fluide de la modale via toute la barre d'en-tête
             if loc.y >= (h - 60) {
-                let isCloseButton = loc.x >= (w - 48) && loc.y >= (h - 48)
-                if !isCloseButton {
-                    self.performDrag(with: event)
-                    return
-                }
+                self.performDrag(with: event)
+                return
             }
         }
         super.sendEvent(event)

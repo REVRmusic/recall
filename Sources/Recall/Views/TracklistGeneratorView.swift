@@ -211,6 +211,7 @@ public struct TracklistGeneratorView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.45))
+                        .frame(width: 32, height: 32)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

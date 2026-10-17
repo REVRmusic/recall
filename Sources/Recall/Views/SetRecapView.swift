@@ -271,6 +271,7 @@ public struct SetRecapView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var currentTime = Date()
     @State private var showCopyToast: Bool = false
+    @State private var isCloseHovered: Bool = false
     
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
@@ -420,22 +421,26 @@ public struct SetRecapView: View {
                 Button(action: closeAction) {
                     ZStack {
                         Circle()
-                            .fill(Color.white.opacity(0.08))
-                            .frame(width: 24, height: 24)
+                            .fill(isCloseHovered ? Color.white.opacity(0.18) : Color.white.opacity(0.08))
+                            .frame(width: 26, height: 26)
                         
                         Image(systemName: "xmark")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white.opacity(0.75))
+                            .foregroundColor(isCloseHovered ? .white : .white.opacity(0.75))
                     }
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .onHover { hovering in
+                    isCloseHovered = hovering
+                }
                 .focusable(false)
                 .help("Fermer la fenêtre (Esc ou Cmd+W)")
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .contentShape(Rectangle())
     }
     
     // MARK: - 2. Hero Card Durée & Pacing

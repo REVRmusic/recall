@@ -31,13 +31,17 @@ private class SetRecapPanel: NSPanel {
             let h = frame.size.height
             let w = frame.size.width
             
-            // Déplacement fluide et 100% natif via toute la barre d'en-tête (sauf bouton fermer en haut à droite)
+            // Zone du bouton fermer en haut à droite : ne jamais déclencher de drag
+            let isCloseArea = loc.x >= (w - 60) && loc.y >= (h - 75)
+            if isCloseArea {
+                super.sendEvent(event)
+                return
+            }
+            
+            // Déplacement fluide et 100% natif via toute la barre d'en-tête
             if loc.y >= (h - 75) {
-                let isCloseButton = loc.x >= (w - 55) && loc.y >= (h - 55)
-                if !isCloseButton {
-                    self.performDrag(with: event)
-                    return
-                }
+                self.performDrag(with: event)
+                return
             }
         }
         super.sendEvent(event)
