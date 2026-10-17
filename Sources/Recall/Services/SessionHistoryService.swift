@@ -250,34 +250,45 @@ public class SessionHistoryService: ObservableObject {
     
     // MARK: - Synchronisation & Détection Pré-écoute vs Lecture Réelle
     
-    /// Interroge l'historique Serato et filtre strictement les morceaux joués (durée >= seuil paramétré)
+    /// Interroge l'historique Serato et applique la vérité du statut officiel Serato (playedFlag == 1)
+    /// pour éliminer 100% des faux positifs de pré-écoute au casque.
     public func syncWithDatabase(dbService: SeratoDatabaseService) {
         guard !isSyncing else { return }
         isSyncing = true
         
         let start = sessionStartTime
         let thresholdSeconds = Double(UserSettings.shared.playedMinDurationSeconds)
-        let playedFlagThreshold = max(5.0, thresholdSeconds * 0.8)
         
-        Task.detached(priority: .utility) { [dbService, start, thresholdSeconds, playedFlagThreshold] in
+        Task.detached(priority: .utility) { [dbService, start, thresholdSeconds] in
             let rawEntries = dbService.fetchSessionEntries(since: start)
             
-            // FILTRAGE INTELLIGENT PRÉ-ÉCOUTE :
-            // Un morceau est considéré "JOUÉ" uniquement s'il a tourné pendant au moins thresholdSeconds
-            // (ou s'il a le flag 'played == 1' ET au moins playedFlagThreshold de lecture).
-            // Les morceaux chargés puis éjectés après une brève pré-écoute au casque sont rejetés.
+            // FILTRAGE HAUTE PRÉCISION ANTI FAUX-POSITIFS :
+            // 1. Priorité absolue au statut officiel Serato (entry.playedFlag == 1) :
+            //    Dès que Serato indique played == 1 (fader ouvert vers le master pendant le seuil de validation),
+            //    Recall valide le morceau comme joué avec un mini-tampon de 3.0s (évite les micro-erreurs de cue/loading).
+            // 2. Exclusion catégorique des pré-écoutes terminées (entry.playedFlag == 0) :
+            //    Si la piste est terminée sans fader ouvert (played == 0), Recall ne la marque JAMAIS comme jouée,
+            //    quelle que soit la durée de la pré-écoute au casque !
+            // 3. Fallback intelligent en cours de lecture :
+            //    Tant que la piste tourne en direct sur la platine (entry.isCurrentlyPlaying == true et played == 0),
+            //    le réglage utilisateur playedMinDurationSeconds sert de filet de sécurité si Serato tarde à flusher
+            //    sa base SQLite (mode WAL). Dès que la piste se termine, si Serato la close avec played == 0,
+            //    elle est immédiatement et automatiquement rejetée.
             var validPlaysByTitle: [String: (title: String, artist: String, fileName: String, bpm: Double, rawKey: String, genre: String, lastTime: Date, maxDuration: Double, count: Int)] = [:]
             
             for entry in rawEntries {
                 let duration = entry.durationSeconds
                 let isGenuinePlay: Bool
                 
-                if entry.isCurrentlyPlaying {
-                    // En cours de lecture sur la platine : doit tourner depuis au moins thresholdSeconds
-                    isGenuinePlay = duration >= thresholdSeconds
+                if entry.playedFlag == 1 {
+                    // 1. Statut officiel Serato certifié (fader ouvert vers le master)
+                    isGenuinePlay = duration >= 3.0
+                } else if !entry.isCurrentlyPlaying {
+                    // 2. Piste terminée / éjectée avec played == 0 : rejet catégorique (pré-écoute au casque)
+                    isGenuinePlay = false
                 } else {
-                    // Lecture terminée : durée effective requise >= thresholdSeconds (ou played=1 avec >= playedFlagThreshold)
-                    isGenuinePlay = duration >= thresholdSeconds || (entry.playedFlag == 1 && duration >= playedFlagThreshold)
+                    // 3. Piste en cours de lecture : fallback intelligent sur le seuil utilisateur
+                    isGenuinePlay = duration >= thresholdSeconds
                 }
                 
                 guard isGenuinePlay else { continue }

@@ -866,7 +866,7 @@ public struct SettingsSheetView: View {
                             Text("Délai de validation (anti-préécoute au casque)")
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundColor(.white.opacity(0.90))
-                            Text("Un morceau doit tourner au moins \(settings.playedMinDurationSeconds)s pour être mémorisé comme joué (25s par défaut).")
+                            Text("Sur Serato, le statut officiel (fader ouvert) est prioritaire avec rejet des pré-écoutes casque. Ce délai sert de validation pour Rekordbox et de filet de sécurité.")
                                 .font(.system(size: 9.5))
                                 .foregroundColor(.white.opacity(0.50))
                         }
