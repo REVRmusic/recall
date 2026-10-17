@@ -235,7 +235,12 @@ public struct MainFloatingView: View {
             GuideSheetView()
         }
         .onReceive(NotificationCenter.default.publisher(for: .recallTriggerSearch)) { _ in
+            showGuide = false
             showSearch = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .recallTriggerGuide)) { _ in
+            showSearch = false
+            showGuide = true
         }
     }
 }

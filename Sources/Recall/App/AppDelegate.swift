@@ -1,7 +1,12 @@
 import Cocoa
 import SwiftUI
 
+@MainActor
 public class AppDelegate: NSObject, NSApplicationDelegate {
+    nonisolated public override init() {
+        super.init()
+    }
+    
     public func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         
@@ -82,14 +87,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         settingsItem.target = self
         appMenu.addItem(settingsItem)
         
-        let feedbackItem = NSMenuItem(
-            title: "Suggérer une amélioration…",
-            action: #selector(openFeedbackWebsiteAction),
-            keyEquivalent: ""
-        )
-        feedbackItem.target = self
-        appMenu.addItem(feedbackItem)
-        
         appMenu.addItem(NSMenuItem.separator())
         
         // Sous-menu Services standard macOS
@@ -141,6 +138,44 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         let fileMenuItem = NSMenuItem()
         let fileMenu = NSMenu(title: "Fichier")
         
+        let newSessionItem = NSMenuItem(
+            title: "Nouvelle session DJ…",
+            action: #selector(resetSessionAction),
+            keyEquivalent: "n"
+        )
+        newSessionItem.target = self
+        fileMenu.addItem(newSessionItem)
+        
+        let resyncItem = NSMenuItem(
+            title: "Resynchroniser avec le logiciel DJ",
+            action: #selector(triggerSessionResyncAction),
+            keyEquivalent: "r"
+        )
+        resyncItem.target = self
+        fileMenu.addItem(resyncItem)
+        
+        fileMenu.addItem(NSMenuItem.separator())
+        
+        let tracklistItem = NSMenuItem(
+            title: "Générateur de Tracklist…",
+            action: #selector(openTracklistGeneratorAction),
+            keyEquivalent: "T"
+        )
+        tracklistItem.keyEquivalentModifierMask = [.command, .shift]
+        tracklistItem.target = self
+        fileMenu.addItem(tracklistItem)
+        
+        let setRecapItem = NSMenuItem(
+            title: "Statistiques du Mix (Set Recap)…",
+            action: #selector(openSetRecapAction),
+            keyEquivalent: "S"
+        )
+        setRecapItem.keyEquivalentModifierMask = [.command, .shift]
+        setRecapItem.target = self
+        fileMenu.addItem(setRecapItem)
+        
+        fileMenu.addItem(NSMenuItem.separator())
+        
         let closeWindowItem = NSMenuItem(
             title: "Fermer la fenêtre",
             action: #selector(closeWindowAction),
@@ -167,6 +202,26 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(NSMenuItem(title: "Coller", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
         editMenu.addItem(NSMenuItem(title: "Tout sélectionner", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
         
+        editMenu.addItem(NSMenuItem.separator())
+        
+        let searchItem = NSMenuItem(
+            title: "Rechercher un morceau…",
+            action: #selector(openSearchAction),
+            keyEquivalent: "f"
+        )
+        searchItem.target = self
+        editMenu.addItem(searchItem)
+        
+        editMenu.addItem(NSMenuItem.separator())
+        
+        let clearToPlayItem = NSMenuItem(
+            title: "Vider la liste « À jouer »…",
+            action: #selector(clearToPlayAction),
+            keyEquivalent: ""
+        )
+        clearToPlayItem.target = self
+        editMenu.addItem(clearToPlayItem)
+        
         editMenuItem.submenu = editMenu
         mainMenu.addItem(editMenuItem)
         
@@ -175,44 +230,113 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         // -------------------------------------------------------------
         let sessionMenuItem = NSMenuItem()
         let sessionMenu = NSMenu(title: "Outils de session")
+        sessionMenu.delegate = self
         
-        let setRecapItem = NSMenuItem(
+        let sessionRecapItem = NSMenuItem(
             title: "Statistiques du Mix (Set Recap)…",
             action: #selector(openSetRecapAction),
             keyEquivalent: "S"
         )
-        setRecapItem.keyEquivalentModifierMask = [.command, .shift]
-        setRecapItem.target = self
-        sessionMenu.addItem(setRecapItem)
+        sessionRecapItem.keyEquivalentModifierMask = [.command, .shift]
+        sessionRecapItem.target = self
+        sessionMenu.addItem(sessionRecapItem)
         
-        let tracklistItem = NSMenuItem(
+        let sessionTracklistItem = NSMenuItem(
             title: "Générateur de Tracklist…",
             action: #selector(openTracklistGeneratorAction),
             keyEquivalent: "T"
         )
-        tracklistItem.keyEquivalentModifierMask = [.command, .shift]
-        tracklistItem.target = self
-        sessionMenu.addItem(tracklistItem)
+        sessionTracklistItem.keyEquivalentModifierMask = [.command, .shift]
+        sessionTracklistItem.target = self
+        sessionMenu.addItem(sessionTracklistItem)
+        
+        let sessionSearchItem = NSMenuItem(
+            title: "Rechercher dans la bibliothèque DJ…",
+            action: #selector(openSearchAction),
+            keyEquivalent: "F"
+        )
+        sessionSearchItem.keyEquivalentModifierMask = [.command, .option]
+        sessionSearchItem.target = self
+        sessionMenu.addItem(sessionSearchItem)
+        
+        sessionMenu.addItem(NSMenuItem.separator())
+        
+        let sessionResyncItem = NSMenuItem(
+            title: "Resynchroniser avec Serato / Rekordbox",
+            action: #selector(triggerSessionResyncAction),
+            keyEquivalent: "R"
+        )
+        sessionResyncItem.keyEquivalentModifierMask = [.command, .shift]
+        sessionResyncItem.target = self
+        sessionMenu.addItem(sessionResyncItem)
+        
+        let sessionResetItem = NSMenuItem(
+            title: "Nouvelle session DJ (Réinitialiser le set)…",
+            action: #selector(resetSessionAction),
+            keyEquivalent: "N"
+        )
+        sessionResetItem.keyEquivalentModifierMask = [.command, .shift]
+        sessionResetItem.target = self
+        sessionMenu.addItem(sessionResetItem)
+        
+        let sessionClearToPlayItem = NSMenuItem(
+            title: "Vider la liste « À jouer »…",
+            action: #selector(clearToPlayAction),
+            keyEquivalent: ""
+        )
+        sessionClearToPlayItem.target = self
+        sessionMenu.addItem(sessionClearToPlayItem)
+        
+        let sessionClearOverrideItem = NSMenuItem(
+            title: "Effacer le forçage manuel de morceau",
+            action: #selector(clearManualOverrideAction),
+            keyEquivalent: ""
+        )
+        sessionClearOverrideItem.target = self
+        sessionMenu.addItem(sessionClearOverrideItem)
+        
+        sessionMenu.addItem(NSMenuItem.separator())
+        
+        // Section Télémétrie & État en direct
+        let statusHeaderItem = NSMenuItem(title: "ÉTAT EN DIRECT", action: nil, keyEquivalent: "")
+        statusHeaderItem.isEnabled = false
+        sessionMenu.addItem(statusHeaderItem)
+        
+        let liveTrackItem = NSMenuItem(title: "▶︎ Morceau : Aucun morceau détecté", action: nil, keyEquivalent: "")
+        liveTrackItem.tag = 1001
+        liveTrackItem.isEnabled = false
+        sessionMenu.addItem(liveTrackItem)
+        
+        let liveCountItem = NSMenuItem(title: "● 0 morceau joué dans ce set", action: nil, keyEquivalent: "")
+        liveCountItem.tag = 1002
+        liveCountItem.isEnabled = false
+        sessionMenu.addItem(liveCountItem)
+        
+        let liveSoftwareItem = NSMenuItem(title: "● En attente de connexion DJ", action: nil, keyEquivalent: "")
+        liveSoftwareItem.tag = 1003
+        liveSoftwareItem.isEnabled = false
+        sessionMenu.addItem(liveSoftwareItem)
         
         sessionMenuItem.submenu = sessionMenu
         mainMenu.addItem(sessionMenuItem)
         
         // -------------------------------------------------------------
-        // 4. Menu "Fenêtre"
+        // 5. Menu "Fenêtre"
         // -------------------------------------------------------------
         let windowMenuItem = NSMenuItem()
         let windowMenu = NSMenu(title: "Fenêtre")
         
-        let showRecallItem = NSMenuItem(
-            title: "Afficher Recall",
-            action: #selector(showRecallAction),
-            keyEquivalent: ""
+        let toggleVisibilityItem = NSMenuItem(
+            title: "Afficher / Masquer Recall",
+            action: #selector(toggleVisibilityAction),
+            keyEquivalent: "r"
         )
-        showRecallItem.target = self
-        windowMenu.addItem(showRecallItem)
+        toggleVisibilityItem.keyEquivalentModifierMask = [.command, .option]
+        toggleVisibilityItem.target = self
+        windowMenu.addItem(toggleVisibilityItem)
         
         let toggleCompactItem = NSMenuItem(
-            title: "Mode Compact",
+            title: "Mode Compact (Bandeau DJ)",
             action: #selector(toggleCompactAction),
             keyEquivalent: "k"
         )
@@ -252,15 +376,81 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         themeSubmenuItem.submenu = themeMenu
         windowMenu.addItem(themeSubmenuItem)
         
+        // Sous-menu Translucidité (Verre dépoli)
+        let glassSubmenuItem = NSMenuItem(title: "Translucidité du verre", action: nil, keyEquivalent: "")
+        let glassMenu = NSMenu(title: "Translucidité du verre")
+        
+        let glass80Item = NSMenuItem(title: "Flou discret (80%)", action: #selector(setGlassTranslucency80Action), keyEquivalent: "")
+        glass80Item.target = self
+        glassMenu.addItem(glass80Item)
+        
+        let glass50Item = NSMenuItem(title: "Équilibré (50% - Recommandé)", action: #selector(setGlassTranslucency50Action), keyEquivalent: "")
+        glass50Item.target = self
+        glassMenu.addItem(glass50Item)
+        
+        let glass20Item = NSMenuItem(title: "Très transparent (20%)", action: #selector(setGlassTranslucency20Action), keyEquivalent: "")
+        glass20Item.target = self
+        glassMenu.addItem(glass20Item)
+        
+        let glass0Item = NSMenuItem(title: "Opaque (0%)", action: #selector(setGlassTranslucency0Action), keyEquivalent: "")
+        glass0Item.target = self
+        glassMenu.addItem(glass0Item)
+        
+        glassSubmenuItem.submenu = glassMenu
+        windowMenu.addItem(glassSubmenuItem)
+        
+        windowMenu.addItem(NSMenuItem.separator())
+        
+        let minimizeItem = NSMenuItem(
+            title: "Réduire",
+            action: #selector(NSWindow.miniaturize(_:)),
+            keyEquivalent: "m"
+        )
+        windowMenu.addItem(minimizeItem)
+        
+        let zoomItem = NSMenuItem(
+            title: "Zoom",
+            action: #selector(NSWindow.performZoom(_:)),
+            keyEquivalent: ""
+        )
+        windowMenu.addItem(zoomItem)
+        
+        windowMenu.addItem(NSMenuItem.separator())
+        
+        let bringAllItem = NSMenuItem(
+            title: "Tout ramener au premier plan",
+            action: #selector(NSApplication.arrangeInFront(_:)),
+            keyEquivalent: ""
+        )
+        windowMenu.addItem(bringAllItem)
+        
         windowMenuItem.submenu = windowMenu
         mainMenu.addItem(windowMenuItem)
         NSApp.windowsMenu = windowMenu
         
         // -------------------------------------------------------------
-        // 5. Menu "Aide"
+        // 6. Menu "Aide"
         // -------------------------------------------------------------
         let helpMenuItem = NSMenuItem()
         let helpMenu = NSMenu(title: "Aide")
+        
+        let guideItem = NSMenuItem(
+            title: "Guide d'utilisation de Recall…",
+            action: #selector(openGuideAction),
+            keyEquivalent: ""
+        )
+        guideItem.target = self
+        helpMenu.addItem(guideItem)
+        
+        let hotkeyItem = NSMenuItem(
+            title: "Raccourcis Clavier DJ…",
+            action: #selector(openHotKeySettingsAction),
+            keyEquivalent: ""
+        )
+        hotkeyItem.target = self
+        helpMenu.addItem(hotkeyItem)
+        
+        helpMenu.addItem(NSMenuItem.separator())
         
         let checkUpdateHelpItem = NSMenuItem(
             title: "Rechercher les mises à jour…",
@@ -270,8 +460,26 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         checkUpdateHelpItem.target = self
         helpMenu.addItem(checkUpdateHelpItem)
         
+        helpMenu.addItem(NSMenuItem.separator())
+        
+        let websiteItem = NSMenuItem(
+            title: "Site officiel (mixify.fr)",
+            action: #selector(openWebsiteAction),
+            keyEquivalent: ""
+        )
+        websiteItem.target = self
+        helpMenu.addItem(websiteItem)
+        
+        let supportItem = NSMenuItem(
+            title: "Support DJ (contact@mixify.fr)",
+            action: #selector(openSupportEmailAction),
+            keyEquivalent: ""
+        )
+        supportItem.target = self
+        helpMenu.addItem(supportItem)
+        
         let feedbackHelpItem = NSMenuItem(
-            title: "Faire un retour au développeur…",
+            title: "Suggérer une amélioration…",
             action: #selector(openFeedbackWebsiteAction),
             keyEquivalent: ""
         )
@@ -279,14 +487,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(feedbackHelpItem)
         
         helpMenu.addItem(NSMenuItem.separator())
-        
-        let websiteItem = NSMenuItem(
-            title: "Site officiel",
-            action: #selector(openWebsiteAction),
-            keyEquivalent: ""
-        )
-        websiteItem.target = self
-        helpMenu.addItem(websiteItem)
         
         let githubItem = NSMenuItem(
             title: "Dépôt GitHub",
@@ -323,30 +523,90 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openFeedbackWebsiteAction() {
-        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
+        if let url = URL(string: "https://mixify.fr") {
             NSWorkspace.shared.open(url)
         }
+    }
+    
+    @objc private func openSupportEmailAction() {
+        if let url = URL(string: "mailto:support@mixify.fr?subject=Recall%20Support%20DJ") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    @objc private func openGuideAction() {
+        FloatingWindowController.shared.show()
+        NSApp.activate(ignoringOtherApps: true)
+        NotificationCenter.default.post(name: .recallTriggerGuide, object: nil)
+    }
+    
+    @objc private func openHotKeySettingsAction() {
+        UserDefaults.standard.set(SettingsTab.hotkeys.rawValue, forKey: "recall_settings_active_tab")
+        SettingsWindowController.shared.show()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    @objc private func openSearchAction() {
+        GlobalHotKeyService.shared.performOpenSearch()
+    }
+    
+    @objc private func triggerSessionResyncAction() {
+        SeratoMonitorService.shared.triggerSessionResync()
+    }
+    
+    @objc private func resetSessionAction() {
+        let alert = NSAlert()
+        alert.messageText = "Démarrer une nouvelle session de mix ?"
+        alert.informativeText = "Cette action réinitialise l'historique des morceaux joués pour le set en cours.\nLes suggestions et statistiques repartiront à zéro.\n\nVos favoris, combos et préréglages restent intacts."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Réinitialiser la session")
+        alert.addButton(withTitle: "Annuler")
+        
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            SessionHistoryService.shared.resetSession()
+        }
+    }
+    
+    @objc private func clearToPlayAction() {
+        let count = ToPlayService.shared.tracks.count
+        guard count > 0 else { return }
+        
+        let alert = NSAlert()
+        alert.messageText = "Vider la liste « À jouer » ?"
+        alert.informativeText = "Cette action retirera les \(count) morceau(x) actuellement mis en attente pour votre mix."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Vider la liste")
+        alert.addButton(withTitle: "Annuler")
+        
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            ToPlayService.shared.clearAll()
+        }
+    }
+    
+    @objc private func clearManualOverrideAction() {
+        SeratoMonitorService.shared.clearManualOverride()
+    }
+    
+    @objc private func toggleVisibilityAction() {
+        GlobalHotKeyService.shared.performToggleVisibility()
     }
     
     @objc private func showAboutAction() {
         let alert = NSAlert()
         alert.messageText = "Recall \(AutoUpdateService.shared.currentAppVersion)"
-        alert.informativeText = "Compagnon intelligent en direct pour Serato DJ Pro & Rekordbox.\nConçu par REVR pour assister les DJs en live.\n\n100% local • Aucune collecte de données • Léger & Réactif."
+        alert.informativeText = "Compagnon intelligent en direct pour Serato DJ Pro & Rekordbox.\nConçu pour assister les DJs en live.\n\n100% local • Aucune collecte de données • Léger & Réactif."
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Site officiel")
-        alert.addButton(withTitle: "Suggérer une idée")
+        alert.addButton(withTitle: "Site officiel (mixify.fr)")
         alert.addButton(withTitle: "Rechercher une mise à jour")
         
         NSApp.activate(ignoringOtherApps: true)
         let response = alert.runModal()
         if response == .alertSecondButtonReturn {
-            if let url = URL(string: "https://revrmusic.github.io/recall/") {
-                NSWorkspace.shared.open(url)
-            }
+            openWebsiteAction()
         } else if response == .alertThirdButtonReturn {
-            openFeedbackWebsiteAction()
-        } else if response == NSApplication.ModalResponse(rawValue: 1003) {
             checkForUpdatesAction()
         }
     }
@@ -371,7 +631,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func toggleCompactAction() {
-        UserSettings.shared.isCompactMode.toggle()
+        GlobalHotKeyService.shared.performToggleCompact()
     }
     
     @objc private func toggleAlwaysOnTopAction() {
@@ -395,8 +655,24 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         UserSettings.shared.djTheme = .acidGreen
     }
     
+    @objc private func setGlassTranslucency80Action() {
+        UserSettings.shared.glassTranslucency = 0.80
+    }
+    
+    @objc private func setGlassTranslucency50Action() {
+        UserSettings.shared.glassTranslucency = 0.50
+    }
+    
+    @objc private func setGlassTranslucency20Action() {
+        UserSettings.shared.glassTranslucency = 0.20
+    }
+    
+    @objc private func setGlassTranslucency0Action() {
+        UserSettings.shared.glassTranslucency = 0.0
+    }
+    
     @objc private func openWebsiteAction() {
-        if let url = URL(string: "https://revrmusic.github.io/recall/") {
+        if let url = URL(string: "https://mixify.fr") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -408,7 +684,51 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-// MARK: - Validation Dynamique des Menus (Coches d'état)
+// MARK: - Délégation Dynamique des Menus (Mise à jour en temps réel)
+
+extension AppDelegate: NSMenuDelegate {
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        if menu.title == "Outils de session" {
+            updateSessionMenuLiveInfo(menu)
+        }
+    }
+    
+    private func updateSessionMenuLiveInfo(_ menu: NSMenu) {
+        if let liveTrackItem = menu.item(withTag: 1001) {
+            if let current = SeratoMonitorService.shared.currentTrack {
+                let title = current.smartParsed.title.isEmpty ? current.title : current.smartParsed.title
+                let artist = current.smartParsed.artist ?? current.artist
+                let label = artist.isEmpty ? title : "\(artist) – \(title)"
+                liveTrackItem.title = "▶︎ Morceau : \(label)"
+            } else {
+                liveTrackItem.title = "▶︎ Morceau : Aucun morceau détecté"
+            }
+        }
+        
+        if let liveCountItem = menu.item(withTag: 1002) {
+            let count = SessionHistoryService.shared.playedTracks.count
+            if count == 0 {
+                liveCountItem.title = "● 0 morceau joué dans ce set"
+            } else if count == 1 {
+                liveCountItem.title = "● 1 morceau joué dans ce set"
+            } else {
+                liveCountItem.title = "● \(count) morceaux joués dans ce set"
+            }
+        }
+        
+        if let liveSoftwareItem = menu.item(withTag: 1003) {
+            if SeratoMonitorService.shared.isSeratoConnected {
+                liveSoftwareItem.title = "● Serato DJ Pro connecté"
+            } else if SeratoMonitorService.shared.isRekordboxConnected {
+                liveSoftwareItem.title = "● Rekordbox connecté"
+            } else {
+                liveSoftwareItem.title = "○ En attente de connexion DJ (Serato / Rekordbox)"
+            }
+        }
+    }
+}
+
+// MARK: - Validation Dynamique des Menus (Coches d'état & Grisement)
 
 extension AppDelegate: NSMenuItemValidation {
     public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
@@ -424,6 +744,20 @@ extension AppDelegate: NSMenuItemValidation {
             menuItem.state = UserSettings.shared.djTheme == .sunsetAmber ? .on : .off
         } else if menuItem.action == #selector(setThemeAcidGreenAction) {
             menuItem.state = UserSettings.shared.djTheme == .acidGreen ? .on : .off
+        } else if menuItem.action == #selector(setGlassTranslucency80Action) {
+            menuItem.state = abs(UserSettings.shared.glassTranslucency - 0.80) < 0.05 ? .on : .off
+        } else if menuItem.action == #selector(setGlassTranslucency50Action) {
+            menuItem.state = abs(UserSettings.shared.glassTranslucency - 0.50) < 0.05 ? .on : .off
+        } else if menuItem.action == #selector(setGlassTranslucency20Action) {
+            menuItem.state = abs(UserSettings.shared.glassTranslucency - 0.20) < 0.05 ? .on : .off
+        } else if menuItem.action == #selector(setGlassTranslucency0Action) {
+            menuItem.state = abs(UserSettings.shared.glassTranslucency - 0.0) < 0.05 ? .on : .off
+        } else if menuItem.action == #selector(clearToPlayAction) {
+            let count = ToPlayService.shared.tracks.count
+            menuItem.title = count > 0 ? "Vider la liste « À jouer » (\(count))…" : "Vider la liste « À jouer »…"
+            return count > 0
+        } else if menuItem.action == #selector(clearManualOverrideAction) {
+            return SeratoMonitorService.shared.manualTrackOverride != nil
         }
         return true
     }

@@ -6,6 +6,7 @@ import SwiftUI
 
 public extension Notification.Name {
     static let recallTriggerSearch = Notification.Name("recallTriggerSearch")
+    static let recallTriggerGuide = Notification.Name("recallTriggerGuide")
 }
 
 /// Service de gestion des raccourcis clavier globaux système via Carbon EventHotKey
