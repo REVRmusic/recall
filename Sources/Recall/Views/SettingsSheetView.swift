@@ -51,6 +51,16 @@ public struct SettingsSheetView: View {
         SettingsTab(rawValue: selectedTabRaw) ?? .djMix
     }
     
+    /// Opacité spécifique à la fenêtre des paramètres : conserve l'élégance du verre dépoli macOS
+    /// tout en restant sombre, dense et parfaitement lisible même lorsque la translucidité globale est au max.
+    private var settingsGlassTintOpacity: Double {
+        min(1.0, max(0.88, 1.0 - (settings.glassTranslucency * 0.12)))
+    }
+    
+    private var settingsHeaderGlassTintOpacity: Double {
+        min(0.98, settingsGlassTintOpacity + 0.05)
+    }
+    
     public init() {}
     
     public var body: some View {
@@ -70,7 +80,7 @@ public struct SettingsSheetView: View {
         .frame(minWidth: 620, maxWidth: .infinity, minHeight: 520, maxHeight: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color.darkBg.opacity(settings.effectiveGlassTintOpacity))
+                .fill(Color.darkBg.opacity(settingsGlassTintOpacity))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(
@@ -170,7 +180,7 @@ public struct SettingsSheetView: View {
         .padding(.horizontal, 22)
         .padding(.top, 16)
         .padding(.bottom, 12)
-        .background(Color.darkBg.opacity(min(0.95, settings.effectiveGlassTintOpacity + 0.15)))
+        .background(Color.darkBg.opacity(settingsHeaderGlassTintOpacity))
     }
     
     // MARK: - Barre d'onglets Pro
@@ -185,7 +195,7 @@ public struct SettingsSheetView: View {
         }
         .padding(.horizontal, 22)
         .padding(.bottom, 12)
-        .background(Color.darkBg.opacity(min(0.95, settings.effectiveGlassTintOpacity + 0.15)))
+        .background(Color.darkBg.opacity(settingsHeaderGlassTintOpacity))
     }
     
     private func tabButton(for tab: SettingsTab) -> some View {
@@ -1197,7 +1207,7 @@ public struct SettingsSheetView: View {
             content()
         }
         .padding(13)
-        .background(Color.cardBg.opacity(min(0.85, 0.25 + (1.0 - settings.glassTranslucency) * 0.60)))
+        .background(Color.cardBg.opacity(min(0.92, 0.65 + (1.0 - settings.glassTranslucency) * 0.25)))
         .cornerRadius(9)
         .overlay(
             RoundedRectangle(cornerRadius: 9)
