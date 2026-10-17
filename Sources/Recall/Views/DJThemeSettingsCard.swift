@@ -132,16 +132,6 @@ public struct DJThemeSettingsCard: View {
                     .foregroundColor(.white.opacity(0.48))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            
-            // Mini Aperçu dynamique du thème
-            VStack(alignment: .leading, spacing: 5) {
-                Text("Aperçu en direct :")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.60))
-                
-                livePreviewCard
-            }
-            .padding(.top, 2)
         }
     }
     
@@ -235,111 +225,5 @@ public struct DJThemeSettingsCard: View {
         .focusable(false)
         .help("Activer l'ambiance \(theme.name) (\(theme.subtitle))")
     }
-    
-    /// Mini-carte d'aperçu dynamique reflétant fidèlement l'ambiance et la transparence
-    private var livePreviewCard: some View {
-        ZStack {
-            // Effet verre dépoli simulé
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.darkBg.opacity(settings.effectiveGlassTintOpacity))
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.ultraThinMaterial)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.20),
-                                    settings.accentColor.opacity(0.35),
-                                    Color.white.opacity(0.08)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                )
-            
-            VStack(spacing: 5) {
-                // Mini barre d'en-tête
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(settings.accentColor)
-                        .frame(width: 6, height: 6)
-                    
-                    Text("RECALL LIVE")
-                        .font(.system(size: 8, weight: .heavy, design: .rounded))
-                        .foregroundColor(settings.accentColor)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 3) {
-                        Text("BPM ±10%")
-                            .font(.system(size: 7.5, weight: .bold))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1.5)
-                            .background(settings.accentColor.opacity(0.25))
-                            .foregroundColor(settings.accentColor)
-                            .cornerRadius(3)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 3)
-                                    .stroke(settings.accentColor.opacity(0.6), lineWidth: 0.6)
-                            )
-                        
-                        Text("8A")
-                            .font(.system(size: 7.5, weight: .heavy, design: .monospaced))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1.5)
-                            .background(Color(hex: "#00E5FF").opacity(0.25))
-                            .foregroundColor(Color(hex: "#00E5FF"))
-                            .cornerRadius(3)
-                    }
-                }
-                
-                // Mini rangée de morceau
-                HStack(spacing: 6) {
-                    Text("#1")
-                        .font(.system(size: 8, weight: .black, design: .rounded))
-                        .foregroundColor(settings.accentColor)
-                        .padding(.horizontal, 3.5)
-                        .padding(.vertical, 1)
-                        .background(settings.accentColor.opacity(0.20))
-                        .cornerRadius(3)
-                    
-                    VStack(alignment: .leading, spacing: 0.5) {
-                        Text("The Weeknd - Blinding Lights")
-                            .font(.system(size: 9.5, weight: .bold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                        
-                        Text("171 BPM • 8A ➔ 9A (+1 Energy Boost)")
-                            .font(.system(size: 8))
-                            .foregroundColor(.white.opacity(0.55))
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 3) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 7.5))
-                            .foregroundColor(Color.accentFire)
-                        Text("14x")
-                            .font(.system(size: 8, weight: .heavy, design: .rounded))
-                            .foregroundColor(settings.accentColor)
-                    }
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(settings.accentColor.opacity(0.18))
-                    .cornerRadius(4)
-                }
-                .padding(5)
-                .background(Color.cardBg.opacity(0.7))
-                .cornerRadius(6)
-            }
-            .padding(8)
-        }
-        .frame(height: 74)
-    }
 }
+
