@@ -108,22 +108,6 @@ public struct HeaderView: View {
                 .focusable(false)
                 .help("Guide et légende des symboles (enchaînements, clés Camelot, BPM)")
                 
-                // Bouton Épingler au premier plan (Always-On-Top)
-                Button {
-                    settings.alwaysOnTop.toggle()
-                    FloatingWindowController.shared.updateAlwaysOnTop(settings.alwaysOnTop)
-                } label: {
-                    Image(systemName: settings.alwaysOnTop ? "pin.fill" : "pin")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(settings.alwaysOnTop ? Color.accentCyan : .white.opacity(0.5))
-                        .frame(width: 21, height: 21)
-                        .background(settings.alwaysOnTop ? Color.accentCyan.opacity(0.2) : Color.white.opacity(0.06))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .help(settings.alwaysOnTop ? "Toujours au premier plan (Actif)" : "Premier plan désactivé")
-                
                 // Bouton Paramètres (s'ouvre au centre de l'écran pour garder Recall visible)
                 Button {
                     SettingsWindowController.shared.toggle()

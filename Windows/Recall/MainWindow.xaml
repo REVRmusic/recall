@@ -378,7 +378,6 @@
                         <Button x:Name="BtnSearch" Content="🔍" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSearch_Click" ToolTip="Rechercher un morceau dans la bibliothèque (Ctrl+Shift+F)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnStats" Content="📊" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnStats_Click" ToolTip="Statistiques du mix - Set Recap (Ctrl+Shift+S)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnGuide" Content="?" FontSize="10" FontWeight="Bold" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnGuide_Click" ToolTip="Guide et légende des symboles" Margin="0,0,3,0"/>
-                        <Button x:Name="BtnPin" Content="📌" FontSize="9" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnPin_Click" ToolTip="Toujours au premier plan (Always on top)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnSettings" Content="⚙" FontSize="10" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSettings_Click" ToolTip="Paramètres et conformité" Margin="0,0,3,0"/>
                         <Button x:Name="BtnClose" Content="✕" FontSize="9" FontWeight="Bold" Style="{StaticResource HeaderCloseBtnStyle}" Click="BtnClose_Click" ToolTip="Fermer Recall" />
                     </StackPanel>

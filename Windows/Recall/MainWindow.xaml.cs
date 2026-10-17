@@ -408,8 +408,7 @@ namespace Recall
                 }
             }
 
-            // Always On Top Pin
-            BtnPin.Foreground = new SolidColorBrush(_settings.AlwaysOnTop ? Color.FromRgb(20, 200, 176) : Color.FromRgb(156, 163, 175));
+
         }
 
         private void ApplySettingsToUI()
@@ -492,13 +491,7 @@ namespace Recall
             guideWnd.ShowDialog();
         }
 
-        private void BtnPin_Click(object sender, RoutedEventArgs e)
-        {
-            _settings.AlwaysOnTop = !_settings.AlwaysOnTop;
-            _settings.Save();
-            Topmost = _settings.AlwaysOnTop;
-            BtnPin.Foreground = new SolidColorBrush(_settings.AlwaysOnTop ? Color.FromRgb(20, 200, 176) : Color.FromRgb(156, 163, 175));
-        }
+
 
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
