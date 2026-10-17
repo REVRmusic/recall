@@ -28,24 +28,6 @@ public struct DJThemeSettingsCard: View {
                 }
                 
                 Spacer()
-                
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(settings.accentColor)
-                        .frame(width: 6, height: 6)
-                    
-                    Text(settings.djTheme.name.uppercased())
-                        .font(.system(size: 8.5, weight: .heavy, design: .rounded))
-                        .foregroundColor(settings.accentColor)
-                }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2.5)
-                .background(settings.accentColor.opacity(0.18))
-                .cornerRadius(4)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(settings.accentColor.opacity(0.4), lineWidth: 0.8)
-                )
             }
             
             Text("Choisissez les accents lumineux pour matcher l'esthétique de vos platines, contrôleurs ou table de mixage, et ajustez la translucidité du verre dépoli.")
