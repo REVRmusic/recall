@@ -109,6 +109,10 @@ public struct Track: Identifiable, Hashable {
         return TrackMetadataCleaner.extractPrimaryArtist(string)
     }
     
+    public static func canonicalGlobalGenre(_ raw: String) -> String {
+        return TrackMetadataCleaner.canonicalGlobalGenre(raw)
+    }
+    
     public var smartParsed: (artist: String?, title: String) {
         return TrackMetadataCleaner.resolve(
             artist: artist,
@@ -139,6 +143,10 @@ public struct Track: Identifiable, Hashable {
             return clean
         }
         return "Artiste inconnu"
+    }
+    
+    public var displayGenre: String {
+        return TrackMetadataCleaner.canonicalGlobalGenre(genre)
     }
     
     public var fullTooltip: String {

@@ -94,6 +94,16 @@ public struct TrackMetadataCleaner {
         pattern: "(?i)\\s+(feat\\.?|ft\\.?|featuring|&|x|vs\\.?|pres\\.?|presents)\\s+.*$",
         options: []
     )
+    
+    private static let emojiRegex = try! NSRegularExpression(
+        pattern: "[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]",
+        options: []
+    )
+    
+    private static let genreJunkSuffixRegex = try! NSRegularExpression(
+        pattern: "(?i)\\s*[\\[\\(](clean|dirty|intro|outro|extended|edit|remix|bootleg|club\\s*mix|original|vip|radio).*?[\\]\\)]",
+        options: []
+    )
 
     // MARK: - Validation & Détection
     
@@ -416,5 +426,156 @@ public struct TrackMetadataCleaner {
             cleanTitleName(trimmedTitle) :
             (!trimmedFile.isEmpty ? cleanTitleName((trimmedFile as NSString).deletingPathExtension) : "Morceau inconnu")
         return (nil, directTitle)
+    }
+    
+    // MARK: - Normalisation & Unification des Genres Musicaux (Styles Globaux)
+    
+    /// Transforme un genre brut ou composite (ex: "Hip-Hop, Rap Fr", "House / Tech House", "Reggaeton")
+    /// en un style musical global propre, homogène et unifié pour le DJ.
+    public static func canonicalGlobalGenre(_ raw: String) -> String {
+        var clean = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if clean.isEmpty { return "" }
+        
+        // Supprimer emojis (ex: "Latino 🔥" -> "Latino")
+        clean = emojiRegex.stringByReplacingMatches(
+            in: clean,
+            options: [],
+            range: NSRange(location: 0, length: (clean as NSString).length),
+            withTemplate: ""
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Supprimer tags suffixes entre parenthèses / crochets (ex: "House (Club Mix)" -> "House")
+        clean = genreJunkSuffixRegex.stringByReplacingMatches(
+            in: clean,
+            options: [],
+            range: NSRange(location: 0, length: (clean as NSString).length),
+            withTemplate: ""
+        ).trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if clean.isEmpty { return "" }
+        
+        let lower = clean.lowercased()
+        
+        // Filtrage des placeholders
+        if lower == "unknown" || lower == "inconnu" || lower == "genre inconnu" ||
+           lower == "other" || lower == "autre" || lower == "divers" || lower == "general" ||
+           lower == "none" || lower == "n/a" || lower == "na" || lower == "?" || lower == "-" || lower == "--" {
+            return ""
+        }
+        
+        // Si c'est un tag de promo ou un handle réseau social égaré dans le genre
+        if isJunkOrPromoArtist(clean) {
+            return ""
+        }
+        
+        // --- Détection des Familles de Styles Globaux ---
+        
+        // 1. Shatta & Bouyon (Culture Urbaine Caribéenne)
+        if lower.contains("shatta") {
+            return "Shatta"
+        }
+        if lower.contains("bouyon") {
+            return "Bouyon"
+        }
+        
+        // 2. Latino & Reggaeton (analysé AVANT Reggae car "reggaeton" contient "reggae")
+        if lower.contains("latino") || lower.contains("latin") || lower.contains("reggaeton") ||
+           lower.contains("regeton") || lower.contains("dembow") || lower.contains("baile funk") ||
+           lower.contains("moombahton") || lower.contains("bachata") || lower.contains("salsa") ||
+           lower.contains("merengue") || lower.contains("cumbia") || lower.contains("perreo") ||
+           lower.contains("urbano") || lower.contains("trap latino") {
+            return "Latino"
+        }
+        
+        // 3. Dancehall, Reggae, Zouk & Kompa
+        if lower.contains("dancehall") || lower.contains("ragga") {
+            return "Dancehall"
+        }
+        if lower.contains("zouk") || lower.contains("kompa") || lower.contains("gouyad") {
+            return "Zouk / Kompa"
+        }
+        if lower.contains("reggae") || lower.contains("dub") {
+            return "Reggae"
+        }
+        
+        // 4. Afro & Amapiano
+        if lower.contains("afro") || lower.contains("amapiano") || lower.contains("coupe decale") ||
+           lower.contains("coupé décalé") || lower.contains("ndombolo") || lower.contains("kizomba") ||
+           lower.contains("semba") || lower.contains("bongo flava") || lower.contains("gqom") ||
+           lower.contains("highlife") {
+            if lower.contains("afro house") || lower.contains("afro-house") {
+                return "Afro House"
+            }
+            return "Afro"
+        }
+        
+        // 5. Hip-Hop & Rap (résout "Hip-Hop, Rap Fr", "French Rap", "Trap", "Drill" -> "Hip-Hop")
+        if lower.contains("hip-hop") || lower.contains("hip hop") || lower.contains("hiphop") ||
+           lower.contains("rap") || lower.contains("trap") || lower.contains("drill") ||
+           lower.contains("boom bap") || lower.contains("crunk") || lower.contains("phonk") {
+            return "Hip-Hop"
+        }
+        
+        // 6. House (résout "Tech House", "Deep House", "Electro House" -> "House")
+        if lower.contains("house") {
+            return "House"
+        }
+        
+        // 7. Techno & Minimal
+        if lower.contains("techno") || lower.contains("minimal") || lower.contains("schranz") || lower.contains("hardgroove") {
+            return "Techno"
+        }
+        
+        // 8. R&B, Soul & Funk
+        if lower.contains("r&b") || lower.contains("rnb") || lower.contains("r and b") ||
+           lower.contains("soul") || lower.contains("funk") || lower.contains("disco") ||
+           lower.contains("boogie") {
+            return "R&B"
+        }
+        
+        // 9. Drum & Bass & Bass Music
+        if lower.contains("drum & bass") || lower.contains("drum and bass") || lower.contains("dnb") ||
+           lower.contains("jungle") || lower.contains("dubstep") || lower.contains("uk garage") ||
+           lower.contains("ukg") || lower.contains("bassline") || lower.contains("grime") ||
+           lower.contains("breakbeat") || lower.contains("breaks") {
+            return "Drum & Bass"
+        }
+        
+        // 10. Electro & EDM
+        if lower.contains("edm") || lower.contains("big room") || lower.contains("future rave") ||
+           lower.contains("mainstage") || lower.contains("electro") || lower.contains("trance") ||
+           lower.contains("hardstyle") || lower.contains("eurodance") {
+            return "Electro"
+        }
+        
+        // 11. Pop & Commercial
+        if lower.contains("pop") || lower.contains("top 40") || lower.contains("commercial") ||
+           lower.contains("variété") || lower.contains("variete") || lower.contains("chanson") {
+            return "Pop"
+        }
+        
+        // 12. Rock & Metal
+        if lower.contains("rock") || lower.contains("metal") || lower.contains("punk") ||
+           lower.contains("grunge") || lower.contains("indie") {
+            return "Rock"
+        }
+        
+        // Si le genre est composite avec séparateurs (ex: "StyleA, StyleB" ou "StyleA / StyleB")
+        let separators = CharacterSet(charactersIn: ",/;&|")
+        if clean.rangeOfCharacter(from: separators) != nil {
+            let parts = clean.components(separatedBy: separators)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            
+            for part in parts {
+                let canonicalPart = canonicalGlobalGenre(part)
+                if !canonicalPart.isEmpty {
+                    return canonicalPart
+                }
+            }
+        }
+        
+        // Fallback propre : Première lettre en majuscule
+        return clean.capitalized
     }
 }

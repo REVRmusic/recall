@@ -206,28 +206,22 @@ public struct SetRecapStats {
         var genreCounts: [String: Int] = [:]
         var genreLatestDate: [String: Date] = [:]
         for tr in tracks {
-            let g = tr.genre.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !g.isEmpty,
-                  g.lowercased() != "unknown",
-                  g.lowercased() != "genre inconnu",
-                  g.lowercased() != "inconnu",
-                  g.lowercased() != "other",
-                  g.lowercased() != "autre",
-                  !TrackMetadataCleaner.isJunkOrPromoArtist(g) else { continue }
+            let canonical = tr.displayGenre
+            guard !canonical.isEmpty,
+                  !TrackMetadataCleaner.isJunkOrPromoArtist(canonical) else { continue }
             
             // Si le genre correspond en réalité au nom de l'artiste résolu, ne pas le compter comme genre musical
             let artLower = tr.displayArtist.lowercased()
             let primaryLower = TrackMetadataCleaner.extractPrimaryArtist(tr.displayArtist).lowercased()
-            if g.lowercased() == artLower || (!primaryLower.isEmpty && g.lowercased() == primaryLower) {
+            if canonical.lowercased() == artLower || (!primaryLower.isEmpty && canonical.lowercased() == primaryLower) {
                 continue
             }
             
-            let formatted = g.capitalized
-            genreCounts[formatted, default: 0] += 1
-            if let existing = genreLatestDate[formatted] {
-                genreLatestDate[formatted] = max(existing, tr.playedAt)
+            genreCounts[canonical, default: 0] += 1
+            if let existing = genreLatestDate[canonical] {
+                genreLatestDate[canonical] = max(existing, tr.playedAt)
             } else {
-                genreLatestDate[formatted] = tr.playedAt
+                genreLatestDate[canonical] = tr.playedAt
             }
         }
         

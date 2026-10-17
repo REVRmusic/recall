@@ -89,6 +89,10 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
         return ""
     }
     
+    public var displayGenre: String {
+        return TrackMetadataCleaner.canonicalGlobalGenre(genre)
+    }
+    
     public var displayBpm: String {
         if bpm <= 0 { return "--" }
         if abs(bpm.rounded() - bpm) < 0.05 {
