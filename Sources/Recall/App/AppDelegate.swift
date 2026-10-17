@@ -141,26 +141,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         let fileMenuItem = NSMenuItem()
         let fileMenu = NSMenu(title: "Fichier")
         
-        let tracklistItem = NSMenuItem(
-            title: "Générateur de Tracklist…",
-            action: #selector(openTracklistGeneratorAction),
-            keyEquivalent: "T"
-        )
-        tracklistItem.keyEquivalentModifierMask = [.command, .shift]
-        tracklistItem.target = self
-        fileMenu.addItem(tracklistItem)
-        
-        let setRecapItem = NSMenuItem(
-            title: "Statistiques du Mix (Set Recap)…",
-            action: #selector(openSetRecapAction),
-            keyEquivalent: "S"
-        )
-        setRecapItem.keyEquivalentModifierMask = [.command, .shift]
-        setRecapItem.target = self
-        fileMenu.addItem(setRecapItem)
-        
-        fileMenu.addItem(NSMenuItem.separator())
-        
         let closeWindowItem = NSMenuItem(
             title: "Fermer la fenêtre",
             action: #selector(closeWindowAction),
@@ -189,6 +169,33 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         
         editMenuItem.submenu = editMenu
         mainMenu.addItem(editMenuItem)
+        
+        // -------------------------------------------------------------
+        // 4. Menu "Outils de session"
+        // -------------------------------------------------------------
+        let sessionMenuItem = NSMenuItem()
+        let sessionMenu = NSMenu(title: "Outils de session")
+        
+        let setRecapItem = NSMenuItem(
+            title: "Statistiques du Mix (Set Recap)…",
+            action: #selector(openSetRecapAction),
+            keyEquivalent: "S"
+        )
+        setRecapItem.keyEquivalentModifierMask = [.command, .shift]
+        setRecapItem.target = self
+        sessionMenu.addItem(setRecapItem)
+        
+        let tracklistItem = NSMenuItem(
+            title: "Générateur de Tracklist…",
+            action: #selector(openTracklistGeneratorAction),
+            keyEquivalent: "T"
+        )
+        tracklistItem.keyEquivalentModifierMask = [.command, .shift]
+        tracklistItem.target = self
+        sessionMenu.addItem(tracklistItem)
+        
+        sessionMenuItem.submenu = sessionMenu
+        mainMenu.addItem(sessionMenuItem)
         
         // -------------------------------------------------------------
         // 4. Menu "Fenêtre"
