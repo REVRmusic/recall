@@ -3,6 +3,7 @@ name: Build & Package Recall (macOS & Windows)
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -75,3 +76,33 @@ jobs:
         name: Recall-Windows-EXE
         path: build-win/Recall.exe
         if-no-files-found: error
+
+  release:
+    name: Publish Official GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-assets
+        merge-multiple: true
+
+    - name: List Release Assets
+      run: ls -lh release-assets
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          release-assets/Recall.dmg
+          release-assets/Recall-macOS.zip
+          release-assets/Recall-Windows-x64.zip
+          release-assets/Recall.exe
+        name: Recall ${{ github.ref_name }} — Précision Serato Live, Thèmes Dynamiques & Menus
+        draft: false
+        prerelease: false
+
