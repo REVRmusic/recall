@@ -31,9 +31,9 @@ private class SetRecapPanel: NSPanel {
             let h = frame.size.height
             let w = frame.size.width
             
-            // Déplacement fluide de la modale via toute la barre d'en-tête (sauf bouton fermer en haut à droite)
-            if loc.y >= (h - 60) {
-                let isCloseButton = loc.x >= (w - 48) && loc.y >= (h - 48)
+            // Déplacement fluide et 100% natif via toute la barre d'en-tête (sauf bouton fermer en haut à droite)
+            if loc.y >= (h - 75) {
+                let isCloseButton = loc.x >= (w - 55) && loc.y >= (h - 55)
                 if !isCloseButton {
                     self.performDrag(with: event)
                     return

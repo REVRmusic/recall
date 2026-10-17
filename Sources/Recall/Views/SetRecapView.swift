@@ -271,7 +271,6 @@ public struct SetRecapView: View {
     @ObservedObject private var settings = UserSettings.shared
     @State private var currentTime = Date()
     @State private var showCopyToast: Bool = false
-    @State private var initialWindowOrigin: CGPoint? = nil
     
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
@@ -437,23 +436,6 @@ public struct SetRecapView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 1)
-                .onChanged { gesture in
-                    guard let window = NSApp.windows.first(where: { $0.title == "Statistiques du Mix Recall" && $0.isVisible }) ?? SetRecapWindowController.shared.window else { return }
-                    if initialWindowOrigin == nil {
-                        initialWindowOrigin = window.frame.origin
-                    }
-                    if let start = initialWindowOrigin {
-                        let newX = start.x + gesture.translation.width
-                        let newY = start.y - gesture.translation.height
-                        window.setFrameOrigin(CGPoint(x: newX, y: newY))
-                    }
-                }
-                .onEnded { _ in
-                    initialWindowOrigin = nil
-                }
-        )
     }
     
     // MARK: - 2. Hero Card Durée & Pacing
