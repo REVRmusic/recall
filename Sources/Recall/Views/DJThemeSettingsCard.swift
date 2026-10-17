@@ -108,24 +108,27 @@ public struct DJThemeSettingsCard: View {
                     }
                 }
                 
-                // Curseur de précision
-                HStack(spacing: 8) {
-                    Text("Opaque (0%)")
-                        .font(.system(size: 8.5))
-                        .foregroundColor(.white.opacity(0.45))
+                // Curseur de précision DJ Pro
+                HStack(spacing: 10) {
+                    HStack(spacing: 3.5) {
+                        Image(systemName: "square.fill")
+                            .font(.system(size: 7))
+                        Text("Opaque (0%)")
+                            .font(.system(size: 8.5, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(settings.glassTranslucency <= 0.04 ? settings.accentColor : .white.opacity(0.45))
                     
-                    Slider(
-                        value: $settings.glassTranslucency,
-                        in: 0.00...1.00,
-                        step: 0.02
-                    )
-                    .tint(settings.accentColor)
-                    .controlSize(.mini)
+                    DJTranslucencySlider(value: $settings.glassTranslucency)
                     
-                    Text("Translucide (100%)")
-                        .font(.system(size: 8.5))
-                        .foregroundColor(.white.opacity(0.45))
+                    HStack(spacing: 3.5) {
+                        Text("Translucide (100%)")
+                            .font(.system(size: 8.5, weight: .semibold, design: .rounded))
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 8))
+                    }
+                    .foregroundColor(settings.glassTranslucency >= 0.96 ? settings.accentColor : .white.opacity(0.45))
                 }
+                .padding(.vertical, 2)
                 
                 Text("Le verre dépoli floute dynamiquement la fenêtre sous Recall (ex: Serato ou Rekordbox). À 100%, l'effet verre dépoli est maximal et laisse transparaître vos formes d'onde et pistes en arrière-plan.")
                     .font(.system(size: 8.5))
@@ -224,6 +227,145 @@ public struct DJThemeSettingsCard: View {
         .buttonStyle(.plain)
         .focusable(false)
         .help("Activer l'ambiance \(theme.name) (\(theme.subtitle))")
+    }
+}
+
+// MARK: - Curseur Tactile Haute Définition pour la Translucidité (Style Console DJ)
+
+public struct DJTranslucencySlider: View {
+    @Binding var value: Double
+    @EnvironmentObject var settings: UserSettings
+    @State private var isDragging: Bool = false
+    @State private var isHovered: Bool = false
+    
+    private let presetNotches: [Double] = [0.0, 0.35, 0.65, 1.0]
+    
+    public init(value: Binding<Double>) {
+        self._value = value
+    }
+    
+    public var body: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let thumbRadius: CGFloat = 9
+            let thumbDiameter: CGFloat = thumbRadius * 2
+            let trackWidth = max(10, width - thumbDiameter)
+            let clampedVal = max(0.0, min(1.0, value))
+            let thumbX = thumbRadius + CGFloat(clampedVal) * trackWidth
+            let centerY = geo.size.height / 2
+            
+            ZStack(alignment: .leading) {
+                // 1. Fond du rail encastré
+                Capsule()
+                    .fill(Color.black.opacity(0.65))
+                    .frame(width: trackWidth, height: 6)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.12), lineWidth: 0.8)
+                    )
+                    .position(x: width / 2, y: centerY)
+                
+                // 2. Piste active lumineuse
+                if clampedVal > 0.005 {
+                    let activeWidth = CGFloat(clampedVal) * trackWidth
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    settings.accentColor.opacity(0.90),
+                                    settings.accentSecondaryColor
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: activeWidth, height: 6)
+                        .shadow(color: settings.accentColor.opacity(isDragging || isHovered ? 0.65 : 0.30), radius: 5, x: 0, y: 0)
+                        .position(x: thumbRadius + activeWidth / 2, y: centerY)
+                }
+                
+                // 3. Repères discrets (notches des présets clés)
+                ForEach(presetNotches, id: \.self) { notch in
+                    let notchX = thumbRadius + CGFloat(notch) * trackWidth
+                    Circle()
+                        .fill(clampedVal >= notch ? settings.accentColor : Color.white.opacity(0.25))
+                        .frame(width: 3.2, height: 3.2)
+                        .position(x: notchX, y: centerY)
+                }
+                
+                // 4. Curseur tactile DJ Pro (Thumb)
+                ZStack {
+                    // Halo néon externe
+                    Circle()
+                        .fill(settings.accentColor.opacity(isDragging ? 0.35 : (isHovered ? 0.20 : 0.08)))
+                        .frame(width: 26, height: 26)
+                        .blur(radius: 2)
+                    
+                    // Corps du curseur
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: "#2C3038"),
+                                    Color(hex: "#15181E")
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: thumbDiameter, height: thumbDiameter)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.40),
+                                            Color.white.opacity(0.10)
+                                        ],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: Color.black.opacity(0.70), radius: 3, x: 0, y: 2)
+                    
+                    // Anneau d'accent lumineux
+                    Circle()
+                        .stroke(settings.accentColor, lineWidth: 1.8)
+                        .frame(width: thumbDiameter - 2, height: thumbDiameter - 2)
+                    
+                    // Point central luminescent
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 4, height: 4)
+                        .shadow(color: settings.accentColor, radius: 2)
+                }
+                .scaleEffect(isDragging ? 1.15 : (isHovered ? 1.08 : 1.0))
+                .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isDragging)
+                .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isHovered)
+                .position(x: thumbX, y: centerY)
+            }
+            .animation(isDragging ? nil : .spring(response: 0.25, dampingFraction: 0.8), value: clampedVal)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { gesture in
+                        isDragging = true
+                        let x = gesture.location.x - thumbRadius
+                        let pct = max(0.0, min(1.0, Double(x / trackWidth)))
+                        let stepped = (pct * 100).rounded() / 100.0
+                        self.value = stepped
+                    }
+                    .onEnded { _ in
+                        isDragging = false
+                    }
+            )
+            .onHover { hovering in
+                isHovered = hovering
+            }
+        }
+        .frame(height: 24)
     }
 }
 
