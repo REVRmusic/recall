@@ -107,6 +107,7 @@ public final class SetRecapShareWebService {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
+                    AppLogger.error("Échec partage récapitulatif de set (réseau/connexion)", category: .web, error: error)
                     completion(.failure(error))
                     return
                 }
@@ -117,15 +118,19 @@ public final class SetRecapShareWebService {
                         let pasteboard = NSPasteboard.general
                         pasteboard.clearContents()
                         pasteboard.setString(webUrlString, forType: .string)
+                        AppLogger.info("Récapitulatif de set publié en ligne avec succès : \(webUrlString)", category: .web)
                         completion(.success(webUrl))
                     } else if httpResponse.statusCode == 404 {
                         let desc = "La table de récapitulatif (dj_set_recaps) n'est pas encore créée sur le serveur."
+                        AppLogger.error("Erreur partage récapitulatif : \(desc) (HTTP 404)", category: .web)
                         completion(.failure(NSError(domain: "RecallShare", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: desc])))
                     } else {
                         let serverMsg = data.flatMap { String(data: $0, encoding: .utf8) } ?? "Erreur HTTP \(httpResponse.statusCode)"
+                        AppLogger.error("Erreur HTTP serveur partage récapitulatif : \(serverMsg) (code \(httpResponse.statusCode))", category: .web)
                         completion(.failure(NSError(domain: "RecallShare", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: serverMsg])))
                     }
                 } else {
+                    AppLogger.error("Réponse serveur invalide lors du partage récapitulatif", category: .web)
                     completion(.failure(NSError(domain: "RecallShare", code: -4, userInfo: [NSLocalizedDescriptionKey: "Réponse serveur invalide."])))
                 }
             }

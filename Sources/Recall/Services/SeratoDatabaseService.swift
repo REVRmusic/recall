@@ -98,6 +98,7 @@ public class SeratoDatabaseService {
             return db
         }
         
+        AppLogger.warning("Impossible d'ouvrir la base Serato SQLite en lecture seule : \(dbPath)", category: .seratoDB)
         return nil
     }
     

@@ -134,8 +134,14 @@ public class SeratoMonitorService: ObservableObject {
             return name.contains("rekordbox") || id.contains("com.pioneerdj.rekordboxdj")
         }
         
-        self.isSeratoConnected = isSeratoRunning
-        self.isRekordboxConnected = isRekordboxRunning
+        if self.isSeratoConnected != isSeratoRunning {
+            self.isSeratoConnected = isSeratoRunning
+            AppLogger.info("Statut connexion Serato DJ Pro : \(isSeratoRunning ? "Connecté" : "Déconnecté")", category: .seratoDB)
+        }
+        if self.isRekordboxConnected != isRekordboxRunning {
+            self.isRekordboxConnected = isRekordboxRunning
+            AppLogger.info("Statut connexion Rekordbox : \(isRekordboxRunning ? "Connecté" : "Déconnecté")", category: .rekordbox)
+        }
         
         // 2. Détermination du mode logiciel effectif
         let mode = UserSettings.shared.djSoftwareMode
@@ -166,6 +172,7 @@ public class SeratoMonitorService: ObservableObject {
         }
         
         if activeDJSoftware != effective {
+            AppLogger.info("Basculement logiciel DJ actif : \(effective.label)", category: .system)
             activeDJSoftware = effective
             if effective == .rekordbox {
                 RekordboxService.shared.loadCollectionIfNeeded()
@@ -221,6 +228,10 @@ public class SeratoMonitorService: ObservableObject {
                                    (self.currentTrack?.displayTitle != newRefTrack?.displayTitle)
                 
                 if trackChanged {
+                    if let track = newRefTrack {
+                        let artistPrefix = track.artist.isEmpty ? "" : "\(track.artist) – "
+                        AppLogger.info("Morceau Rekordbox détecté : \(artistPrefix)\(track.title) [\(track.displayKey)]", category: .rekordbox)
+                    }
                     self.currentTrack = newRefTrack
                     self.refreshSuggestions()
                 }
@@ -314,6 +325,10 @@ public class SeratoMonitorService: ObservableObject {
                     }
                     if trackChanged, let old = self.currentTrack, old.displayTitle != newRefTrack?.displayTitle {
                         self.previousTrack = old
+                    }
+                    if trackChanged, let track = newRefTrack {
+                        let artistPrefix = track.artist.isEmpty ? "" : "\(track.artist) – "
+                        AppLogger.info("Morceau Serato détecté : \(artistPrefix)\(track.title) [\(track.displayKey)]", category: .seratoDB)
                     }
                     self.currentTrack = newRefTrack
                     self.refreshSuggestions()

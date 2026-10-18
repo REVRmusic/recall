@@ -155,7 +155,7 @@ public class FavoriteCombosService: ObservableObject {
             let decoded = try JSONDecoder().decode([FavoriteCombo].self, from: data)
             self.combos = decoded
         } catch {
-            print("Erreur chargement favoris: \(error)")
+            AppLogger.error("Erreur chargement favoris", category: .session, error: error)
             self.combos = []
         }
     }
@@ -165,7 +165,7 @@ public class FavoriteCombosService: ObservableObject {
             let data = try JSONEncoder().encode(combos)
             try data.write(to: storageURL, options: .atomic)
         } catch {
-            print("Erreur sauvegarde favoris: \(error)")
+            AppLogger.error("Erreur sauvegarde favoris", category: .session, error: error)
         }
     }
     

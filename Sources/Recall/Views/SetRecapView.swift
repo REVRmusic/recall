@@ -675,6 +675,7 @@ public struct SetRecapView: View {
     private func selectPastSession(_ session: SeratoDatabaseService.PastSessionItem) {
         selectedPastSession = session
         exportSessionTitleInput = session.fullFrenchDate
+        AppLogger.info("Chargement de la session passée : \(session.shortTitle) (ID: \(session.id), \(session.trackCount) morceaux)", category: .session)
         DispatchQueue.global(qos: .userInitiated).async {
             let tracks = SeratoDatabaseService.shared.fetchTracksForSession(sessionId: session.id)
             let newStats = SetRecapStats.compute(from: tracks, sessionStartTime: session.startTime)
@@ -686,6 +687,7 @@ public struct SetRecapView: View {
     }
     
     private func returnToLive() {
+        AppLogger.info("Retour à la session en cours (Live)", category: .session)
         selectedPastSession = nil
         pastSessionTracks = []
         exportSessionTitleInput = SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)

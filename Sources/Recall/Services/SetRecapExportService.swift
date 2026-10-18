@@ -82,6 +82,7 @@ public final class SetRecapExportService {
                         DispatchQueue.main.async {
                             if success {
                                 try? FileManager.default.removeItem(at: tempFile)
+                                AppLogger.info("Bilan de set enregistré dans l'application Photos avec succès (PHPhotoLibrary)", category: .export)
                                 completion(true, nil)
                             } else {
                                 // En cas d'échec PHPhotoLibrary, on essaie le secours AppleScript
@@ -100,6 +101,7 @@ public final class SetRecapExportService {
     /// Secours AppleScript pour importer une image directement dans Photos.app
     private func importToPhotosViaAppleScript(filePath: String, completion: @escaping (Bool, String?) -> Void) {
         guard FileManager.default.fileExists(atPath: filePath) else {
+            AppLogger.error("Fichier image temporaire introuvable pour Photos", category: .export)
             completion(false, "Fichier image temporaire introuvable.")
             return
         }
@@ -126,15 +128,18 @@ public final class SetRecapExportService {
                 
                 DispatchQueue.main.async {
                     if resultString == "SUCCESS" {
+                        AppLogger.info("Bilan de set importé dans l'application Photos via AppleScript", category: .export)
                         completion(true, nil)
                     } else {
                         let errDesc = error?[NSAppleScript.errorMessage] as? String ?? resultString
+                        AppLogger.error("Échec importation Photos : \(errDesc)", category: .export)
                         completion(false, "Photos nécessite l'autorisation d'importation : \(errDesc)")
                     }
                 }
             } else {
                 try? FileManager.default.removeItem(atPath: filePath)
                 DispatchQueue.main.async {
+                    AppLogger.error("Impossible d'exécuter la commande AppleScript vers Photos", category: .export)
                     completion(false, "Impossible d'exécuter la commande vers Photos.")
                 }
             }

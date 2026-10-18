@@ -246,6 +246,7 @@ public class SessionHistoryService: ObservableObject {
         self.lastHistoryFingerprint = nil
         
         UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "recall_session_start_time")
+        AppLogger.info("Session de mix réinitialisée par le DJ (remise à zéro des statistiques).", category: .session)
         
         // Rafraîchir immédiatement l'interface et les suggestions
         SeratoMonitorService.shared.refreshSuggestions()

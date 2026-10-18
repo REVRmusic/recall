@@ -46,6 +46,7 @@ public struct SettingsSheetView: View {
     
     @AppStorage("recall_settings_active_tab") private var selectedTabRaw: String = SettingsTab.djMix.rawValue
     @State private var showGuideFromSettings: Bool = false
+    @State private var logSizeText: String = AppLogger.shared.getLogFileSizeDescription()
     
     private var selectedTab: SettingsTab {
         SettingsTab(rawValue: selectedTabRaw) ?? .djMix
@@ -1136,9 +1137,9 @@ public struct SettingsSheetView: View {
                     
                     SettingActionButton(
                         icon: "paperplane.fill",
-                        title: "Faire un retour à REVR (Web) ↗"
+                        title: "Faire un retour (Web) ↗"
                     ) {
-                        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
+                        if let url = URL(string: "https://mixify.fr") {
                             NSWorkspace.shared.open(url)
                         }
                     }
@@ -1146,7 +1147,56 @@ public struct SettingsSheetView: View {
             }
         }
         
-        // CARTE 4 : Mentions Légales & Confidentialité
+        // CARTE 4 : Diagnostics & Suivi des dysfonctionnements (Logs)
+        settingCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    sectionHeader(icon: "stethoscope", title: "Suivi des dysfonctionnements & Logs")
+                    Spacer()
+                    Text(logSizeText)
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.60))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.white.opacity(0.08))
+                        .cornerRadius(4)
+                }
+                
+                Text("Système de suivi ultra-léger (zéro impact CPU, écriture asynchrone par lots, rotation automatique limitée à 6 Mo max). Vos données restent 100% locales sur votre Mac et s'auto-nettoient après 7 jours.")
+                    .font(.system(size: 9.5))
+                    .foregroundColor(.white.opacity(0.60))
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                HStack(spacing: 8) {
+                    SettingActionButton(
+                        icon: "folder.fill",
+                        title: "Ouvrir dans le Finder"
+                    ) {
+                        AppLogger.shared.revealInFinder()
+                    }
+                    
+                    SettingActionButton(
+                        icon: "square.and.arrow.up",
+                        title: "Exporter le rapport…"
+                    ) {
+                        exportDiagnosticFromSettings()
+                    }
+                    
+                    SettingActionButton(
+                        icon: "trash",
+                        title: "Vider les logs",
+                        color: Color(hex: "#FF5252")
+                    ) {
+                        AppLogger.shared.clearAllLogs()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            logSizeText = AppLogger.shared.getLogFileSizeDescription()
+                        }
+                    }
+                }
+            }
+        }
+        
+        // CARTE 5 : Mentions Légales & Confidentialité
         settingCard {
             VStack(alignment: .leading, spacing: 8) {
                 sectionHeader(icon: "lock.shield.fill", title: "Mentions Légales & Confidentialité")
@@ -1227,6 +1277,23 @@ public struct SettingsSheetView: View {
             settings.rekordboxXmlCustomPath = url.path
             RekordboxService.shared.reloadCollection(from: url.path)
             monitor.refreshSuggestions()
+        }
+    }
+    
+    private func exportDiagnosticFromSettings() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Exporter le rapport de diagnostic Recall"
+        savePanel.prompt = "Enregistrer"
+        let df = DateFormatter()
+        df.dateFormat = "yyyyMMdd_HHmm"
+        savePanel.nameFieldStringValue = "Recall_Diagnostic_\(df.string(from: Date())).txt"
+        savePanel.canCreateDirectories = true
+        
+        NSApp.activate(ignoringOtherApps: true)
+        if savePanel.runModal() == .OK, let url = savePanel.url {
+            let report = AppLogger.shared.generateDiagnosticReport()
+            try? report.write(to: url, atomically: true, encoding: .utf8)
+            NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: url.deletingLastPathComponent().path)
         }
     }
     

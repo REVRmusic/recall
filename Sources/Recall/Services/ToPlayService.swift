@@ -194,7 +194,7 @@ public class ToPlayService: ObservableObject {
             let decoded = try JSONDecoder().decode([ToPlayTrack].self, from: data)
             self.tracks = decoded
         } catch {
-            print("Erreur chargement des morceaux à jouer: \(error)")
+            AppLogger.error("Erreur chargement des morceaux à jouer", category: .session, error: error)
             self.tracks = []
         }
     }
@@ -204,7 +204,7 @@ public class ToPlayService: ObservableObject {
             let data = try JSONEncoder().encode(tracks)
             try data.write(to: storageURL, options: .atomic)
         } catch {
-            print("Erreur sauvegarde des morceaux à jouer: \(error)")
+            AppLogger.error("Erreur sauvegarde des morceaux à jouer", category: .session, error: error)
         }
     }
     
@@ -683,7 +683,7 @@ public class ToPlayService: ObservableObject {
                 receiver.receivePromisedFiles(atDestination: dropDir, options: [:], operationQueue: promiseQueue) { [weak self] fileURL, error in
                     DispatchQueue.main.async {
                         if let error = error {
-                            print("[Recall] Erreur réception file promise Rekordbox: \(error.localizedDescription)")
+                            AppLogger.error("Erreur réception file promise Rekordbox", category: .rekordbox, error: error)
                         } else {
                             self?.addTrack(fromURL: fileURL, isSilentIfAlreadyPresent: true)
                         }

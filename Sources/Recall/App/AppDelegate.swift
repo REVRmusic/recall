@@ -10,6 +10,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         
+        // Enregistrement du gestionnaire de crash pour consigner les erreurs fatales
+        AppLogger.shared.registerCrashHandler()
+        AppLogger.info("Démarrage de Recall...", category: .system)
+        
         // Délai de survol optimisé (0.9s) évitant les déclenchements intempestifs tout en restant réactif
         let tooltipDelayMs = 900
         UserDefaults.standard.register(defaults: [
@@ -36,6 +40,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Recherche de mise à jour automatique au démarrage (uniquement si connecté à Internet)
         AutoUpdateService.shared.checkForUpdatesOnStartup()
+        
+        AppLogger.info("Recall initialisé avec succès et prêt.", category: .system)
     }
     
     public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -45,8 +51,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     public func applicationWillTerminate(_ notification: Notification) {
+        AppLogger.info("Fermeture de Recall en cours...", category: .system)
         SeratoMonitorService.shared.stopMonitoring()
         UserDefaults.standard.synchronize()
+        AppLogger.shared.handleApplicationWillTerminate()
     }
     
     // MARK: - Configuration de la Barre de Menus macOS (Menu Bar)
@@ -463,7 +471,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(NSMenuItem.separator())
         
         let websiteItem = NSMenuItem(
-            title: "Site officiel (revrmusic.github.io/recall)",
+            title: "Site officiel (mixify.fr)",
             action: #selector(openWebsiteAction),
             keyEquivalent: ""
         )
@@ -471,7 +479,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(websiteItem)
         
         let supportItem = NSMenuItem(
-            title: "Support DJ (contact@mixify.fr)",
+            title: "Support DJ (support@mixify.fr)",
             action: #selector(openSupportEmailAction),
             keyEquivalent: ""
         )
@@ -485,6 +493,28 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         )
         feedbackHelpItem.target = self
         helpMenu.addItem(feedbackHelpItem)
+        
+        helpMenu.addItem(NSMenuItem.separator())
+        
+        let logsHeaderItem = NSMenuItem(title: "DIAGNOSTICS & LOGS", action: nil, keyEquivalent: "")
+        logsHeaderItem.isEnabled = false
+        helpMenu.addItem(logsHeaderItem)
+        
+        let showLogsItem = NSMenuItem(
+            title: "Afficher les logs dans le Finder",
+            action: #selector(openLogsFolderAction),
+            keyEquivalent: ""
+        )
+        showLogsItem.target = self
+        helpMenu.addItem(showLogsItem)
+        
+        let exportLogsItem = NSMenuItem(
+            title: "Exporter le rapport de diagnostic (Logs)…",
+            action: #selector(exportDiagnosticReportAction),
+            keyEquivalent: ""
+        )
+        exportLogsItem.target = self
+        helpMenu.addItem(exportLogsItem)
         
         helpMenu.addItem(NSMenuItem.separator())
         
@@ -523,7 +553,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openFeedbackWebsiteAction() {
-        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
+        if let url = URL(string: "https://mixify.fr") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -672,8 +702,45 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openWebsiteAction() {
-        if let url = URL(string: "https://revrmusic.github.io/recall/") {
+        if let url = URL(string: "https://mixify.fr") {
             NSWorkspace.shared.open(url)
+        }
+    }
+    
+    @objc private func openLogsFolderAction() {
+        AppLogger.shared.revealInFinder()
+    }
+    
+    @objc private func exportDiagnosticReportAction() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Exporter le rapport de diagnostic Recall"
+        savePanel.prompt = "Enregistrer"
+        let df = DateFormatter()
+        df.dateFormat = "yyyyMMdd_HHmm"
+        savePanel.nameFieldStringValue = "Recall_Diagnostic_\(df.string(from: Date())).txt"
+        savePanel.canCreateDirectories = true
+        
+        NSApp.activate(ignoringOtherApps: true)
+        if savePanel.runModal() == .OK, let url = savePanel.url {
+            let report = AppLogger.shared.generateDiagnosticReport()
+            do {
+                try report.write(to: url, atomically: true, encoding: .utf8)
+                let alert = NSAlert()
+                alert.messageText = "Rapport de diagnostic exporté"
+                alert.informativeText = "Le rapport de diagnostic a été enregistré avec succès.\nVous pouvez l'envoyer à support@mixify.fr pour nous aider à analyser tout dysfonctionnement."
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: "Afficher dans le Finder")
+                alert.addButton(withTitle: "OK")
+                if alert.runModal() == .alertFirstButtonReturn {
+                    NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: url.deletingLastPathComponent().path)
+                }
+            } catch {
+                let alert = NSAlert()
+                alert.messageText = "Erreur lors de l'exportation"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .warning
+                alert.runModal()
+            }
         }
     }
     
