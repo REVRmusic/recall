@@ -314,10 +314,14 @@ public struct SetRecapView: View {
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
     
-    @State private var currentStats: SetRecapStats? = nil
+    @State private var liveStats: SetRecapStats? = nil
+    @State private var pastSessionStats: SetRecapStats? = nil
     @State private var pastSessions: [SeratoDatabaseService.PastSessionItem] = []
     @State private var selectedPastSession: SeratoDatabaseService.PastSessionItem? = nil
     @State private var pastSessionTracks: [SessionPlayedTrack] = []
+    @State private var isLoadingPastSession: Bool = false
+    @State private var pastSessionLoadTask: Task<Void, Never>? = nil
+    @State private var pastSessionsListTask: Task<Void, Never>? = nil
     
     private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     
@@ -327,14 +331,41 @@ public struct SetRecapView: View {
     }
     
     private var stats: SetRecapStats {
-        if let s = currentStats {
-            return s
-        }
         if let past = selectedPastSession {
-            return SetRecapStats.compute(
-                from: pastSessionTracks,
-                sessionStartTime: past.startTime
+            if let ps = pastSessionStats {
+                return ps
+            }
+            if !pastSessionTracks.isEmpty {
+                return SetRecapStats.compute(
+                    from: pastSessionTracks,
+                    sessionStartTime: past.startTime
+                )
+            }
+            return SetRecapStats(
+                totalTracksCount: 0,
+                totalPlaysCount: 0,
+                totalDurationSeconds: 0,
+                averageTimePerTrackSeconds: 0,
+                tracksPerHour: 0,
+                averageBpm: 0,
+                minBpm: 0,
+                maxBpm: 0,
+                dominantKey: nil,
+                dominantKeyCount: 0,
+                dominantKeyPercentage: 0,
+                keyDistribution: [],
+                fastestTransition: nil,
+                longestTransition: nil,
+                topArtists: [],
+                mostPlayedArtist: nil,
+                topGenres: [],
+                mostPlayedGenre: nil,
+                isLiveSession: false
             )
+        }
+        
+        if let ls = liveStats {
+            return ls
         }
         return SetRecapStats.compute(
             from: sessionService.playedTracks,
@@ -486,7 +517,7 @@ public struct SetRecapView: View {
             }
         )
         .onAppear {
-            currentStats = SetRecapStats.compute(
+            liveStats = SetRecapStats.compute(
                 from: sessionService.playedTracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
@@ -497,21 +528,21 @@ public struct SetRecapView: View {
             // on stoppe le rafraîchissement récurrent du timer (0% CPU)
             guard selectedPastSession == nil, stats.isLiveSession else { return }
             currentTime = newTime
-            currentStats = SetRecapStats.compute(
+            liveStats = SetRecapStats.compute(
                 from: sessionService.playedTracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
         }
         .onReceive(sessionService.$playedTracks) { tracks in
             guard selectedPastSession == nil else { return }
-            currentStats = SetRecapStats.compute(
+            liveStats = SetRecapStats.compute(
                 from: tracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
         }
         .onReceive(sessionService.$isCurrentlyPlaying) { _ in
             guard selectedPastSession == nil else { return }
-            currentStats = SetRecapStats.compute(
+            liveStats = SetRecapStats.compute(
                 from: sessionService.playedTracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
@@ -554,13 +585,23 @@ public struct SetRecapView: View {
                 }
                 
                 HStack(spacing: 6) {
-                    Circle()
-                        .fill(selectedPastSession != nil ? Color.purple : (stats.totalTracksCount == 0 ? Color.white.opacity(0.3) : (stats.isLiveSession ? Color.green : Color.orange)))
-                        .frame(width: 6, height: 6)
-                    
-                    Text(selectedPastSession != nil ? (selectedPastSession!.venue != nil ? "📍 \(selectedPastSession!.venue!) • \(selectedPastSession!.trackCount) morceaux" : "Session archivée (\(selectedPastSession!.trackCount) morceaux)") : (stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause")))
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.55))
+                    if isLoadingPastSession {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 6, height: 6)
+                        
+                        Text("Chargement des statistiques (\(selectedPastSession?.trackCount ?? 0) morceaux)…")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.accentCyan.opacity(0.85))
+                    } else {
+                        Circle()
+                            .fill(selectedPastSession != nil ? Color.purple : (stats.totalTracksCount == 0 ? Color.white.opacity(0.3) : (stats.isLiveSession ? Color.green : Color.orange)))
+                            .frame(width: 6, height: 6)
+                        
+                        Text(selectedPastSession != nil ? (selectedPastSession!.venue != nil ? "📍 \(selectedPastSession!.venue!) • \(selectedPastSession!.trackCount) morceaux" : "Session archivée (\(selectedPastSession!.trackCount) morceaux)") : (stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause")))
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.55))
+                    }
                 }
             }
             
@@ -678,9 +719,15 @@ public struct SetRecapView: View {
             }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: selectedPastSession == nil ? "record.circle" : "clock.arrow.circlepath")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(selectedPastSession == nil ? .green : Color.accentCyan)
+                if isLoadingPastSession {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .frame(width: 11, height: 11)
+                } else {
+                    Image(systemName: selectedPastSession == nil ? "record.circle" : "clock.arrow.circlepath")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(selectedPastSession == nil ? .green : Color.accentCyan)
+                }
                 
                 Text(selectedPastSession == nil ? "Session en cours" : selectedPastSession!.shortTitle)
                     .font(.system(size: 11.5, weight: .semibold))
@@ -710,34 +757,55 @@ public struct SetRecapView: View {
     }
     
     private func loadPastSessions() {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let sessions = SeratoDatabaseService.shared.fetchPastSessions(limit: 30)
-            DispatchQueue.main.async {
-                self.pastSessions = sessions
-            }
+        pastSessionsListTask?.cancel()
+        pastSessionsListTask = Task { @MainActor in
+            let sessions = await Task.detached(priority: .userInitiated) {
+                SeratoDatabaseService.shared.fetchPastSessions(limit: 30)
+            }.value
+            guard !Task.isCancelled else { return }
+            self.pastSessions = sessions
         }
     }
     
     private func selectPastSession(_ session: SeratoDatabaseService.PastSessionItem) {
+        pastSessionLoadTask?.cancel()
         selectedPastSession = session
+        pastSessionStats = nil
+        pastSessionTracks = []
+        isLoadingPastSession = true
         exportSessionTitleInput = session.fullFrenchDate
         AppLogger.info("Chargement de la session passée : \(session.shortTitle) (ID: \(session.id), \(session.trackCount) morceaux)", category: .session)
-        DispatchQueue.global(qos: .userInitiated).async {
-            let tracks = SeratoDatabaseService.shared.fetchTracksForSession(sessionId: session.id)
-            let newStats = SetRecapStats.compute(from: tracks, sessionStartTime: session.startTime)
-            DispatchQueue.main.async {
-                self.pastSessionTracks = tracks
-                self.currentStats = newStats
-            }
+        
+        let targetId = session.id
+        let sessionStartTime = session.startTime
+        
+        pastSessionLoadTask = Task { @MainActor in
+            let (tracks, computedStats) = await Task.detached(priority: .userInitiated) { () -> ([SessionPlayedTrack], SetRecapStats) in
+                let loadedTracks = SeratoDatabaseService.shared.fetchTracksForSession(sessionId: targetId)
+                let calculatedStats = SetRecapStats.compute(from: loadedTracks, sessionStartTime: sessionStartTime)
+                return (loadedTracks, calculatedStats)
+            }.value
+            
+            guard !Task.isCancelled else { return }
+            guard self.selectedPastSession?.id == targetId else { return }
+            
+            self.pastSessionTracks = tracks
+            self.pastSessionStats = computedStats
+            self.isLoadingPastSession = false
+            AppLogger.info("Statistiques calculées avec succès pour la session passée ID \(targetId) : \(tracks.count) morceaux uniques, \(computedStats.totalPlaysCount) lectures totales", category: .session)
         }
     }
     
     private func returnToLive() {
+        pastSessionLoadTask?.cancel()
+        pastSessionLoadTask = nil
+        isLoadingPastSession = false
         AppLogger.info("Retour à la session en cours (Live)", category: .session)
         selectedPastSession = nil
+        pastSessionStats = nil
         pastSessionTracks = []
         exportSessionTitleInput = SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
-        currentStats = SetRecapStats.compute(
+        liveStats = SetRecapStats.compute(
             from: sessionService.playedTracks,
             sessionStartTime: sessionService.sessionStartTime
         )
@@ -754,9 +822,20 @@ public struct SetRecapView: View {
                         .foregroundColor(.white.opacity(0.45))
                         .tracking(0.5)
                     
-                    Text(stats.totalTracksCount > 0 ? formatDuration(stats.totalDurationSeconds) : "00m 00s")
-                        .font(.system(size: 26, weight: .black, design: .rounded))
-                        .foregroundColor(stats.totalTracksCount > 0 ? .white : .white.opacity(0.4))
+                    if isLoadingPastSession {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.65)
+                                .frame(width: 14, height: 14)
+                            Text("Calcul du set…")
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundColor(Color.accentCyan)
+                        }
+                    } else {
+                        Text(stats.totalTracksCount > 0 ? formatDuration(stats.totalDurationSeconds) : "00m 00s")
+                            .font(.system(size: 26, weight: .black, design: .rounded))
+                            .foregroundColor(stats.totalTracksCount > 0 ? .white : .white.opacity(0.4))
+                    }
                 }
                 
                 Spacer()
@@ -767,8 +846,10 @@ public struct SetRecapView: View {
                         .foregroundColor(.white.opacity(0.45))
                         .tracking(0.5)
                     
+                    let trackCountToDisplay = selectedPastSession != nil ? (stats.totalTracksCount > 0 ? stats.totalTracksCount : selectedPastSession!.trackCount) : stats.totalTracksCount
+                    
                     HStack(spacing: 4) {
-                        Text("\(stats.totalTracksCount)")
+                        Text("\(trackCountToDisplay)")
                             .font(.system(size: 26, weight: .black, design: .rounded))
                             .foregroundColor(Color.accentCyan)
                         
@@ -842,19 +923,40 @@ public struct SetRecapView: View {
                         .font(.system(size: 10.5, weight: .medium))
                         .foregroundColor(.white.opacity(0.75))
                     
-                    Text(stats.totalTracksCount > 0 ? formatMinutesSeconds(stats.averageTimePerTrackSeconds) : "--")
-                        .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                    
-                    Text("/ track")
-                        .font(.system(size: 9.5))
-                        .foregroundColor(.white.opacity(0.5))
+                    if isLoadingPastSession {
+                        Text("Analyse en cours…")
+                            .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                            .foregroundColor(Color.accentCyan)
+                    } else {
+                        Text(stats.totalTracksCount > 0 ? formatMinutesSeconds(stats.averageTimePerTrackSeconds) : "--")
+                            .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                        
+                        Text("/ track")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
                 }
                 
                 Spacer()
                 
                 // Badge de style de mix
-                mixPaceBadge
+                if isLoadingPastSession {
+                    HStack(spacing: 4) {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 9, height: 9)
+                        Text("Analyse du rythme")
+                            .font(.system(size: 9.5, weight: .semibold))
+                            .foregroundColor(Color.accentCyan)
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.accentCyan.opacity(0.12))
+                    .cornerRadius(5)
+                } else {
+                    mixPaceBadge
+                }
             }
         }
         .padding(14)
@@ -918,9 +1020,9 @@ public struct SetRecapView: View {
                 icon: "speedometer",
                 iconColor: .orange,
                 title: "BPM MOYEN DU SET",
-                mainValue: stats.averageBpm > 0 ? String(format: "%.1f", stats.averageBpm) : "--",
+                mainValue: isLoadingPastSession ? "..." : (stats.averageBpm > 0 ? String(format: "%.1f", stats.averageBpm) : "--"),
                 unit: "BPM",
-                subtext: stats.minBpm > 0 ? "Plage : \(Int(stats.minBpm.rounded())) - \(Int(stats.maxBpm.rounded())) BPM" : "Aucun BPM détecté"
+                subtext: isLoadingPastSession ? "Calcul du BPM moyen…" : (stats.minBpm > 0 ? "Plage : \(Int(stats.minBpm.rounded())) - \(Int(stats.maxBpm.rounded())) BPM" : "Aucun BPM détecté")
             )
             
             // Indicateur 2 : Tonalité Dominante
@@ -928,9 +1030,9 @@ public struct SetRecapView: View {
                 icon: "music.quarternote.3",
                 iconColor: .purple,
                 title: "TONALITÉ DOMINANTE",
-                mainValue: stats.dominantKey ?? "--",
+                mainValue: isLoadingPastSession ? "..." : (stats.dominantKey ?? "--"),
                 unit: "",
-                subtext: stats.dominantKey != nil ? "\(stats.dominantKeyCount) tracks (\(Int(stats.dominantKeyPercentage.rounded()))% du set)" : "Clés non analysées"
+                subtext: isLoadingPastSession ? "Harmonisation en cours…" : (stats.dominantKey != nil ? "\(stats.dominantKeyCount) tracks (\(Int(stats.dominantKeyPercentage.rounded()))% du set)" : "Clés non analysées")
             )
             
             // Indicateur 3 : Genre le plus joué
@@ -938,9 +1040,9 @@ public struct SetRecapView: View {
                 icon: "headphones",
                 iconColor: Color.accentCyan,
                 title: "GENRE LE PLUS JOUÉ",
-                mainValue: stats.mostPlayedGenre?.name ?? "--",
+                mainValue: isLoadingPastSession ? "..." : (stats.mostPlayedGenre?.name ?? "--"),
                 unit: "",
-                subtext: stats.mostPlayedGenre != nil ? "\(stats.mostPlayedGenre!.count) tracks (\(Int(stats.mostPlayedGenre!.percent.rounded()))% du set)" : "En attente des genres",
+                subtext: isLoadingPastSession ? "Analyse des styles…" : (stats.mostPlayedGenre != nil ? "\(stats.mostPlayedGenre!.count) tracks (\(Int(stats.mostPlayedGenre!.percent.rounded()))% du set)" : "En attente des genres"),
                 isTruncatedSubtext: true
             )
             
@@ -949,9 +1051,9 @@ public struct SetRecapView: View {
                 icon: "bolt.horizontal.fill",
                 iconColor: .yellow,
                 title: "TRANSITION LA PLUS RAPIDE",
-                mainValue: stats.fastestTransition != nil ? formatMinutesSeconds(stats.fastestTransition!.elapsedSeconds) : "--",
+                mainValue: isLoadingPastSession ? "..." : (stats.fastestTransition != nil ? formatMinutesSeconds(stats.fastestTransition!.elapsedSeconds) : "--"),
                 unit: "",
-                subtext: stats.fastestTransition != nil ? "\(stats.fastestTransition!.fromTrack) ➔ \(stats.fastestTransition!.toTrack)" : "2 morceaux requis",
+                subtext: isLoadingPastSession ? "Calcul des transitions…" : (stats.fastestTransition != nil ? "\(stats.fastestTransition!.fromTrack) ➔ \(stats.fastestTransition!.toTrack)" : "2 morceaux requis"),
                 isTruncatedSubtext: true
             )
             
@@ -960,9 +1062,9 @@ public struct SetRecapView: View {
                 icon: "hare.fill",
                 iconColor: Color.accentCyan,
                 title: "VITESSE DE MIX",
-                mainValue: stats.totalTracksCount > 0 ? String(format: "%.1f", stats.tracksPerHour) : "--",
+                mainValue: isLoadingPastSession ? "..." : (stats.totalTracksCount > 0 ? String(format: "%.1f", stats.tracksPerHour) : "--"),
                 unit: "tracks/h",
-                subtext: stats.totalTracksCount > 0 ? "Cadence moyenne observée" : "En cours d'analyse..."
+                subtext: isLoadingPastSession ? "Cadence en cours de calcul…" : (stats.totalTracksCount > 0 ? "Cadence moyenne observée" : "En cours d'analyse...")
             )
             
             // Indicateur 6 : Total Lectures
@@ -970,9 +1072,9 @@ public struct SetRecapView: View {
                 icon: "music.note.list",
                 iconColor: .green,
                 title: "LECTURES TOTALES",
-                mainValue: stats.totalPlaysCount > 0 ? "\(stats.totalPlaysCount)" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount)" : "--"),
+                mainValue: isLoadingPastSession ? "\(selectedPastSession?.trackCount ?? 0)" : (stats.totalPlaysCount > 0 ? "\(stats.totalPlaysCount)" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount)" : "--")),
                 unit: "plays",
-                subtext: stats.totalTracksCount > 0 ? "\(stats.totalTracksCount) morceaux uniques" : "En attente du mix"
+                subtext: isLoadingPastSession ? "Lectures en cours de décompte…" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount) morceaux uniques" : "En attente du mix")
             )
         }
     }
@@ -1054,7 +1156,17 @@ public struct SetRecapView: View {
                 }
             }
             
-            if stats.topGenres.isEmpty {
+            if isLoadingPastSession {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .frame(width: 12, height: 12)
+                    Text("Calcul des genres musicaux du set…")
+                        .font(.system(size: 10.5))
+                        .foregroundColor(Color.accentCyan.opacity(0.85))
+                }
+                .padding(.vertical, 8)
+            } else if stats.topGenres.isEmpty {
                 Text("Genres musicaux en cours d'analyse.")
                     .font(.system(size: 10.5))
                     .foregroundColor(.white.opacity(0.4))
@@ -1146,7 +1258,17 @@ public struct SetRecapView: View {
                 }
             }
             
-            if stats.topArtists.isEmpty {
+            if isLoadingPastSession {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .frame(width: 12, height: 12)
+                    Text("Calcul des artistes du mix…")
+                        .font(.system(size: 10.5))
+                        .foregroundColor(Color.accentCyan.opacity(0.85))
+                }
+                .padding(.vertical, 8)
+            } else if stats.topArtists.isEmpty {
                 Text("Aucun artiste récurrent détecté dans la session.")
                     .font(.system(size: 10.5))
                     .foregroundColor(.white.opacity(0.4))
