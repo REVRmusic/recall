@@ -555,14 +555,10 @@ public class ToPlayService: ObservableObject {
     // MARK: - Types et Gestionnaires Universels de Glisser-Déposer (Serato & Rekordbox)
     
     public static var universalDragTypes: [NSPasteboard.PasteboardType] {
-        var types: [NSPasteboard.PasteboardType] = [
+        return [
             .fileURL,
             NSPasteboard.PasteboardType("NSFilenamesPboardType"),
             NSPasteboard.PasteboardType("public.file-url"),
-            NSPasteboard.PasteboardType("com.apple.pasteboard.promised-file-url"),
-            NSPasteboard.PasteboardType("com.apple.pasteboard.promised-file-content-type"),
-            NSPasteboard.PasteboardType("com.apple.NSFilePromiseItemMetaData"),
-            NSPasteboard.PasteboardType("NSFilesPromisePboardType"),
             NSPasteboard.PasteboardType("CorePasteboardFlavorType 0x6974756E"),
             NSPasteboard.PasteboardType("itun"),
             NSPasteboard.PasteboardType("com.apple.itunes.metadata"),
@@ -576,18 +572,12 @@ public class ToPlayService: ObservableObject {
             NSPasteboard.PasteboardType("CorePasteboardFlavorType 0x54455854"),
             NSPasteboard.PasteboardType("com.pioneer.rekordbox.track")
         ]
-        for promiseType in NSFilePromiseReceiver.readableDraggedTypes {
-            let pbType = NSPasteboard.PasteboardType(promiseType)
-            if !types.contains(pbType) {
-                types.append(pbType)
-            }
-        }
-        return types
     }
     
     public static func canHandle(pasteboard: NSPasteboard) -> Bool {
         guard let types = pasteboard.types, !types.isEmpty else { return false }
-        return true
+        let supported = Set(universalDragTypes.map { $0.rawValue })
+        return types.contains { supported.contains($0.rawValue) }
     }
     
     /// Traite l'ensemble des éléments déposés depuis le presse-papier macOS (Serato, Rekordbox, Finder)
@@ -639,99 +629,6 @@ public class ToPlayService: ObservableObject {
             }
         }
         if addedAny { return true }
-        
-        // 5. Promesses de fichiers modernes macOS / Rekordbox JUCE (NSFilePromiseReceiver)
-        let receivers = (pasteboard.readObjects(forClasses: [NSFilePromiseReceiver.self], options: [:]) as? [NSFilePromiseReceiver]) ??
-                        (pasteboard.readObjects(forClasses: [NSFilePromiseReceiver.self], options: nil) as? [NSFilePromiseReceiver]) ?? []
-        if !receivers.isEmpty {
-            let dropDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("RecallDrops", isDirectory: true)
-            try? FileManager.default.createDirectory(at: dropDir, withIntermediateDirectories: true)
-            
-            let promiseQueue = OperationQueue()
-            promiseQueue.qualityOfService = .userInitiated
-            
-            for receiver in receivers {
-                // Correspondance ultra-rapide immédiate via les noms de fichiers promis
-                for promisedName in receiver.fileNames {
-                    if let rbTrack = RekordboxService.shared.findTrackByFile(filePath: "", fileName: promisedName) {
-                        _ = addTrack(rbTrack)
-                        addedAny = true
-                    } else {
-                        let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
-                        if let sTrack = seratoService.findTrackByFile(filePath: "", fileName: promisedName) {
-                            _ = addTrack(sTrack)
-                            addedAny = true
-                        } else {
-                            // Création visuelle instantanée pour réactivité UI immédiate (sub-milliseconde)
-                            let parsed = Track.parseSmartArtistAndTitle(rawString: (promisedName as NSString).deletingPathExtension)
-                            let provisionalTrack = Track(
-                                title: parsed.title,
-                                artist: parsed.artist ?? "",
-                                bpm: 0.0,
-                                rawKey: "",
-                                filePath: nil,
-                                fileName: promisedName,
-                                portableId: promisedName
-                            )
-                            _ = addTrack(provisionalTrack)
-                            addedAny = true
-                        }
-                    }
-                }
-                
-                // Réception physique asynchrone en tâche de fond pour extraction ID3 si besoin
-                receiver.receivePromisedFiles(atDestination: dropDir, options: [:], operationQueue: promiseQueue) { [weak self] fileURL, error in
-                    DispatchQueue.main.async {
-                        if let error = error {
-                            AppLogger.error("Erreur réception file promise Rekordbox", category: .rekordbox, error: error)
-                        } else {
-                            self?.addTrack(fromURL: fileURL, isSilentIfAlreadyPresent: true)
-                        }
-                    }
-                }
-            }
-            // CRUCIAL : TOUJOURS renvoyer true pour confirmer le drop à macOS et Rekordbox
-            return true
-        }
-        
-        // 6. Promesses de fichiers historiques pour compatibilité rétroactive
-        if let sender = sender {
-            let dropDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("RecallDrops", isDirectory: true)
-            try? FileManager.default.createDirectory(at: dropDir, withIntermediateDirectories: true)
-            if let legacyNames = sender.namesOfPromisedFilesDropped(atDestination: dropDir), !legacyNames.isEmpty {
-                for name in legacyNames {
-                    let fileURL = dropDir.appendingPathComponent(name)
-                    if FileManager.default.fileExists(atPath: fileURL.path) {
-                        if addTrack(fromURL: fileURL) {
-                            addedAny = true
-                        }
-                    } else if let rbTrack = RekordboxService.shared.findTrackByFile(filePath: fileURL.path, fileName: name) {
-                        _ = addTrack(rbTrack)
-                        addedAny = true
-                    } else {
-                        let seratoService = SeratoDatabaseService(databasePath: UserSettings.shared.effectiveDatabasePath)
-                        if let sTrack = seratoService.findTrackByFile(filePath: fileURL.path, fileName: name) {
-                            _ = addTrack(sTrack)
-                            addedAny = true
-                        } else {
-                            let parsed = Track.parseSmartArtistAndTitle(rawString: (name as NSString).deletingPathExtension)
-                            let provisionalTrack = Track(
-                                title: parsed.title,
-                                artist: parsed.artist ?? "",
-                                bpm: 0.0,
-                                rawKey: "",
-                                filePath: fileURL.path,
-                                fileName: name,
-                                portableId: fileURL.path
-                            )
-                            _ = addTrack(provisionalTrack)
-                            addedAny = true
-                        }
-                    }
-                }
-                return true
-            }
-        }
         
         // 7. Parcours exhaustif de tous les pasteboardItems pour URLs, chemins ou XML
         if let items = pasteboard.pasteboardItems {
@@ -1013,11 +910,17 @@ public final class RecallDropTargetNSView: NSView {
     }
     
     public override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
+            return []
+        }
         onDraggingChanged?(true)
         return .copy
     }
     
     public override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
+            return []
+        }
         return .copy
     }
     
