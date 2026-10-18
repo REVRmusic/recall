@@ -1585,12 +1585,22 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
         public let startTime: Date
         public let endTime: Date?
         public let trackCount: Int
+        public let notes: String?
         
-        public init(id: Int, startTime: Date, endTime: Date?, trackCount: Int) {
+        public init(id: Int, startTime: Date, endTime: Date?, trackCount: Int, notes: String? = nil) {
             self.id = id
             self.startTime = startTime
             self.endTime = endTime
             self.trackCount = trackCount
+            self.notes = notes
+        }
+        
+        /// Nom de l'établissement ou commentaire personnalisé de la soirée (ex: "PANAMA", "LE FIZZ", "Fizz")
+        public var venue: String? {
+            guard let n = notes?.trimmingCharacters(in: .whitespacesAndNewlines), !n.isEmpty else {
+                return nil
+            }
+            return n
         }
         
         public var formattedTitle: String {
@@ -1611,7 +1621,11 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 endStr = "En cours"
             }
             
-            return "\(dateStr) (\(startStr) - \(endStr) • \(trackCount) morceaux)"
+            if let v = venue {
+                return "📍 \(v) — \(dateStr) (\(startStr) - \(endStr) • \(trackCount) morceaux)"
+            } else {
+                return "📅 \(dateStr) (\(startStr) - \(endStr) • \(trackCount) morceaux)"
+            }
         }
         
         public var shortTitle: String {
@@ -1619,14 +1633,25 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
             formatter.locale = Locale(identifier: "fr_FR")
             formatter.dateFormat = "d MMM yyyy"
             let dateStr = formatter.string(from: startTime)
-            return "\(dateStr) • \(trackCount) morceaux"
+            
+            if let v = venue {
+                return "📍 \(v) • \(dateStr)"
+            } else {
+                return "\(dateStr) • \(trackCount) morceaux"
+            }
         }
         
         public var fullFrenchDate: String {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "fr_FR")
             formatter.dateFormat = "EEEE d MMMM yyyy"
-            return formatter.string(from: startTime).capitalized
+            let dateStr = formatter.string(from: startTime).capitalized
+            
+            if let v = venue {
+                return "\(v) — \(dateStr)"
+            } else {
+                return dateStr
+            }
         }
     }
     
@@ -1641,7 +1666,8 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 s.id,
                 s.start_time,
                 s.end_time,
-                count(h.id) as track_count
+                count(h.id) as track_count,
+                ifnull(nullif(s.notes, ''), ifnull(s.comment, '')) as session_notes
             FROM history_session s
             JOIN history_entry h ON h.session_id = s.id AND h.played = 1
             GROUP BY s.id
@@ -1660,6 +1686,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                     let startUnix = sqlite3_column_int64(stmt, 1)
                     let endUnix = sqlite3_column_int64(stmt, 2)
                     let count = Int(sqlite3_column_int64(stmt, 3))
+                    let notes = sqlite3_column_text(stmt, 4).map { String(cString: $0) }
                     
                     let startDate = Date(timeIntervalSince1970: TimeInterval(startUnix))
                     let endDate = endUnix > 0 ? Date(timeIntervalSince1970: TimeInterval(endUnix)) : nil
@@ -1668,7 +1695,8 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                         id: id,
                         startTime: startDate,
                         endTime: endDate,
-                        trackCount: count
+                        trackCount: count,
+                        notes: notes
                     ))
                 }
             }

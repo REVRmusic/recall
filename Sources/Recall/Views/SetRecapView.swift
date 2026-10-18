@@ -304,6 +304,7 @@ public struct SetRecapView: View {
     @State private var isCloseHovered: Bool = false
     @State private var isPhotosHovered: Bool = false
     @State private var isShareHovered: Bool = false
+    @State private var isPickerHovered: Bool = false
     @State private var isExporting: Bool = false
     @State private var toastMessage: String? = nil
     @State private var toastIcon: String = "checkmark.circle.fill"
@@ -510,7 +511,7 @@ public struct SetRecapView: View {
                         .fill(selectedPastSession != nil ? Color.purple : (stats.totalTracksCount == 0 ? Color.white.opacity(0.3) : (stats.isLiveSession ? Color.green : Color.orange)))
                         .frame(width: 6, height: 6)
                     
-                    Text(selectedPastSession != nil ? "Session archivée (\(selectedPastSession!.trackCount) morceaux)" : (stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause")))
+                    Text(selectedPastSession != nil ? (selectedPastSession!.venue != nil ? "📍 \(selectedPastSession!.venue!) • \(selectedPastSession!.trackCount) morceaux" : "Session archivée (\(selectedPastSession!.trackCount) morceaux)") : (stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause")))
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.55))
                 }
@@ -603,11 +604,10 @@ public struct SetRecapView: View {
             Button {
                 returnToLive()
             } label: {
-                HStack {
+                if selectedPastSession == nil {
+                    Label("Session en direct (Actuelle)", systemImage: "checkmark")
+                } else {
                     Text("🟢 Session en direct (Actuelle)")
-                    if selectedPastSession == nil {
-                        Image(systemName: "checkmark")
-                    }
                 }
             }
             
@@ -618,43 +618,47 @@ public struct SetRecapView: View {
                     Button {
                         selectPastSession(session)
                     } label: {
-                        HStack {
-                            Text("📅 \(session.formattedTitle)")
-                            if selectedPastSession?.id == session.id {
-                                Image(systemName: "checkmark")
-                            }
+                        if selectedPastSession?.id == session.id {
+                            Label(session.formattedTitle, systemImage: "checkmark")
+                        } else {
+                            Text(session.formattedTitle)
                         }
                     }
                 }
+            } else {
+                Divider()
+                Text("Chargement des sessions Serato...")
             }
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 Image(systemName: selectedPastSession == nil ? "record.circle" : "clock.arrow.circlepath")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(selectedPastSession == nil ? .green : Color.accentCyan)
                 
                 Text(selectedPastSession == nil ? "Session en cours" : selectedPastSession!.shortTitle)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.white.opacity(0.9))
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundColor(.white)
                     .lineLimit(1)
                 
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 7.5, weight: .bold))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundColor(isPickerHovered ? Color.accentCyan : .white.opacity(0.6))
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(selectedPastSession == nil ? Color.white.opacity(0.06) : Color.accentCyan.opacity(0.14))
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(isPickerHovered ? Color.white.opacity(0.14) : (selectedPastSession == nil ? Color.white.opacity(0.08) : Color.accentCyan.opacity(0.18)))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(selectedPastSession == nil ? Color.white.opacity(0.12) : Color.accentCyan.opacity(0.35), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(isPickerHovered ? Color.accentCyan : (selectedPastSession == nil ? Color.white.opacity(0.18) : Color.accentCyan.opacity(0.45)), lineWidth: 1)
             )
+            .contentShape(Rectangle())
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
+        .onHover { isPickerHovered = $0 }
         .help("Choisir la session à analyser (session en direct ou sessions Serato passées)")
     }
     

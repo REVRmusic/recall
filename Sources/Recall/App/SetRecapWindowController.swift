@@ -27,19 +27,17 @@ private class SetRecapPanel: NSPanel {
     
     override func sendEvent(_ event: NSEvent) {
         if event.type == .leftMouseDown {
-            let loc = event.locationInWindow
-            let h = frame.size.height
-            let w = frame.size.width
-            
-            // Zone du bouton fermer en haut à droite : ne jamais déclencher de drag
-            let isCloseArea = loc.x >= (w - 60) && loc.y >= (h - 75)
-            if isCloseArea {
-                super.sendEvent(event)
-                return
+            if !NSApp.isActive {
+                NSApp.activate(ignoringOtherApps: true)
             }
             
-            // Déplacement fluide et 100% natif via toute la barre d'en-tête
-            if loc.y >= (h - 75) {
+            let loc = event.locationInWindow
+            let h = frame.size.height
+            
+            // Seule la zone du titre en haut à gauche (icône + texte, x < 180) déclenche le drag de la fenêtre.
+            // Le sélecteur de session (x >= 180) et les boutons d'action (Photos, Partage, Fermer) reçoivent 100% des clics sans interférence.
+            let isTitleDragArea = loc.x < 180 && loc.y >= (h - 70)
+            if isTitleDragArea {
                 self.performDrag(with: event)
                 return
             }
