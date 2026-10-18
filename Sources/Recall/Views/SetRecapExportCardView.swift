@@ -8,12 +8,20 @@ public struct SetRecapExportCardView: View {
     public let sessionStartTime: Date
     public let eventTitle: String?
     public let generationDate: Date
+    public let hideDuration: Bool
     
-    public init(stats: SetRecapStats, sessionStartTime: Date, eventTitle: String? = nil, generationDate: Date = Date()) {
+    public init(
+        stats: SetRecapStats,
+        sessionStartTime: Date,
+        eventTitle: String? = nil,
+        generationDate: Date = Date(),
+        hideDuration: Bool = false
+    ) {
         self.stats = stats
         self.sessionStartTime = sessionStartTime
         self.eventTitle = eventTitle
         self.generationDate = generationDate
+        self.hideDuration = hideDuration
     }
     
     public var body: some View {
@@ -167,14 +175,25 @@ public struct SetRecapExportCardView: View {
         VStack(spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("DURÉE TOTALE DU MIX")
+                    Text(hideDuration ? "TOTAL DU MIX" : "DURÉE TOTALE DU MIX")
                         .font(.system(size: 9.5, weight: .heavy))
                         .foregroundColor(.white.opacity(0.45))
                         .tracking(0.6)
                     
-                    Text(formatDuration(stats.totalDurationSeconds))
-                        .font(.system(size: 26, weight: .black, design: .monospaced))
-                        .foregroundColor(.white)
+                    if hideDuration {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text("\(stats.totalTracksCount)")
+                                .font(.system(size: 26, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("morceaux joués")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(Color.accentCyan)
+                        }
+                    } else {
+                        Text(formatDuration(stats.totalDurationSeconds))
+                            .font(.system(size: 26, weight: .black, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
                 }
                 
                 Spacer()
@@ -186,56 +205,107 @@ public struct SetRecapExportCardView: View {
                 .background(Color.white.opacity(0.08))
             
             HStack(spacing: 12) {
-                // Morceaux joués
-                HStack(spacing: 6) {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Color.accentCyan)
-                    
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("\(stats.totalTracksCount)")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                        Text("morceaux joués")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.55))
+                if hideDuration {
+                    // Métriques préservant la confidentialité de la durée totale du set
+                    HStack(spacing: 6) {
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Color.accentCyan)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount)")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("lectures totales")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Temps moyen par morceau
-                HStack(spacing: 6) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(stats.totalTracksCount > 0 ? formatMinutesSeconds(stats.averageTimePerTrackSeconds) : "--")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                        Text("temps / track")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.55))
+                    HStack(spacing: 6) {
+                        Image(systemName: "circle.grid.cross.fill")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.purple)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(stats.keyDistribution.count)")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("tonalités jouées")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Rotation horaire
-                HStack(spacing: 6) {
-                    Image(systemName: "gauge.with.needle")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.purple)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(stats.totalTracksCount > 0 ? String(format: "%.1f", stats.tracksPerHour) : "--")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                        Text("tracks / heure")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.55))
+                    HStack(spacing: 6) {
+                        Image(systemName: "guitars")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.orange)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(stats.topGenres.count)")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("genres explorés")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    // Morceaux joués
+                    HStack(spacing: 6) {
+                        Image(systemName: "music.note")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Color.accentCyan)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(stats.totalTracksCount)")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("morceaux joués")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Temps moyen par morceau
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.orange)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(stats.totalTracksCount > 0 ? formatMinutesSeconds(stats.averageTimePerTrackSeconds) : "--")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("temps / track")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Rotation horaire
+                    HStack(spacing: 6) {
+                        Image(systemName: "gauge.with.needle")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.purple)
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(stats.totalTracksCount > 0 ? String(format: "%.1f", stats.tracksPerHour) : "--")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("tracks / heure")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(14)
@@ -309,14 +379,25 @@ public struct SetRecapExportCardView: View {
                 subtext: stats.fastestTransition != nil ? "\(stats.fastestTransition!.fromTrack) ➔ \(stats.fastestTransition!.toTrack)" : "2 morceaux requis"
             )
             
-            metricCard(
-                icon: "hare.fill",
-                iconColor: Color.accentCyan,
-                title: "VITESSE DE MIX",
-                mainValue: stats.totalTracksCount > 0 ? String(format: "%.1f", stats.tracksPerHour) : "--",
-                unit: "tracks/h",
-                subtext: stats.totalTracksCount > 0 ? "Cadence moyenne observée" : "En cours d'analyse..."
-            )
+            if hideDuration {
+                metricCard(
+                    icon: "sparkles",
+                    iconColor: Color.accentCyan,
+                    title: "VARIÉTÉ DES GENRES",
+                    mainValue: "\(stats.topGenres.count)",
+                    unit: "genres",
+                    subtext: "\(stats.topArtists.count) artistes différents explorés"
+                )
+            } else {
+                metricCard(
+                    icon: "hare.fill",
+                    iconColor: Color.accentCyan,
+                    title: "VITESSE DE MIX",
+                    mainValue: stats.totalTracksCount > 0 ? String(format: "%.1f", stats.tracksPerHour) : "--",
+                    unit: "tracks/h",
+                    subtext: stats.totalTracksCount > 0 ? "Cadence moyenne observée" : "En cours d'analyse..."
+                )
+            }
             
             metricCard(
                 icon: "music.note.list",

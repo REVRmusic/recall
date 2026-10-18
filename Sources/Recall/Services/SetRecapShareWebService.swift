@@ -34,6 +34,7 @@ public final class SetRecapShareWebService {
         stats: SetRecapStats,
         sessionStartTime: Date,
         sessionTitle: String,
+        hideDuration: Bool = false,
         completion: @escaping (Result<URL, Error>) -> Void
     ) {
         let token = generateSecureShareToken()
@@ -52,7 +53,8 @@ public final class SetRecapShareWebService {
             "title": sessionTitle,
             "session_start_time": dateFormatter.string(from: sessionStartTime),
             "created_at": dateFormatter.string(from: Date()),
-            "views_count": 0
+            "views_count": 0,
+            "hide_duration": hideDuration
         ]
         
         // Sérialisation des statistiques
@@ -69,6 +71,7 @@ public final class SetRecapShareWebService {
             "dominantKeyCount": stats.dominantKeyCount,
             "dominantKeyPercentage": stats.dominantKeyPercentage,
             "isLiveSession": stats.isLiveSession,
+            "hideDuration": hideDuration,
             "keyDistribution": stats.keyDistribution.map { ["key": $0.key, "count": $0.count, "percent": $0.percent] },
             "topGenres": stats.topGenres.map { ["name": $0.name, "count": $0.count, "percent": $0.percent] },
             "topArtists": stats.topArtists.map { ["name": $0.name, "count": $0.count, "percent": $0.percent] },

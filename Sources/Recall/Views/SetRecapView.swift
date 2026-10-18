@@ -297,6 +297,7 @@ public struct SetRecapView: View {
     
     @State private var isShowingExportCustomization: Bool = false
     @State private var exportSessionTitleInput: String = ""
+    @AppStorage("recap_export_hide_duration") private var exportHideDuration: Bool = false
     @State private var pendingExportTarget: ExportTarget = .photos
     @State private var isPublishingWeb: Bool = false
     @FocusState private var isTitleFieldFocused: Bool
@@ -1455,7 +1456,8 @@ public struct SetRecapView: View {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
             sessionStartTime: effectiveSessionStartTime,
-            eventTitle: title
+            eventTitle: title,
+            hideDuration: exportHideDuration
         ) else {
             isExporting = false
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
@@ -1476,7 +1478,8 @@ public struct SetRecapView: View {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
             sessionStartTime: effectiveSessionStartTime,
-            eventTitle: title
+            eventTitle: title,
+            hideDuration: exportHideDuration
         ) else {
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
             return
@@ -1489,7 +1492,8 @@ public struct SetRecapView: View {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
             sessionStartTime: effectiveSessionStartTime,
-            eventTitle: title
+            eventTitle: title,
+            hideDuration: exportHideDuration
         ) else {
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
             return
@@ -1506,7 +1510,8 @@ public struct SetRecapView: View {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
             sessionStartTime: effectiveSessionStartTime,
-            eventTitle: title
+            eventTitle: title,
+            hideDuration: exportHideDuration
         ) else {
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
             return
@@ -1527,7 +1532,8 @@ public struct SetRecapView: View {
         SetRecapShareWebService.shared.publishSetRecap(
             stats: stats,
             sessionStartTime: effectiveSessionStartTime,
-            sessionTitle: title
+            sessionTitle: title,
+            hideDuration: exportHideDuration
         ) { result in
             isPublishingWeb = false
             switch result {
@@ -1702,6 +1708,56 @@ public struct SetRecapView: View {
                 .background(Color.white.opacity(0.035))
                 .cornerRadius(6)
                 
+                // Option : Masquer la durée du set
+                Button {
+                    exportHideDuration.toggle()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: exportHideDuration ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(exportHideDuration ? Color.accentCyan : .white.opacity(0.45))
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text("Masquer la durée du set")
+                                    .font(.system(size: 11.5, weight: .semibold))
+                                    .foregroundColor(.white)
+                                
+                                if exportHideDuration {
+                                    Text("CONFIDENTIEL")
+                                        .font(.system(size: 8, weight: .black))
+                                        .foregroundColor(Color.accentCyan)
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 1.5)
+                                        .background(Color.accentCyan.opacity(0.18))
+                                        .cornerRadius(4)
+                                }
+                            }
+                            
+                            Text("Masque le temps total sur l'image et sur le web (met en avant le volume de morceaux).")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: exportHideDuration ? "eye.slash.fill" : "clock")
+                            .font(.system(size: 12))
+                            .foregroundColor(exportHideDuration ? Color.accentCyan : .white.opacity(0.3))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(exportHideDuration ? Color.accentCyan.opacity(0.08) : Color.white.opacity(0.035))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(exportHideDuration ? Color.accentCyan.opacity(0.35) : Color.white.opacity(0.08), lineWidth: 0.8)
+                    )
+                }
+                .buttonStyle(.plain)
+                
                 Divider()
                     .background(Color.white.opacity(0.12))
                 
@@ -1830,11 +1886,16 @@ public struct SetRecapView: View {
         var lines: [String] = []
         lines.append("📊 BILAN DU MIX • RECALL")
         lines.append("────────────────────────")
-        lines.append("⏱ Durée totale : \(formatDuration(stats.totalDurationSeconds))")
+        if !exportHideDuration {
+            lines.append("⏱ Durée totale : \(formatDuration(stats.totalDurationSeconds))")
+        }
         lines.append("🎵 Morceaux joués : \(stats.totalTracksCount) tracks")
-        if stats.totalTracksCount > 0 {
+        if stats.totalTracksCount > 0 && !exportHideDuration {
             let pace = mixPaceInfo(avgSec: stats.averageTimePerTrackSeconds, totalTracks: stats.totalTracksCount).label
             lines.append("🎚 Vitesse de mix : \(formatMinutesSeconds(stats.averageTimePerTrackSeconds)) / track (\(String(format: "%.1f", stats.tracksPerHour)) tracks/h • \(pace))")
+        } else if exportHideDuration {
+            lines.append("🎧 Lectures totales : \(stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount) passages")
+            lines.append("🎚 Tonalités explorées : \(stats.keyDistribution.count)")
         }
         if stats.averageBpm > 0 {
             lines.append("⚡️ BPM moyen : \(String(format: "%.1f", stats.averageBpm)) BPM (\(Int(stats.minBpm.rounded())) - \(Int(stats.maxBpm.rounded())) BPM)")

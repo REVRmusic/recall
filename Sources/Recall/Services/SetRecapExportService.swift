@@ -13,12 +13,18 @@ public final class SetRecapExportService {
     // MARK: - 1. Génération de l'image haute définition
     
     /// Génère un rendu image haute résolution (Retina @2x) de l'intégralité du bilan statistique
-    public func generateImage(stats: SetRecapStats, sessionStartTime: Date, eventTitle: String? = nil) -> NSImage? {
+    public func generateImage(
+        stats: SetRecapStats,
+        sessionStartTime: Date,
+        eventTitle: String? = nil,
+        hideDuration: Bool = false
+    ) -> NSImage? {
         let exportView = SetRecapExportCardView(
             stats: stats,
             sessionStartTime: sessionStartTime,
             eventTitle: eventTitle,
-            generationDate: Date()
+            generationDate: Date(),
+            hideDuration: hideDuration
         )
         
         // 1. Priorité moderne : ImageRenderer SwiftUI (macOS 13+)
