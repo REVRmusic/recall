@@ -6,6 +6,7 @@ import AppKit
 public struct SetRecapExportCardView: View {
     public let stats: SetRecapStats
     public let sessionStartTime: Date
+    public let sessionEndTime: Date?
     public let eventTitle: String?
     public let generationDate: Date
     public let hideDuration: Bool
@@ -13,12 +14,14 @@ public struct SetRecapExportCardView: View {
     public init(
         stats: SetRecapStats,
         sessionStartTime: Date,
+        sessionEndTime: Date? = nil,
         eventTitle: String? = nil,
         generationDate: Date = Date(),
         hideDuration: Bool = false
     ) {
         self.stats = stats
         self.sessionStartTime = sessionStartTime
+        self.sessionEndTime = sessionEndTime
         self.eventTitle = eventTitle
         self.generationDate = generationDate
         self.hideDuration = hideDuration
@@ -199,6 +202,44 @@ public struct SetRecapExportCardView: View {
                 Spacer()
                 
                 mixPaceBadge
+            }
+            
+            if !hideDuration {
+                // Horaires du set : Début & Fin
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(Color.accentCyan)
+                        Text("Début :")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.60))
+                        Text(formatHourMinute(sessionStartTime))
+                            .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    
+                    if let end = resolvedSessionEndTime {
+                        Text("•")
+                            .font(.system(size: 9))
+                            .foregroundColor(.white.opacity(0.30))
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "flag.checkered")
+                                .font(.system(size: 9))
+                                .foregroundColor(Color.accentCyan.opacity(0.85))
+                            Text("Fin :")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.white.opacity(0.60))
+                            Text(formatHourMinute(end))
+                                .font(.system(size: 10.5, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.top, 1)
             }
             
             Divider()
@@ -741,6 +782,23 @@ public struct SetRecapExportCardView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+    
+    private func formatHourMinute(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.dateFormat = "HH'h'mm"
+        return formatter.string(from: date)
+    }
+    
+    private var resolvedSessionEndTime: Date? {
+        if let end = sessionEndTime {
+            return end
+        }
+        if stats.totalDurationSeconds > 0 {
+            return sessionStartTime.addingTimeInterval(stats.totalDurationSeconds)
+        }
+        return nil
     }
     
     private func formatDuration(_ seconds: Double) -> String {

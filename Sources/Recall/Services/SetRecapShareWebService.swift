@@ -33,6 +33,7 @@ public final class SetRecapShareWebService {
     public func publishSetRecap(
         stats: SetRecapStats,
         sessionStartTime: Date,
+        sessionEndTime: Date? = nil,
         sessionTitle: String,
         hideDuration: Bool = false,
         completion: @escaping (Result<URL, Error>) -> Void
@@ -56,6 +57,9 @@ public final class SetRecapShareWebService {
             "views_count": 0,
             "hide_duration": hideDuration
         ]
+        if let end = sessionEndTime {
+            payload["session_end_time"] = dateFormatter.string(from: end)
+        }
         
         // Sérialisation des statistiques
         let statsDict: [String: Any] = [
@@ -83,7 +87,13 @@ public final class SetRecapShareWebService {
                 ]
             } as Any
         ]
-        payload["stats"] = statsDict
+        if let end = sessionEndTime {
+            var mutableStats = statsDict
+            mutableStats["sessionEndTime"] = dateFormatter.string(from: end)
+            payload["stats"] = mutableStats
+        } else {
+            payload["stats"] = statsDict
+        }
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []) else {
             completion(.failure(NSError(domain: "RecallShare", code: -2, userInfo: [NSLocalizedDescriptionKey: "Impossible d'encoder les données."])))

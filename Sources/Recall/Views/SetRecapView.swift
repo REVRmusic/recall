@@ -350,6 +350,52 @@ public struct SetRecapView: View {
         return selectedPastSession != nil ? pastSessionTracks : sessionService.playedTracks
     }
     
+    /// Horaires de début et de fin du set avec détection en direct et sessions archivées
+    private var setTimeRange: (start: Date, end: Date?, isLive: Bool, formattedStart: String, formattedEnd: String) {
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "fr_FR")
+        df.dateFormat = "HH'h'mm"
+        
+        if let past = selectedPastSession {
+            let start = past.startTime
+            let startStr = df.string(from: start)
+            
+            if let end = past.endTime {
+                return (start, end, false, startStr, df.string(from: end))
+            } else if let lastTrack = pastSessionTracks.max(by: { ($0.endTime ?? $0.playedAt) < ($1.endTime ?? $1.playedAt) }) {
+                let estimatedEnd = lastTrack.endTime ?? lastTrack.playedAt.addingTimeInterval(max(30.0, lastTrack.durationSeconds))
+                return (start, estimatedEnd, false, startStr, df.string(from: estimatedEnd))
+            } else if stats.totalDurationSeconds > 0 {
+                let estimatedEnd = start.addingTimeInterval(stats.totalDurationSeconds)
+                return (start, estimatedEnd, false, startStr, df.string(from: estimatedEnd))
+            } else {
+                return (start, nil, false, startStr, "--")
+            }
+        } else {
+            // Session en cours
+            let tracks = sessionService.playedTracks
+            let start: Date
+            if let earliest = tracks.min(by: { $0.startTime < $1.startTime }) {
+                start = earliest.startTime
+            } else {
+                start = sessionService.sessionStartTime
+            }
+            let startStr = df.string(from: start)
+            
+            if stats.isLiveSession {
+                return (start, nil, true, startStr, "En direct")
+            } else if let latest = tracks.max(by: { ($0.endTime ?? $0.playedAt) < ($1.endTime ?? $1.playedAt) }) {
+                let end = latest.endTime ?? latest.playedAt.addingTimeInterval(max(30.0, latest.durationSeconds))
+                return (start, end, false, startStr, df.string(from: end))
+            } else if stats.totalDurationSeconds > 0 {
+                let end = start.addingTimeInterval(stats.totalDurationSeconds)
+                return (start, end, false, startStr, df.string(from: end))
+            } else {
+                return (start, nil, false, startStr, "--")
+            }
+        }
+    }
+    
     public var body: some View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
@@ -732,6 +778,55 @@ public struct SetRecapView: View {
                     }
                 }
             }
+            
+            // Horaires du set : Heure de début et heure de fin
+            HStack(spacing: 12) {
+                HStack(spacing: 5) {
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.accentCyan)
+                    
+                    Text("Début :")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundColor(.white.opacity(0.60))
+                    
+                    Text(setTimeRange.formattedStart)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                
+                Text("•")
+                    .font(.system(size: 9))
+                    .foregroundColor(.white.opacity(0.30))
+                
+                HStack(spacing: 5) {
+                    Image(systemName: "flag.checkered")
+                        .font(.system(size: 9.5))
+                        .foregroundColor(setTimeRange.isLive ? Color.green : Color.accentCyan.opacity(0.85))
+                    
+                    Text("Fin :")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundColor(.white.opacity(0.60))
+                    
+                    if setTimeRange.isLive {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 5.5, height: 5.5)
+                            Text("En direct")
+                                .font(.system(size: 10.5, weight: .bold))
+                                .foregroundColor(Color.green)
+                        }
+                    } else {
+                        Text(setTimeRange.formattedEnd)
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding(.top, 1)
             
             Divider()
                 .background(Color.white.opacity(0.08))
@@ -1457,7 +1552,8 @@ public struct SetRecapView: View {
         
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
-            sessionStartTime: effectiveSessionStartTime,
+            sessionStartTime: setTimeRange.start,
+            sessionEndTime: setTimeRange.end,
             eventTitle: title,
             hideDuration: exportHideDuration
         ) else {
@@ -1479,7 +1575,8 @@ public struct SetRecapView: View {
     private func shareRecap(with title: String) {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
-            sessionStartTime: effectiveSessionStartTime,
+            sessionStartTime: setTimeRange.start,
+            sessionEndTime: setTimeRange.end,
             eventTitle: title,
             hideDuration: exportHideDuration
         ) else {
@@ -1493,7 +1590,8 @@ public struct SetRecapView: View {
     private func copyVisualRecapImage(with title: String) {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
-            sessionStartTime: effectiveSessionStartTime,
+            sessionStartTime: setTimeRange.start,
+            sessionEndTime: setTimeRange.end,
             eventTitle: title,
             hideDuration: exportHideDuration
         ) else {
@@ -1511,7 +1609,8 @@ public struct SetRecapView: View {
     private func saveVisualRecapFile(with title: String) {
         guard let image = SetRecapExportService.shared.generateImage(
             stats: stats,
-            sessionStartTime: effectiveSessionStartTime,
+            sessionStartTime: setTimeRange.start,
+            sessionEndTime: setTimeRange.end,
             eventTitle: title,
             hideDuration: exportHideDuration
         ) else {
@@ -1533,7 +1632,8 @@ public struct SetRecapView: View {
         
         SetRecapShareWebService.shared.publishSetRecap(
             stats: stats,
-            sessionStartTime: effectiveSessionStartTime,
+            sessionStartTime: setTimeRange.start,
+            sessionEndTime: setTimeRange.end,
             sessionTitle: title,
             hideDuration: exportHideDuration
         ) { result in
@@ -1721,7 +1821,7 @@ public struct SetRecapView: View {
                         
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
-                                Text("Masquer la durée du set")
+                                Text("Masquer la durée et les horaires du set")
                                     .font(.system(size: 11.5, weight: .semibold))
                                     .foregroundColor(.white)
                                 
@@ -1736,7 +1836,7 @@ public struct SetRecapView: View {
                                 }
                             }
                             
-                            Text("Masque le temps total sur l'image et sur le web (met en avant le volume de morceaux).")
+                            Text("Masque le temps total et les heures de début/fin sur l'image et sur le web (met en avant le volume de morceaux).")
                                 .font(.system(size: 9.5))
                                 .foregroundColor(.white.opacity(0.55))
                         }

@@ -16,12 +16,14 @@ public final class SetRecapExportService {
     public func generateImage(
         stats: SetRecapStats,
         sessionStartTime: Date,
+        sessionEndTime: Date? = nil,
         eventTitle: String? = nil,
         hideDuration: Bool = false
     ) -> NSImage? {
         let exportView = SetRecapExportCardView(
             stats: stats,
             sessionStartTime: sessionStartTime,
+            sessionEndTime: sessionEndTime,
             eventTitle: eventTitle,
             generationDate: Date(),
             hideDuration: hideDuration
