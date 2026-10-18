@@ -242,7 +242,7 @@ namespace Recall
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = "https://mixify.fr/?feedback=1&source=app_windows",
+                    FileName = "https://revrmusic.github.io/recall/?feedback=1&source=app_windows",
                     UseShellExecute = true
                 });
             }

@@ -63,15 +63,19 @@ cat << 'EOF' > "$CONTENTS_DIR/Info.plist"
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.3</string>
+    <string>1.0.4</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>1.0.4</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Recall nécessite l'accès à Photos pour enregistrer directement le récapitulatif visuel de votre mix.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Recall nécessite l'accès à Photos pour enregistrer directement le récapitulatif visuel de votre mix.</string>
 </dict>
 </plist>
 EOF
@@ -102,4 +106,8 @@ if [ "$1" == "--dmg" ] || [ "$BUILD_DMG" == "1" ]; then
     rm -rf "$DMG_TEMP"
     echo "✅ Image disque prête :"
     echo "   $DMG_PATH"
+    
+    echo "📦 Création de l'archive Recall-macOS.zip..."
+    (cd "$BUILD_DIR" && rm -f "Recall-macOS.zip" && ditto -c -k --keepParent "$APP_NAME.app" "Recall-macOS.zip")
+    echo "✅ Archive Recall-macOS.zip prête."
 fi

@@ -54,7 +54,7 @@ Ce dossier contient la solution complète permettant d'utiliser **Google Sheets*
 
 ## 💡 NOUVEAU : Onglet « Retours & Suggestions »
 Le même script collecte désormais automatiquement toutes les suggestions et retours soumis par les DJs :
-- Depuis la modale de feedback sur le site web (`https://mixify.fr/?feedback=1`).
+- Depuis la modale de feedback sur le site web (`https://revrmusic.github.io/recall/?feedback=1`).
 - Depuis l'application Recall (bouton dédié dans les Paramètres et le menu macOS / Windows).
 
 Un onglet intitulé **`💡 Retours & Suggestions`** est généré automatiquement avec :

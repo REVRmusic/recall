@@ -201,6 +201,7 @@ public class SessionHistoryService: ObservableObject {
     
     private let dbService: SeratoDatabaseService
     private var isSyncing: Bool = false
+    private var lastHistoryFingerprint: DatabaseFingerprint? = nil
     
     public init(dbService: SeratoDatabaseService = SeratoDatabaseService()) {
         self.dbService = dbService
@@ -242,6 +243,7 @@ public class SessionHistoryService: ObservableObject {
         self.playedTracks = []
         self.playedNormalizedTitles = []
         self.playedCount = 0
+        self.lastHistoryFingerprint = nil
         
         UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "recall_session_start_time")
         
@@ -337,11 +339,18 @@ public class SessionHistoryService: ObservableObject {
     /// pour éliminer 100% des faux positifs de pré-écoute au casque et des durées arbitraires.
     public func syncWithDatabase(dbService: SeratoDatabaseService) {
         guard !isSyncing else { return }
-        isSyncing = true
         
+        // Surveillance WAL ultra-légère : si ni le journal WAL ni la base n'ont changé depuis le dernier sync,
+        // rien n'a été écrit par Serato -> 0 accès SQL inutile.
+        let currentFp = dbService.currentDatabaseFingerprint()
+        if let lastFp = self.lastHistoryFingerprint, lastFp == currentFp {
+            return
+        }
+        
+        isSyncing = true
         let start = sessionStartTime
         
-        Task.detached(priority: .utility) { [dbService, start] in
+        Task.detached(priority: .utility) { [dbService, start, currentFp] in
             let rawEntries = dbService.fetchSessionEntries(since: start)
             
             // FILTRAGE HAUTE PRÉCISION BASÉ EXCLUSIVEMENT SUR LE STATUT JOOUÉ :
@@ -440,6 +449,7 @@ public class SessionHistoryService: ObservableObject {
                     self.playedCount = sortedTracks.count
                     self.isCurrentlyPlaying = anyPlaying
                 }
+                self.lastHistoryFingerprint = currentFp
                 self.isSyncing = false
             }
         }

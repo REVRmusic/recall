@@ -330,7 +330,7 @@ namespace Recall
             }
             if (stats.MostPlayedArtist != null) sb.AppendLine($"👑 Artiste le plus joué : {stats.MostPlayedArtist.Name} ({stats.MostPlayedArtist.Count} tracks)");
             sb.AppendLine("\n────────────────────────");
-            sb.AppendLine("⚡ Compagnon DJ intelligent Recall (mixify.fr)");
+            sb.AppendLine("⚡ Compagnon DJ intelligent Recall (revrmusic.github.io/recall)");
 
             try
             {

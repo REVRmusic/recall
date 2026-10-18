@@ -21,7 +21,7 @@ const translations = {
     "nav-download": "Télécharger",
     "nav-faq": "FAQ",
     "nav-legal": "Mentions Légales",
-    "nav-cta-download": "Télécharger v1.0.3",
+    "nav-cta-download": "Télécharger v1.0.4",
     
     // Hero
     "hero-pill-badge": "NOUVEAU",
@@ -155,7 +155,7 @@ const translations = {
     // Downloads
     "dl-tag": "Téléchargement Gratuit",
     "dl-title": "Installez Recall sur votre machine de mix",
-    "dl-subtitle": "Téléchargez la version officielle 1.0.3 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
+    "dl-subtitle": "Téléchargez la version officielle 1.0.4 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
     "dl-mac-title": "macOS",
     "dl-mac-specs": "macOS 12.0+ Monterey, Ventura, Sonoma, Sequoia (Universal Apple Silicon M1-M4 & Intel)",
     "dl-mac-btn": "Télécharger Recall.dmg (Recommandé)",
@@ -277,7 +277,7 @@ const translations = {
     "nav-download": "Download",
     "nav-faq": "FAQ",
     "nav-legal": "Legal Notice",
-    "nav-cta-download": "Download v1.0.3",
+    "nav-cta-download": "Download v1.0.4",
     
     // Hero
     "hero-pill-badge": "NEW",
@@ -411,7 +411,7 @@ const translations = {
     // Downloads
     "dl-tag": "Free Download",
     "dl-title": "Get Recall for your DJ machine",
-    "dl-subtitle": "Download the official v1.0.3 release for macOS or Windows. No sign-up required, install and mix.",
+    "dl-subtitle": "Download the official v1.0.4 release for macOS or Windows. No sign-up required, install and mix.",
     "dl-mac-title": "macOS",
     "dl-mac-specs": "macOS 12.0+ Monterey, Ventura, Sonoma, Sequoia (Universal Apple Silicon M1-M4 & Intel)",
     "dl-mac-btn": "Download Recall.dmg (Recommended)",
@@ -595,7 +595,7 @@ function updateSmartHeroButton(os, lang) {
   const currentDict = translations[lang] || translations.fr;
 
   if (isWin) {
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.3/Recall-Windows-x64.zip";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.4/Recall-Windows-x64.zip";
     smartBtn.setAttribute("data-track-download", "Windows");
     smartBtn.setAttribute("data-track-file", "Recall-Windows.zip");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (Windows)");
@@ -616,7 +616,7 @@ function updateSmartHeroButton(os, lang) {
     }
   } else {
     // macOS default
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.3/Recall.dmg";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.4/Recall.dmg";
     smartBtn.setAttribute("data-track-download", "macOS");
     smartBtn.setAttribute("data-track-file", "Recall.dmg");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (macOS)");
@@ -814,19 +814,19 @@ function initFAQ() {
 function getMockupTitles(lang) {
   if (lang === "en") {
     return {
-      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.3 (Floating Mode)",
-      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.3 (Sélec Scratchpad)",
-      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.3 (78px Compact Dock Mode)",
-      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.3 (Performance Mode)",
-      "mockup-settings": "Recall v1.0.3 — Settings Sheet & Soft Dimming"
+      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.4 (Floating Mode)",
+      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.4 (Sélec Scratchpad)",
+      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.4 (78px Compact Dock Mode)",
+      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.4 (Performance Mode)",
+      "mockup-settings": "Recall v1.0.4 — Settings Sheet & Soft Dimming"
     };
   }
   return {
-    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.3 (Mode Flottant)",
-    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.3 (Onglet Sélec & Scratchpad)",
-    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.3 (Mode Bandeau Compact 78 px)",
-    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.3 (Mode Performance)",
-    "mockup-settings": "Recall v1.0.3 — Panneau des Paramètres & Estompage"
+    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.4 (Mode Flottant)",
+    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.4 (Onglet Sélec & Scratchpad)",
+    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.4 (Mode Bandeau Compact 78 px)",
+    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.4 (Mode Performance)",
+    "mockup-settings": "Recall v1.0.4 — Panneau des Paramètres & Estompage"
   };
 }
 
@@ -887,7 +887,7 @@ function sendDownloadEvent(eventData) {
   const payload = {
     platform: eventData.platform || "macOS",
     file: file,
-    version: "1.0.3",
+    version: "1.0.4",
     event: "Téléchargement direct",
     location: eventData.location || "Section Téléchargement",
     site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
@@ -1251,7 +1251,7 @@ function submitFeedbackForm(e) {
     email: email,
     software: software,
     source: source,
-    version: "1.0.3",
+    version: "1.0.4",
     event: "💡 Suggestion : " + category,
     location: author + (email ? " <" + email + ">" : ""),
     file: (software ? "[" + software + "] " : "") + message,

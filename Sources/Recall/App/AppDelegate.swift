@@ -463,7 +463,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(NSMenuItem.separator())
         
         let websiteItem = NSMenuItem(
-            title: "Site officiel (mixify.fr)",
+            title: "Site officiel (revrmusic.github.io/recall)",
             action: #selector(openWebsiteAction),
             keyEquivalent: ""
         )
@@ -523,7 +523,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openFeedbackWebsiteAction() {
-        if let url = URL(string: "https://mixify.fr") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -599,7 +599,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         alert.informativeText = "Compagnon intelligent en direct pour Serato DJ Pro & Rekordbox.\nConçu pour assister les DJs en live.\n\n100% local • Aucune collecte de données • Léger & Réactif."
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Site officiel (mixify.fr)")
+        alert.addButton(withTitle: "Site officiel")
         alert.addButton(withTitle: "Rechercher une mise à jour")
         
         NSApp.activate(ignoringOtherApps: true)
@@ -672,7 +672,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openWebsiteAction() {
-        if let url = URL(string: "https://mixify.fr") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/") {
             NSWorkspace.shared.open(url)
         }
     }

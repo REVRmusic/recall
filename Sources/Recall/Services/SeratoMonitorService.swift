@@ -27,10 +27,20 @@ public class SeratoMonitorService: ObservableObject {
     private var timer: Timer?
     private var lastKnownMaxEntryId: Int = -1
     private var cancellables = Set<AnyCancellable>()
+    private var isCheckingDatabase: Bool = false
+    private var lastHistorySyncTime: Date = .distantPast
     
     public init(dbService: SeratoDatabaseService = SeratoDatabaseService()) {
         self.dbService = dbService
         startMonitoring()
+        
+        // Surveillance active de l'extinction de Serato (Point 6 : zéro conflit de fermeture)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(handleApplicationTermination(_:)),
+            name: NSWorkspace.didTerminateApplicationNotification,
+            object: nil
+        )
         
         // Rafraîchir les suggestions quand les paramètres changent
         UserSettings.shared.$djSoftwareMode
@@ -109,14 +119,16 @@ public class SeratoMonitorService: ObservableObject {
     public func checkDatabaseUpdates() {
         lastCheckTime = Date()
         
-        // 1. Détection des applications DJ en cours d'exécution sur macOS
+        // 1. Détection des applications DJ en cours d'exécution sur macOS (Point 6 : ignore immédiatement les apps en cours d'extinction)
         let runningApps = NSWorkspace.shared.runningApplications
         let isSeratoRunning = runningApps.contains { app in
+            guard !app.isTerminated else { return false }
             let name = app.localizedName?.lowercased() ?? ""
             let id = app.bundleIdentifier?.lowercased() ?? ""
             return name.contains("serato") || id.contains("com.serato")
         }
         let isRekordboxRunning = runningApps.contains { app in
+            guard !app.isTerminated else { return false }
             let name = app.localizedName?.lowercased() ?? ""
             let id = app.bundleIdentifier?.lowercased() ?? ""
             return name.contains("rekordbox") || id.contains("com.pioneerdj.rekordboxdj")
@@ -236,19 +248,36 @@ public class SeratoMonitorService: ObservableObject {
             return
         }
         
+        guard !isCheckingDatabase else { return }
+        isCheckingDatabase = true
+        
         Task.detached(priority: .userInitiated) { [dbService, lastKnownMaxEntryId] in
             let activeState = dbService.fetchActiveDecks()
             
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
+                defer { self.isCheckingDatabase = false }
+                
+                let decksChanged = (self.deck1Track?.id != activeState.deck1?.id) ||
+                                   (self.deck1Track?.displayTitle != activeState.deck1?.displayTitle) ||
+                                   (self.deck2Track?.id != activeState.deck2?.id) ||
+                                   (self.deck2Track?.displayTitle != activeState.deck2?.displayTitle)
+                
+                let latestEntryId = activeState.latestEntryId
+                let entryChanged = (latestEntryId > 0 && latestEntryId != self.lastKnownMaxEntryId)
                 
                 self.deck1Track = activeState.deck1
                 self.deck2Track = activeState.deck2
                 
-                // Synchronisation de l'historique de session
-                SessionHistoryService.shared.syncWithDatabase(dbService: self.dbService)
-                
-                let latestEntryId = activeState.latestEntryId
+                // Optimisation anti-sollicitation disque Serato (Point 3) :
+                // On synchronise l'historique complet UNIQUEMENT si un morceau change de platine,
+                // si une nouvelle entrée est écrite par Serato, ou en battement périodique à basse fréquence (toutes les 15s).
+                let now = Date()
+                let shouldSyncHistory = decksChanged || entryChanged || (now.timeIntervalSince(self.lastHistorySyncTime) >= 15.0)
+                if shouldSyncHistory {
+                    self.lastHistorySyncTime = now
+                    SessionHistoryService.shared.syncWithDatabase(dbService: self.dbService)
+                }
                 
                 // Si la platine sélectionnée manuellement n'est plus active, retour automatique en mode AUTO
                 if self.activeDeckSelection == "1" && self.deck1Track == nil {
@@ -599,6 +628,28 @@ public class SeratoMonitorService: ObservableObject {
             FavoriteCombosService.shared.saveCombo(track1: pending.trackA, track2: pending.trackB)
         }
         self.pendingComboConfirmation = nil
+    }
+    
+    // MARK: - Gestion de l'extinction de Serato (Zéro conflit)
+    
+    @objc private func handleApplicationTermination(_ notification: Notification) {
+        guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
+        let name = app.localizedName?.lowercased() ?? ""
+        let id = app.bundleIdentifier?.lowercased() ?? ""
+        if name.contains("serato") || id.contains("com.serato") {
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                self.isSeratoConnected = false
+                self.deck1Track = nil
+                self.deck2Track = nil
+                if self.manualTrackOverride == nil && self.currentTrack != nil {
+                    self.currentTrack = nil
+                    self.suggestions = []
+                    self.historySuggestions = []
+                    self.favoriteSuggestions = []
+                }
+            }
+        }
     }
 }
 

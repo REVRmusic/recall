@@ -257,13 +257,65 @@ public struct SetRecapView: View {
     @ObservedObject private var sessionService = SessionHistoryService.shared
     @ObservedObject private var settings = UserSettings.shared
     @State private var currentTime = Date()
-    @State private var showCopyToast: Bool = false
+    public enum ExportTarget {
+        case photos
+        case share
+        case copyImage
+        case saveFile
+        case webLink
+        
+        var modalTitle: String {
+            switch self {
+            case .photos: return "Enregistrer dans Photos"
+            case .share: return "Partager l'image"
+            case .copyImage: return "Copier l'image"
+            case .saveFile: return "Enregistrer le fichier PNG"
+            case .webLink: return "Partager la page web"
+            }
+        }
+        
+        var actionButtonTitle: String {
+            switch self {
+            case .photos: return "Enregistrer dans Photos"
+            case .share: return "Partager le visuel"
+            case .copyImage: return "Copier dans le presse-papier"
+            case .saveFile: return "Enregistrer le fichier..."
+            case .webLink: return "Créer le lien sécurisé"
+            }
+        }
+        
+        var actionIcon: String {
+            switch self {
+            case .photos: return "photo.badge.plus"
+            case .share: return "square.and.arrow.up"
+            case .copyImage: return "doc.on.doc.fill"
+            case .saveFile: return "arrow.down.doc.fill"
+            case .webLink: return "link.badge.plus"
+            }
+        }
+    }
+    
+    @State private var isShowingExportCustomization: Bool = false
+    @State private var exportSessionTitleInput: String = ""
+    @State private var pendingExportTarget: ExportTarget = .photos
+    @State private var isPublishingWeb: Bool = false
+    @FocusState private var isTitleFieldFocused: Bool
+    
     @State private var isCloseHovered: Bool = false
+    @State private var isPhotosHovered: Bool = false
+    @State private var isShareHovered: Bool = false
+    @State private var isExporting: Bool = false
+    @State private var toastMessage: String? = nil
+    @State private var toastIcon: String = "checkmark.circle.fill"
+    @State private var toastColor: Color = .green
     
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
     
     @State private var currentStats: SetRecapStats? = nil
+    @State private var pastSessions: [SeratoDatabaseService.PastSessionItem] = []
+    @State private var selectedPastSession: SeratoDatabaseService.PastSessionItem? = nil
+    @State private var pastSessionTracks: [SessionPlayedTrack] = []
     
     private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     
@@ -276,47 +328,97 @@ public struct SetRecapView: View {
         if let s = currentStats {
             return s
         }
+        if let past = selectedPastSession {
+            return SetRecapStats.compute(
+                from: pastSessionTracks,
+                sessionStartTime: past.startTime
+            )
+        }
         return SetRecapStats.compute(
             from: sessionService.playedTracks,
             sessionStartTime: sessionService.sessionStartTime
         )
     }
     
+    private var effectiveSessionStartTime: Date {
+        return selectedPastSession?.startTime ?? sessionService.sessionStartTime
+    }
+    
+    private var effectiveTracks: [SessionPlayedTrack] {
+        return selectedPastSession != nil ? pastSessionTracks : sessionService.playedTracks
+    }
+    
     public var body: some View {
-        VStack(spacing: 0) {
-            // 1. En-tête
-            headerView
-            
-            Divider()
-                .background(Color.white.opacity(0.12))
-            
-            ScrollView(.vertical, showsIndicators: true) {
-                VStack(spacing: 12) {
-                    // 2. Carte Principale : Durée totale & Rythme du mix
-                    heroDurationCard
-                    
-                    // 3. Grille des indicateurs clés (BPM, Clé dominante, Genre dominant, Transition rapide, Vitesse, Lectures)
-                    metricsGridView
-                    
-                    // 4. Section Top Genres joués
-                    topGenresSection
-                    
-                    // 5. Section Top Artistes joués
-                    topArtistsSection
-                    
-                    // 6. Section Distribution Harmonique
-                    if !stats.keyDistribution.isEmpty {
-                        harmonicDistributionSection
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                // 1. En-tête
+                headerView
+                
+                Divider()
+                    .background(Color.white.opacity(0.12))
+                
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(spacing: 12) {
+                        // 2. Carte Principale : Durée totale & Rythme du mix
+                        heroDurationCard
+                        
+                        // 3. Grille des indicateurs clés (BPM, Clé dominante, Genre dominant, Transition rapide, Vitesse, Lectures)
+                        metricsGridView
+                        
+                        // 4. Section Top Genres joués
+                        topGenresSection
+                        
+                        // 5. Section Top Artistes joués
+                        topArtistsSection
+                        
+                        // 6. Section Distribution Harmonique
+                        if !stats.keyDistribution.isEmpty {
+                            harmonicDistributionSection
+                        }
                     }
+                    .padding(14)
                 }
-                .padding(14)
+                
+                Divider()
+                    .background(Color.white.opacity(0.12))
+                
+                // 7. Pied de page / Actions
+                footerActionsView
             }
             
-            Divider()
-                .background(Color.white.opacity(0.12))
+            // Notification Toast Flottante
+            if let message = toastMessage {
+                HStack(spacing: 8) {
+                    Image(systemName: toastIcon)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(toastColor)
+                    
+                    Text(message)
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(red: 0.12, green: 0.14, blue: 0.18).opacity(0.96))
+                        .shadow(color: Color.black.opacity(0.5), radius: 10, x: 0, y: 4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                )
+                .padding(.bottom, 54)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(100)
+            }
             
-            // 6. Pied de page / Actions
-            footerActionsView
+            // Étape intermédiaire : Personnalisation de la soirée avant export
+            if isShowingExportCustomization {
+                exportCustomizationModal
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    .zIndex(200)
+            }
         }
         .frame(minWidth: 540, minHeight: 620)
         .background(
@@ -340,11 +442,12 @@ public struct SetRecapView: View {
                 from: sessionService.playedTracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
+            loadPastSessions()
         }
         .onReceive(timer) { newTime in
             // OPTIMISATION CPU MAJEURE : Si aucun morceau n'est en cours de lecture,
             // on stoppe le rafraîchissement récurrent du timer (0% CPU)
-            guard stats.isLiveSession else { return }
+            guard selectedPastSession == nil, stats.isLiveSession else { return }
             currentTime = newTime
             currentStats = SetRecapStats.compute(
                 from: sessionService.playedTracks,
@@ -352,12 +455,14 @@ public struct SetRecapView: View {
             )
         }
         .onReceive(sessionService.$playedTracks) { tracks in
+            guard selectedPastSession == nil else { return }
             currentStats = SetRecapStats.compute(
                 from: tracks,
                 sessionStartTime: sessionService.sessionStartTime
             )
         }
         .onReceive(sessionService.$isCurrentlyPlaying) { _ in
+            guard selectedPastSession == nil else { return }
             currentStats = SetRecapStats.compute(
                 from: sessionService.playedTracks,
                 sessionStartTime: sessionService.sessionStartTime
@@ -391,52 +496,198 @@ public struct SetRecapView: View {
                         .font(.system(size: 13.5, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("SET RECAP")
+                    Text(selectedPastSession == nil ? "SET RECAP" : "ARCHIVE")
                         .font(.system(size: 9, weight: .heavy, design: .rounded))
-                        .foregroundColor(Color.accentCyan)
+                        .foregroundColor(selectedPastSession == nil ? Color.accentCyan : Color.purple)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1.5)
-                        .background(Color.accentCyan.opacity(0.18))
+                        .background(selectedPastSession == nil ? Color.accentCyan.opacity(0.18) : Color.purple.opacity(0.22))
                         .cornerRadius(3)
                 }
                 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(stats.totalTracksCount == 0 ? Color.white.opacity(0.3) : (stats.isLiveSession ? Color.green : Color.orange))
+                        .fill(selectedPastSession != nil ? Color.purple : (stats.totalTracksCount == 0 ? Color.white.opacity(0.3) : (stats.isLiveSession ? Color.green : Color.orange)))
                         .frame(width: 6, height: 6)
                     
-                    Text(stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause"))
+                    Text(selectedPastSession != nil ? "Session archivée (\(selectedPastSession!.trackCount) morceaux)" : (stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause")))
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.55))
                 }
             }
             
+            sessionPickerMenu
+            
             Spacer()
             
-            if let closeAction = onClose {
-                Button(action: closeAction) {
+            HStack(spacing: 6) {
+                // Bouton Partager rapide
+                Button {
+                    promptExport(for: .share)
+                } label: {
                     ZStack {
                         Circle()
-                            .fill(isCloseHovered ? Color.white.opacity(0.18) : Color.white.opacity(0.08))
+                            .fill(isShareHovered ? Color.white.opacity(0.18) : Color.white.opacity(0.08))
                             .frame(width: 26, height: 26)
                         
-                        Image(systemName: "xmark")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(isCloseHovered ? .white : .white.opacity(0.75))
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(isShareHovered ? Color.accentCyan : .white.opacity(0.85))
                     }
-                    .frame(width: 32, height: 32)
+                    .frame(width: 28, height: 28)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .onHover { hovering in
-                    isCloseHovered = hovering
-                }
+                .onHover { isShareHovered = $0 }
                 .focusable(false)
-                .help("Fermer la fenêtre (Esc ou Cmd+W)")
+                .help("Partager le bilan visuel (AirDrop, Messages, Mail...)")
+                
+                // Bouton Photos rapide
+                Button {
+                    promptExport(for: .photos)
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(isPhotosHovered ? Color.white.opacity(0.18) : Color.white.opacity(0.08))
+                            .frame(width: 26, height: 26)
+                        
+                        if isExporting {
+                            ProgressView()
+                                .scaleEffect(0.6)
+                        } else {
+                            Image(systemName: "photo.badge.plus")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(isPhotosHovered ? Color.accentCyan : .white.opacity(0.85))
+                        }
+                    }
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .onHover { isPhotosHovered = $0 }
+                .focusable(false)
+                .disabled(isExporting)
+                .help("Enregistrer l'image dans l'application Photos")
+                
+                if let closeAction = onClose {
+                    Button(action: closeAction) {
+                        ZStack {
+                            Circle()
+                                .fill(isCloseHovered ? Color.white.opacity(0.18) : Color.white.opacity(0.08))
+                                .frame(width: 26, height: 26)
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(isCloseHovered ? .white : .white.opacity(0.75))
+                        }
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { hovering in
+                        isCloseHovered = hovering
+                    }
+                    .focusable(false)
+                    .help("Fermer la fenêtre (Esc ou Cmd+W)")
+                }
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+    
+    // MARK: - 1.1 Sélecteur de session (Direct / Passé)
+    
+    private var sessionPickerMenu: some View {
+        Menu {
+            Button {
+                returnToLive()
+            } label: {
+                HStack {
+                    Text("🟢 Session en direct (Actuelle)")
+                    if selectedPastSession == nil {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+            
+            if !pastSessions.isEmpty {
+                Divider()
+                
+                ForEach(pastSessions) { session in
+                    Button {
+                        selectPastSession(session)
+                    } label: {
+                        HStack {
+                            Text("📅 \(session.formattedTitle)")
+                            if selectedPastSession?.id == session.id {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: selectedPastSession == nil ? "record.circle" : "clock.arrow.circlepath")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(selectedPastSession == nil ? .green : Color.accentCyan)
+                
+                Text(selectedPastSession == nil ? "Session en cours" : selectedPastSession!.shortTitle)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+                    .lineLimit(1)
+                
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 7.5, weight: .bold))
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(selectedPastSession == nil ? Color.white.opacity(0.06) : Color.accentCyan.opacity(0.14))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(selectedPastSession == nil ? Color.white.opacity(0.12) : Color.accentCyan.opacity(0.35), lineWidth: 1)
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help("Choisir la session à analyser (session en direct ou sessions Serato passées)")
+    }
+    
+    private func loadPastSessions() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let sessions = SeratoDatabaseService.shared.fetchPastSessions(limit: 30)
+            DispatchQueue.main.async {
+                self.pastSessions = sessions
+            }
+        }
+    }
+    
+    private func selectPastSession(_ session: SeratoDatabaseService.PastSessionItem) {
+        selectedPastSession = session
+        exportSessionTitleInput = session.fullFrenchDate
+        DispatchQueue.global(qos: .userInitiated).async {
+            let tracks = SeratoDatabaseService.shared.fetchTracksForSession(sessionId: session.id)
+            let newStats = SetRecapStats.compute(from: tracks, sessionStartTime: session.startTime)
+            DispatchQueue.main.async {
+                self.pastSessionTracks = tracks
+                self.currentStats = newStats
+            }
+        }
+    }
+    
+    private func returnToLive() {
+        selectedPastSession = nil
+        pastSessionTracks = []
+        exportSessionTitleInput = SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
+        currentStats = SetRecapStats.compute(
+            from: sessionService.playedTracks,
+            sessionStartTime: sessionService.sessionStartTime
+        )
     }
     
     // MARK: - 2. Hero Card Durée & Pacing
@@ -927,22 +1178,28 @@ public struct SetRecapView: View {
     
     private var footerActionsView: some View {
         HStack(spacing: 8) {
-            // Copier le bilan
+            // 1. Bouton Enregistrer dans Photos (Action Principale 1)
             Button {
-                copyStatsToClipboard()
+                promptExport(for: .photos)
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: showCopyToast ? "checkmark" : "doc.on.doc.fill")
-                        .font(.system(size: 11, weight: .bold))
-                    Text(showCopyToast ? "Bilan copié !" : "Copier les statistiques")
+                    if isExporting {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                            .frame(width: 13, height: 13)
+                    } else {
+                        Image(systemName: "photo.badge.plus")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    Text("Dans Photos")
                         .font(.system(size: 11, weight: .bold))
                 }
                 .foregroundColor(.black)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
                     LinearGradient(
-                        colors: showCopyToast ? [Color.green, Color.green.opacity(0.85)] : [Color.accentCyan, Color.accentCyan.opacity(0.85)],
+                        colors: [Color.accentCyan, Color.accentCyan.opacity(0.85)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -951,18 +1208,100 @@ public struct SetRecapView: View {
                 .shadow(color: Color.accentCyan.opacity(0.3), radius: 4, x: 0, y: 1)
             }
             .buttonStyle(.plain)
+            .disabled(isExporting)
+            .help("Enregistrer l'image du récapitulatif directement dans Photos sur votre Mac")
             
-            // Ouvrir la tracklist
+            // 2. Bouton Partager (Action Principale 2)
+            Button {
+                promptExport(for: .share)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 11, weight: .bold))
+                    Text("Partager")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    LinearGradient(
+                        colors: [Color.purple.opacity(0.85), Color.purple.opacity(0.70)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
+                .shadow(color: Color.purple.opacity(0.3), radius: 4, x: 0, y: 1)
+            }
+            .buttonStyle(.plain)
+            .help("Partager le bilan visuel (AirDrop, Messages, Mail...)")
+            
+            // 3. Menu d'options d'export
+            Menu {
+                Button {
+                    promptExport(for: .copyImage)
+                } label: {
+                    Label("Copier l'image visuelle", systemImage: "doc.on.doc.fill")
+                }
+                
+                Button {
+                    promptExport(for: .saveFile)
+                } label: {
+                    Label("Enregistrer l'image PNG...", systemImage: "arrow.down.doc")
+                }
+                
+                Button {
+                    promptExport(for: .webLink)
+                } label: {
+                    Label("Partager un lien web sécurisé...", systemImage: "link.badge.plus")
+                }
+                
+                Divider()
+                
+                Button {
+                    copyStatsToClipboard()
+                } label: {
+                    Label("Copier les statistiques en texte", systemImage: "text.alignleft")
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 11, weight: .semibold))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 7, weight: .bold))
+                }
+                .foregroundColor(.white.opacity(0.85))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                )
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("Options supplémentaires : copier l'image, enregistrer en PNG ou texte")
+            
+            Spacer()
+            
+            // 4. Tracklist
             if let openTracklist = onOpenTracklist {
                 Button(action: openTracklist) {
                     HStack(spacing: 5) {
                         Image(systemName: "list.bullet.rectangle.portrait")
                             .font(.system(size: 10.5))
-                        Text("Générer Tracklist")
+                        Text("Tracklist")
                             .font(.system(size: 10.5, weight: .semibold))
                     }
                     .foregroundColor(.white.opacity(0.9))
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 9)
                     .padding(.vertical, 8)
                     .background(Color.white.opacity(0.08))
                     .cornerRadius(6)
@@ -972,30 +1311,55 @@ public struct SetRecapView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .help("Afficher la liste chronologique des morceaux")
             }
             
-            // Reset Session
-            Button {
-                sessionService.resetSession()
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 10))
-                    Text("Reset")
-                        .font(.system(size: 10.5, weight: .semibold))
+            // 5. Reset ou Revenir au direct
+            if selectedPastSession != nil {
+                Button {
+                    returnToLive()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.system(size: 10))
+                        Text("Revenir au direct")
+                            .font(.system(size: 10.5, weight: .semibold))
+                    }
+                    .foregroundColor(Color.accentCyan)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+                    .background(Color.accentCyan.opacity(0.12))
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.accentCyan.opacity(0.3), lineWidth: 1)
+                    )
                 }
-                .foregroundColor(.red.opacity(0.85))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
-                .background(Color.red.opacity(0.10))
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.red.opacity(0.25), lineWidth: 1)
-                )
+                .buttonStyle(.plain)
+                .help("Quitter la session archivée et revenir aux statistiques du mix en cours")
+            } else {
+                Button {
+                    sessionService.resetSession()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 10))
+                        Text("Reset")
+                            .font(.system(size: 10.5, weight: .semibold))
+                    }
+                    .foregroundColor(.red.opacity(0.85))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+                    .background(Color.red.opacity(0.10))
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.red.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .help("Remettre à zéro pour démarrer un nouveau mix")
             }
-            .buttonStyle(.plain)
-            .help("Remettre à zéro pour démarrer un nouveau mix")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -1020,6 +1384,442 @@ public struct SetRecapView: View {
         let m = total / 60
         let s = total % 60
         return String(format: "%dm %02ds", m, s)
+    }
+    
+    // MARK: - Actions d'Exportation Visuelle & Notification
+    
+    private func showToast(message: String, icon: String = "checkmark.circle.fill", color: Color = .green) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+            toastMessage = message
+            toastIcon = icon
+            toastColor = color
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                if toastMessage == message {
+                    toastMessage = nil
+                }
+            }
+        }
+    }
+    
+    // MARK: - Étape intermédiaire de personnalisation
+    
+    private func promptExport(for target: ExportTarget) {
+        if exportSessionTitleInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if let past = selectedPastSession {
+                exportSessionTitleInput = past.fullFrenchDate
+            } else {
+                exportSessionTitleInput = SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
+            }
+        }
+        pendingExportTarget = target
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+            isShowingExportCustomization = true
+        }
+    }
+    
+    private func performExportAction() {
+        let defaultDate = selectedPastSession?.fullFrenchDate ?? SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
+        let title = exportSessionTitleInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedTitle = title.isEmpty ? defaultDate : title
+        
+        withAnimation(.easeOut(duration: 0.2)) {
+            isShowingExportCustomization = false
+        }
+        
+        switch pendingExportTarget {
+        case .photos:
+            exportToPhotos(with: resolvedTitle)
+        case .share:
+            shareRecap(with: resolvedTitle)
+        case .copyImage:
+            copyVisualRecapImage(with: resolvedTitle)
+        case .saveFile:
+            saveVisualRecapFile(with: resolvedTitle)
+        case .webLink:
+            shareViaWebLink(with: resolvedTitle)
+        }
+    }
+    
+    // MARK: - Exportations effectives
+    
+    private func exportToPhotos(with title: String) {
+        guard !isExporting else { return }
+        isExporting = true
+        
+        guard let image = SetRecapExportService.shared.generateImage(
+            stats: stats,
+            sessionStartTime: effectiveSessionStartTime,
+            eventTitle: title
+        ) else {
+            isExporting = false
+            showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
+            return
+        }
+        
+        SetRecapExportService.shared.saveToPhotos(image: image) { success, error in
+            isExporting = false
+            if success {
+                showToast(message: "Enregistré dans l'application Photos !", icon: "photo.fill.on.rectangle.fill", color: Color.accentCyan)
+            } else {
+                showToast(message: error ?? "Impossible d'enregistrer dans Photos", icon: "exclamationmark.triangle.fill", color: .orange)
+            }
+        }
+    }
+    
+    private func shareRecap(with title: String) {
+        guard let image = SetRecapExportService.shared.generateImage(
+            stats: stats,
+            sessionStartTime: effectiveSessionStartTime,
+            eventTitle: title
+        ) else {
+            showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
+            return
+        }
+        
+        SetRecapExportService.shared.shareImage(image: image, window: NSApp.keyWindow)
+    }
+    
+    private func copyVisualRecapImage(with title: String) {
+        guard let image = SetRecapExportService.shared.generateImage(
+            stats: stats,
+            sessionStartTime: effectiveSessionStartTime,
+            eventTitle: title
+        ) else {
+            showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
+            return
+        }
+        
+        if SetRecapExportService.shared.copyImageToClipboard(image: image) {
+            showToast(message: "Image visuelle copiée !", icon: "doc.on.doc.fill", color: Color.accentCyan)
+        } else {
+            showToast(message: "Erreur lors de la copie de l'image", icon: "xmark.circle.fill", color: .red)
+        }
+    }
+    
+    private func saveVisualRecapFile(with title: String) {
+        guard let image = SetRecapExportService.shared.generateImage(
+            stats: stats,
+            sessionStartTime: effectiveSessionStartTime,
+            eventTitle: title
+        ) else {
+            showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
+            return
+        }
+        
+        SetRecapExportService.shared.saveImageToFile(image: image, window: NSApp.keyWindow) { success in
+            if success {
+                showToast(message: "Image PNG enregistrée sur votre Mac !", icon: "arrow.down.doc.fill", color: Color.accentCyan)
+            }
+        }
+    }
+    
+    private func shareViaWebLink(with title: String) {
+        guard !isPublishingWeb else { return }
+        isPublishingWeb = true
+        showToast(message: "Génération du lien web sécurisé...", icon: "arrow.triangle.2.circlepath", color: Color.accentCyan)
+        
+        SetRecapShareWebService.shared.publishSetRecap(
+            stats: stats,
+            sessionStartTime: effectiveSessionStartTime,
+            sessionTitle: title
+        ) { result in
+            isPublishingWeb = false
+            switch result {
+            case .success(let url):
+                showToast(message: "Lien sécurisé copié dans le presse-papier !", icon: "link.circle.fill", color: Color.accentCyan)
+                NSWorkspace.shared.open(url)
+            case .failure(let error):
+                showToast(message: error.localizedDescription, icon: "exclamationmark.triangle.fill", color: .orange)
+            }
+        }
+    }
+    
+    // MARK: - Modale d'Étape Intermédiaire
+    
+    private var exportCustomizationModal: some View {
+        ZStack {
+            // Fond noir dépoli cliquable pour fermer
+            Color.black.opacity(0.65)
+                .background(.ultraThinMaterial)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                        isShowingExportCustomization = false
+                    }
+                }
+            
+            // Boîte modale
+            VStack(alignment: .leading, spacing: 14) {
+                // En-tête
+                HStack(alignment: .center, spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.purple.opacity(0.4), Color.accentCyan.opacity(0.4)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 34, height: 34)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                        
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(Color.accentCyan)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Quelle soirée est concernée ?")
+                            .font(.system(size: 13.5, weight: .bold))
+                            .foregroundColor(.white)
+                        
+                        Text("Ce titre s'affichera en haut à gauche du bilan visuel.")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    
+                    Spacer()
+                    
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                            isShowingExportCustomization = false
+                        }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9.5, weight: .bold))
+                            .foregroundColor(.white.opacity(0.65))
+                            .frame(width: 24, height: 24)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
+                }
+                
+                Divider()
+                    .background(Color.white.opacity(0.12))
+                
+                // Champ de saisie
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("TITRE OU DATE DE L'ÉVÉNEMENT")
+                        .font(.system(size: 9.5, weight: .heavy))
+                        .foregroundColor(.white.opacity(0.5))
+                        .tracking(0.5)
+                    
+                    TextField("Ex : Samedi 17 octobre 2026", text: $exportSessionTitleInput)
+                        .focused($isTitleFieldFocused)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.06))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.accentCyan.opacity(0.4), lineWidth: 1)
+                        )
+                        .onSubmit {
+                            performExportAction()
+                        }
+                    
+                    // Suggestions de date rapides
+                    HStack(spacing: 6) {
+                        let fullDate = selectedPastSession?.fullFrenchDate ?? SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
+                        
+                        Button {
+                            exportSessionTitleInput = fullDate
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 8))
+                                Text(fullDate)
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .foregroundColor(exportSessionTitleInput == fullDate ? Color.accentCyan : .white.opacity(0.7))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(exportSessionTitleInput == fullDate ? Color.accentCyan.opacity(0.15) : Color.white.opacity(0.05))
+                            .cornerRadius(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(exportSessionTitleInput == fullDate ? Color.accentCyan.opacity(0.4) : Color.white.opacity(0.1), lineWidth: 0.8)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        
+                        let soireePreset = "Soirée du \(formattedShortFrenchDate(effectiveSessionStartTime))"
+                        Button {
+                            exportSessionTitleInput = soireePreset
+                        } label: {
+                            Text(soireePreset)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(exportSessionTitleInput == soireePreset ? Color.accentCyan : .white.opacity(0.7))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(exportSessionTitleInput == soireePreset ? Color.accentCyan.opacity(0.15) : Color.white.opacity(0.05))
+                                .cornerRadius(6)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(exportSessionTitleInput == soireePreset ? Color.accentCyan.opacity(0.4) : Color.white.opacity(0.1), lineWidth: 0.8)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 2)
+                }
+                
+                // Aperçu visuel en direct
+                HStack(spacing: 8) {
+                    Image(systemName: "eye.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.accentCyan)
+                    
+                    Text("Aperçu en-tête :")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white.opacity(0.5))
+                    
+                    let defaultDate = selectedPastSession?.fullFrenchDate ?? SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
+                    Text(exportSessionTitleInput.isEmpty ? defaultDate : exportSessionTitleInput)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.035))
+                .cornerRadius(6)
+                
+                Divider()
+                    .background(Color.white.opacity(0.12))
+                
+                // Boutons d'actions
+                HStack(spacing: 10) {
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                            isShowingExportCustomization = false
+                        }
+                    } label: {
+                        Text("Annuler")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.75))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Spacer()
+                    
+                    if pendingExportTarget == .photos {
+                        Button {
+                            pendingExportTarget = .webLink
+                            performExportAction()
+                        } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: "link")
+                                    .font(.system(size: 10))
+                                Text("Lien web")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .foregroundColor(.white.opacity(0.85))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color.white.opacity(0.15), lineWidth: 0.8)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .help("Partager sous la forme d'une page internet avec un lien sécurisé")
+                    }
+                    
+                    Button {
+                        performExportAction()
+                    } label: {
+                        HStack(spacing: 6) {
+                            if isExporting || isPublishingWeb {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                    .frame(width: 12, height: 12)
+                            } else {
+                                Image(systemName: pendingExportTarget.actionIcon)
+                                    .font(.system(size: 11, weight: .bold))
+                            }
+                            
+                            Text(pendingExportTarget.actionButtonTitle)
+                                .font(.system(size: 11.5, weight: .bold))
+                        }
+                        .foregroundColor(pendingExportTarget == .photos ? .black : .white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(
+                            LinearGradient(
+                                colors: pendingExportTarget == .photos
+                                    ? [Color.accentCyan, Color.accentCyan.opacity(0.85)]
+                                    : [Color.purple.opacity(0.9), Color.purple.opacity(0.75)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .cornerRadius(6)
+                        .shadow(color: (pendingExportTarget == .photos ? Color.accentCyan : Color.purple).opacity(0.35), radius: 6, x: 0, y: 1)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isExporting || isPublishingWeb)
+                    .keyboardShortcut(.defaultAction)
+                }
+            }
+            .padding(16)
+            .frame(width: 440)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(red: 0.10, green: 0.11, blue: 0.15).opacity(0.98))
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(.ultraThinMaterial)
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.accentCyan.opacity(0.55),
+                                Color.purple.opacity(0.35),
+                                Color.white.opacity(0.10)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color.black.opacity(0.75), radius: 24, x: 0, y: 12)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isTitleFieldFocused = true
+                }
+            }
+        }
+    }
+    
+    private func formattedShortFrenchDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.dateFormat = "d MMMM yyyy"
+        return formatter.string(from: date)
     }
     
     private func copyStatsToClipboard() {
@@ -1060,13 +1860,6 @@ public struct SetRecapView: View {
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
         
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            showCopyToast = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            withAnimation {
-                showCopyToast = false
-            }
-        }
+        showToast(message: "Statistiques en texte copiées !", icon: "doc.on.doc.fill", color: Color.accentCyan)
     }
 }
