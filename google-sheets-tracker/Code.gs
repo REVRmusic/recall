@@ -24,6 +24,35 @@
  * ============================================================================
  */
 
+function repairDashboard(ss) {
+  if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dashSheet = ss.getSheetByName("📊 Tableau de Bord") || ss.getSheetByName("Tableau de Bord");
+  if (!dashSheet) return;
+
+  // Google Sheets Apps Script requiert obligatoirement les noms de formules en anglais et la virgule comme séparateur
+  var formulas = [
+    ['=COUNTIF(\'Téléchargements\'!E2:E, "*direct*")'],
+    ['=COUNTIFS(\'Téléchargements\'!B2:B, "*macOS*", \'Téléchargements\'!E2:E, "*direct*")'],
+    ['=COUNTIFS(\'Téléchargements\'!B2:B, "*Windows*", \'Téléchargements\'!E2:E, "*direct*")'],
+    ['=COUNTIF(\'Téléchargements\'!E2:E, "*Intention*")'],
+    ['=MAX(0, COUNTA(\'Téléchargements\'!A2:A) - 1)'],
+    ['=IF(COUNTA(\'Téléchargements\'!A2:A)>1, TEXT(MAX(\'Téléchargements\'!A2:A), "yyyy-mm-dd hh:mm:ss"), "Aucun")']
+  ];
+
+  dashSheet.getRange(4, 2, formulas.length, 1).setFormulas(formulas);
+}
+
+/**
+ * Exécutez cette fonction directement depuis l'éditeur Apps Script
+ * (Sélectionnez 'reparerTableauDeBord' dans la barre d'outils et cliquez sur 'Exécuter')
+ * pour corriger instantanément toutes les erreurs #NOM? / #NAME? du tableau de bord.
+ */
+function reparerTableauDeBord() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  setupSheetsIfNeeded(ss);
+  repairDashboard(ss);
+}
+
 function setupSheetsIfNeeded(ss) {
   var dataSheet = ss.getSheetByName("Téléchargements");
   if (!dataSheet) {
@@ -50,7 +79,7 @@ function setupSheetsIfNeeded(ss) {
     dataSheet.autoResizeColumns(1, headers.length);
   }
 
-  var dashSheet = ss.getSheetByName("📊 Tableau de Bord");
+  var dashSheet = ss.getSheetByName("📊 Tableau de Bord") || ss.getSheetByName("Tableau de Bord");
   if (!dashSheet) {
     dashSheet = ss.insertSheet("📊 Tableau de Bord", 0);
     dashSheet.getRange("A1:D1").merge().setValue("🚀 RECALL — STATISTIQUES DES TÉLÉCHARGEMENTS")
@@ -58,12 +87,12 @@ function setupSheetsIfNeeded(ss) {
 
     var kpis = [
       ["Métrique", "Total", "Description"],
-      ["Total Téléchargements Réels", '=NB.SI(\'Téléchargements\'!E2:E; "*direct*")', "Nombre total de téléchargements réels de fichiers (.dmg, .zip)"],
-      ["Téléchargements macOS", '=NB.SI.ENS(\'Téléchargements\'!B2:B; "*macOS*"; \'Téléchargements\'!E2:E; "*direct*")', "Total des téléchargements version Mac"],
-      ["Téléchargements Windows", '=NB.SI.ENS(\'Téléchargements\'!B2:B; "*Windows*"; \'Téléchargements\'!E2:E; "*direct*")', "Total des téléchargements version PC Windows"],
-      ["Clics d'Intention (Hero / Nav)", '=NB.SI(\'Téléchargements\'!E2:E; "*Intention*")', "Visiteurs ayant cliqué sur les boutons d'appel à l'action"],
-      ["Total Tous Événements", '=MAX(0; NBVAL(\'Téléchargements\'!A2:A) - 1)', "Volume global de signaux collectés"],
-      ["Dernier Événement", '=SI(NBVAL(\'Téléchargements\'!A2:A)>1; TEXTE(MAX(\'Téléchargements\'!A2:A); "AAAA-MM-JJ HH:mm:ss"); "Aucun")', "Horodatage de la dernière action"]
+      ["Total Téléchargements Réels", "", "Nombre total de clics sur les fichiers d'installation (.dmg, .zip)"],
+      ["Téléchargements macOS", "", "Total des téléchargements version Mac"],
+      ["Téléchargements Windows", "", "Total des téléchargements version PC Windows"],
+      ["Clics d'Intention (Hero / Nav)", "", "Visiteurs ayant cliqué sur les boutons d'appel à l'action"],
+      ["Total Tous Événements", "", "Volume global de signaux collectés"],
+      ["Dernier Événement", "", "Horodatage de la dernière action"]
     ];
 
     dashSheet.getRange(3, 1, kpis.length, 3).setValues(kpis);
@@ -72,6 +101,10 @@ function setupSheetsIfNeeded(ss) {
     dashSheet.getRange("A4:A10").setFontWeight("bold");
     dashSheet.getRange("B4:B10").setFontWeight("bold").setFontSize(12).setHorizontalAlignment("center").setBackground("#F1F5F9");
     dashSheet.autoResizeColumns(1, 3);
+    repairDashboard(ss);
+  } else {
+    // Si la feuille existe déjà, auto-réparation des formules
+    repairDashboard(ss);
   }
 
   var feedbackSheet = ss.getSheetByName("💡 Retours & Suggestions");
@@ -101,7 +134,19 @@ function setupSheetsIfNeeded(ss) {
 function handleRequest(params) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   setupSheetsIfNeeded(ss);
-  // Mode enregistrement d'un récapitulatif de mix (?action=save_recap)
+
+  // Mode réparation manuelle / ping du tableau de bord (?action=repair)
+  if (params.action === "repair" || params.action === "reparer" || params.action === "repair_dashboard") {
+    repairDashboard(ss);
+    var repairOut = { status: "success", message: "Tableau de bord vérifié et réparé avec succès" };
+    if (params.callback) {
+      return ContentService.createTextOutput(params.callback + "(" + JSON.stringify(repairOut) + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(JSON.stringify(repairOut))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   // Mode enregistrement d'un récapitulatif de mix (?action=save_recap)
   if (params.action === "save_recap" || params.action === "recap") {
     var recapSheet = ss.getSheetByName("📊 Récapitulatifs de Mix");
@@ -246,7 +291,8 @@ function handleRequest(params) {
 
   // Mode lecture des statistiques (?action=stats) pour affichage d'un compteur en direct
   if (params.action === "stats") {
-    var data = sheet.getDataRange().getValues();
+    var downloadSheet = ss.getSheetByName("Téléchargements");
+    var data = downloadSheet ? downloadSheet.getDataRange().getValues() : [];
     var totalDownloads = 0;
     var macDownloads = 0;
     var winDownloads = 0;
@@ -276,6 +322,12 @@ function handleRequest(params) {
   }
 
   // Enregistrement d'un nouvel événement de téléchargement
+  var downloadSheet = ss.getSheetByName("Téléchargements");
+  if (!downloadSheet) {
+    setupSheetsIfNeeded(ss);
+    downloadSheet = ss.getSheetByName("Téléchargements");
+  }
+
   var now = new Date();
   var platform = params.platform || "macOS";
   var file = params.file || (platform.toLowerCase().indexOf("mac") !== -1 ? "Recall.dmg" : "Recall-Windows.zip");
@@ -288,19 +340,21 @@ function handleRequest(params) {
   var referrer = params.referrer || "Direct";
   var userAgent = params.ua || "";
 
-  sheet.appendRow([
-    now,
-    platform,
-    file,
-    version,
-    eventType,
-    location,
-    siteLang,
-    browserLang,
-    resolution,
-    referrer,
-    userAgent
-  ]);
+  if (downloadSheet) {
+    downloadSheet.appendRow([
+      now,
+      platform,
+      file,
+      version,
+      eventType,
+      location,
+      siteLang,
+      browserLang,
+      resolution,
+      referrer,
+      userAgent
+    ]);
+  }
 
   return ContentService.createTextOutput(JSON.stringify({
     status: "success",

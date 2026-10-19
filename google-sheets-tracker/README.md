@@ -52,6 +52,22 @@ Ce dossier contient la solution complète permettant d'utiliser **Google Sheets*
 
 ---
 
+## 🛠️ Dépannage : En cas d'erreur `#NOM?` ou `#NAME?` sur le Tableau de Bord
+Si les cellules de la colonne **Total** (B4 à B9) affichent `#NAME?` ou `#NOM?` :
+1. Dans l'éditeur **Apps Script**, dans le menu déroulant en haut à côté de *Exécuter*, choisissez **`reparerTableauDeBord`**.
+2. Cliquez sur **Exécuter**.
+3. Vos cellules sont immédiatement réparées avec les totaux en temps réel !
+
+*Ou collez directement ces formules dans votre Google Sheet :*
+- **B4** : `=COUNTIF('Téléchargements'!E2:E; "*direct*")` ou `=NB.SI(Téléchargements!E2:E; "*direct*")`
+- **B5** : `=COUNTIFS('Téléchargements'!B2:B; "*macOS*"; 'Téléchargements'!E2:E; "*direct*")` ou `=NB.SI.ENS(Téléchargements!B2:B; "*macOS*"; Téléchargements!E2:E; "*direct*")`
+- **B6** : `=COUNTIFS('Téléchargements'!B2:B; "*Windows*"; 'Téléchargements'!E2:E; "*direct*")` ou `=NB.SI.ENS(Téléchargements!B2:B; "*Windows*"; Téléchargements!E2:E; "*direct*")`
+- **B7** : `=COUNTIF('Téléchargements'!E2:E; "*Intention*")` ou `=NB.SI(Téléchargements!E2:E; "*Intention*")`
+- **B8** : `=MAX(0; COUNTA('Téléchargements'!A2:A) - 1)` ou `=MAX(0; NBVAL(Téléchargements!A2:A) - 1)`
+- **B9** : `=IF(COUNTA('Téléchargements'!A2:A)>1; TEXT(MAX('Téléchargements'!A2:A); "yyyy-mm-dd hh:mm:ss"); "Aucun")`
+
+---
+
 ## 💡 NOUVEAU : Onglet « Retours & Suggestions »
 Le même script collecte désormais automatiquement toutes les suggestions et retours soumis par les DJs :
 - Depuis la modale de feedback sur le site web (`https://revrmusic.github.io/recall/?feedback=1`).
