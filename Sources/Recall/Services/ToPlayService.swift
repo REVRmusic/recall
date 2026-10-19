@@ -906,10 +906,15 @@ public final class RecallDropTargetNSView: NSView {
     }
     
     private func setupDragTypes() {
-        registerForDraggedTypes(ToPlayService.universalDragTypes)
+        if UserSettings.shared.isDragDropEnabled {
+            registerForDraggedTypes(ToPlayService.universalDragTypes)
+        } else {
+            unregisterDraggedTypes()
+        }
     }
     
     public override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard UserSettings.shared.isDragDropEnabled else { return [] }
         guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
             return []
         }
@@ -918,6 +923,7 @@ public final class RecallDropTargetNSView: NSView {
     }
     
     public override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard UserSettings.shared.isDragDropEnabled else { return [] }
         guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
             return []
         }

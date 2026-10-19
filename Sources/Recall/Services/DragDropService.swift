@@ -41,15 +41,19 @@ public class DraggableGripNSView: NSView, NSDraggingSource {
     
     public override func resetCursorRects() {
         super.resetCursorRects()
-        addCursorRect(bounds, cursor: .openHand)
+        if UserSettings.shared.isDragDropEnabled {
+            addCursorRect(bounds, cursor: .openHand)
+        }
     }
     
     public override func mouseDown(with event: NSEvent) {
+        guard UserSettings.shared.isDragDropEnabled else { return }
         mouseDownLocation = event.locationInWindow
         isDraggingActive = false
     }
     
     public override func mouseDragged(with event: NSEvent) {
+        guard UserSettings.shared.isDragDropEnabled else { return }
         guard let start = mouseDownLocation, !isDraggingActive else { return }
         
         let current = event.locationInWindow

@@ -65,6 +65,7 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     // MARK: - Réception Globale du Glisser-Déposer Serato / Rekordbox / Finder
     
     public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard UserSettings.shared.isDragDropEnabled else { return [] }
         guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
             return []
         }
@@ -75,6 +76,7 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
     }
     
     public func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard UserSettings.shared.isDragDropEnabled else { return [] }
         guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
             return []
         }
@@ -97,6 +99,7 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
         DispatchQueue.main.async {
             ToPlayService.shared.isDraggingFileOver = false
         }
+        guard UserSettings.shared.isDragDropEnabled else { return false }
         guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
             return false
         }
@@ -183,7 +186,9 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
-        panel.registerForDraggedTypes(ToPlayService.universalDragTypes)
+        if UserSettings.shared.isDragDropEnabled {
+            panel.registerForDraggedTypes(ToPlayService.universalDragTypes)
+        }
         
         // Supprime complètement les boutons ronds standard de macOS pour libérer le coin supérieur gauche pour le logo Recall
         panel.standardWindowButton(.closeButton)?.isHidden = true
@@ -255,6 +260,15 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
     public func updateAlwaysOnTop(_ enabled: Bool) {
         guard let window = self.window else { return }
         window.level = enabled ? .floating : .normal
+    }
+    
+    public func updateDragDropRegistration() {
+        guard let panel = self.window as? NSPanel else { return }
+        if UserSettings.shared.isDragDropEnabled {
+            panel.registerForDraggedTypes(ToPlayService.universalDragTypes)
+        } else {
+            panel.unregisterDraggedTypes()
+        }
     }
     
     public func toggleCompactMode(_ compact: Bool) {
