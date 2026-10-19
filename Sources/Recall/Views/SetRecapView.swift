@@ -823,16 +823,22 @@ public struct SetRecapView: View {
                         .foregroundColor(.white.opacity(0.45))
                         .tracking(0.5)
                     
-                    let trackCountToDisplay = selectedPastSession != nil ? (stats.totalTracksCount > 0 ? stats.totalTracksCount : selectedPastSession!.trackCount) : stats.totalTracksCount
+                    let playsToDisplay = stats.totalPlaysCount > 0 ? stats.totalPlaysCount : (selectedPastSession?.trackCount ?? stats.totalTracksCount)
                     
                     HStack(spacing: 4) {
-                        Text("\(trackCountToDisplay)")
+                        Text("\(playsToDisplay)")
                             .font(.system(size: 26, weight: .black, design: .rounded))
                             .foregroundColor(Color.accentCyan)
                         
-                        Text("tracks")
+                        Text("lectures")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.white.opacity(0.6))
+                    }
+                    
+                    if stats.totalTracksCount > 0 && stats.totalTracksCount != playsToDisplay {
+                        Text("\(stats.totalTracksCount) titres uniques")
+                            .font(.system(size: 9.5, weight: .medium))
+                            .foregroundColor(.white.opacity(0.50))
                     }
                 }
             }

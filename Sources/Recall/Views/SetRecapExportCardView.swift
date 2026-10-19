@@ -185,10 +185,11 @@ public struct SetRecapExportCardView: View {
                     
                     if hideDuration {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text("\(stats.totalTracksCount)")
+                            let plays = stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount
+                            Text("\(plays)")
                                 .font(.system(size: 26, weight: .black, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("morceaux joués")
+                            Text(plays > 1 ? "lectures" : "lecture")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(Color.accentCyan)
                         }
@@ -303,12 +304,19 @@ public struct SetRecapExportCardView: View {
                             .foregroundColor(Color.accentCyan)
                         
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("\(stats.totalTracksCount)")
+                            let plays = stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount
+                            Text("\(plays)")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("morceaux joués")
-                                .font(.system(size: 9.5))
-                                .foregroundColor(.white.opacity(0.55))
+                            if stats.totalPlaysCount > 0 && stats.totalPlaysCount != stats.totalTracksCount {
+                                Text("lectures (\(stats.totalTracksCount) titres)")
+                                    .font(.system(size: 9.5))
+                                    .foregroundColor(.white.opacity(0.55))
+                            } else {
+                                Text("morceaux joués")
+                                    .font(.system(size: 9.5))
+                                    .foregroundColor(.white.opacity(0.55))
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
