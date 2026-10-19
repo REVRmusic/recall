@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Statistiques du Mix — Recall</title>
   <meta name="description" content="Récapitulatif et analyse détaillée de session de mix DJ via Recall.">
+  <meta property="og:title" content="Statistiques du Mix — Recall">
+  <meta property="og:description" content="Découvrez le bilan et l'analyse complète de la session de mix (morceaux joués, tempo moyen, genres et transitions).">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://revrmusic.github.io/recall/assets/images/app-icon.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Statistiques du Mix — Recall">
+  <meta name="twitter:description" content="Bilan et analyse complète de la session de mix DJ.">
+  <meta name="twitter:image" content="https://revrmusic.github.io/recall/assets/images/app-icon.png">
   <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/apple-touch-icon.png">
   <meta name="theme-color" content="#0a0c10">
@@ -444,34 +452,99 @@
         return { label: "Posé", icon: "☕️", color: "#a855f7" };
       }
 
-      // 1. Extraction des données : hash (#data=...) ou query param (?data=... ou ?token=...)
-      let recap = null;
-      const hash = window.location.hash || '';
-      const search = window.location.search || '';
-      let encodedData = '';
-
-      if (hash.includes('data=')) {
-        encodedData = hash.split('data=')[1].split('&')[0];
-      } else if (search.includes('data=')) {
-        const params = new URLSearchParams(search);
-        encodedData = params.get('data') || '';
-      }
-
-      if (encodedData) {
+      function decodeUrlSafeBase64(str) {
+        if (!str) return null;
         try {
-          const raw = decodeURIComponent(escape(atob(decodeURIComponent(encodedData))));
-          recap = JSON.parse(raw);
+          let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+          while (base64.length % 4) {
+            base64 += '=';
+          }
+          const binary = atob(base64);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+          }
+          const decoded = new TextDecoder().decode(bytes);
+          return JSON.parse(decoded);
         } catch(e) {
-          console.warn("Échec décodage immédiat :", e);
+          try {
+            // Secours si double encodage URL
+            const clean = decodeURIComponent(str).replace(/-/g, '+').replace(/_/g, '/');
+            const binary = atob(clean);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+              bytes[i] = binary.charCodeAt(i);
+            }
+            return JSON.parse(new TextDecoder().decode(bytes));
+          } catch(err2) {
+            console.warn("Échec décodage URL :", err2);
+            return null;
+          }
         }
       }
 
-      // 2. Fallback Google Apps Script si token seul
+      // 1. Extraction des données
+      let recap = null;
+      const search = window.location.search || '';
+      const hash = window.location.hash || '';
+      const params = new URLSearchParams(search);
+
+      // Cas A : Nouveau format compact et incassable via query param (?d=...)
+      const compactParam = params.get('d') || params.get('data') || '';
+      if (compactParam) {
+        const compact = decodeUrlSafeBase64(compactParam);
+        if (compact) {
+          if (compact.t !== undefined && compact.c !== undefined) {
+            // Reconstruction fidèle depuis les clés ultra-compactes
+            const startTimeStr = compact.t0 ? new Date(compact.t0 * 1000).toISOString() : "";
+            const endTimeStr = compact.t1 ? new Date(compact.t1 * 1000).toISOString() : "";
+            recap = {
+              title: compact.t || "Session de Mix",
+              hide_duration: Boolean(compact.h),
+              session_start_time: startTimeStr,
+              session_end_time: endTimeStr,
+              stats: {
+                totalTracksCount: compact.c || 0,
+                totalDurationSeconds: compact.d || 0,
+                averageTimePerTrackSeconds: compact.as || (compact.c > 0 ? (compact.d / compact.c) : 0),
+                tracksPerHour: compact.th || (compact.d > 0 ? ((compact.c / compact.d) * 3600) : 0),
+                averageBpm: compact.b || 0,
+                minBpm: compact.b0 || 0,
+                maxBpm: compact.b1 || 0,
+                dominantKey: compact.k || "",
+                dominantKeyCount: compact.kc || 0,
+                dominantKeyPercentage: compact.kp || 0,
+                hideDuration: Boolean(compact.h),
+                topGenres: (compact.g || []).map(g => ({ name: g[0], count: g[1], percent: g[2] || 0 })),
+                topArtists: (compact.a || []).map(a => ({ name: a[0], count: a[1], percent: a[2] || 0 })),
+                fastestTransition: (compact.ft && compact.ft.length >= 3) ? {
+                  fromTrack: compact.ft[0],
+                  toTrack: compact.ft[1],
+                  elapsedSeconds: compact.ft[2]
+                } : null
+              }
+            };
+          } else if (compact.stats || compact.title) {
+            recap = compact;
+          }
+        }
+      }
+
+      // Cas B : Ancien format hash (#data=...)
+      if (!recap && hash.includes('data=')) {
+        try {
+          const rawHashData = hash.split('data=')[1].split('&')[0];
+          const decoded = decodeUrlSafeBase64(decodeURIComponent(rawHashData));
+          if (decoded && (decoded.stats || decoded.title)) {
+            recap = decoded;
+          }
+        } catch(e) {}
+      }
+
+      // Cas C : Fallback Google Apps Script si token seul (?token=...)
       if (!recap) {
-        let token = '';
-        if (search.includes('token=')) {
-          token = new URLSearchParams(search).get('token') || '';
-        } else {
+        let token = params.get('token') || '';
+        if (!token) {
           const parts = window.location.pathname.split('/').filter(Boolean);
           const last = parts[parts.length - 1];
           if (last && last.startsWith('rcp_')) token = last;
