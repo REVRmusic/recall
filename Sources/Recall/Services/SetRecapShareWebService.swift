@@ -91,10 +91,9 @@ public final class SetRecapShareWebService {
             completion(.failure(NSError(domain: "RecallShare", code: -2, userInfo: [NSLocalizedDescriptionKey: "Impossible d'encoder les données."])))
             return
         }
-        
         let base64String = jsonData.base64EncodedString()
         let encodedData = base64String.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? base64String
-        let webUrlString = "\(publicBaseUrl)/\(token)#data=\(encodedData)"
+        let webUrlString = "\(publicBaseUrl)/?token=\(token)#data=\(encodedData)"
         
         guard let webUrl = URL(string: webUrlString) else {
             completion(.failure(NSError(domain: "RecallShare", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL invalide."])))
