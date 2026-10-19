@@ -85,22 +85,48 @@ function nettoyerEtReparerTout() {
   // 1. Trouver la vraie feuille de telechargements (celle avec les vraies lignes)
   var realDownloads = getDownloadsSheet(ss);
 
-  // 2. Supprimer les onglets corrompus / doublons vides
+  // 2. Supprimer les doublons de Tableau de Bord (ne garder que le principal)
+  var allDashboards = [];
+  for (var i = 0; i < sheets.length; i++) {
+    var n = sheets[i].getName().toLowerCase();
+    if (n.indexOf("tableau") !== -1 || n.indexOf("dashboard") !== -1) {
+      allDashboards.push(sheets[i]);
+    }
+  }
+  while (allDashboards.length > 1) {
+    var extraDash = allDashboards.pop();
+    try { ss.deleteSheet(extraDash); } catch(e) {}
+  }
+
+  // Supprimer les doublons de Retours & Suggestions (ex: onglet corrompu)
+  var allFeedbacks = [];
+  for (var i = 0; i < sheets.length; i++) {
+    var n = sheets[i].getName().toLowerCase();
+    if (n.indexOf("retour") !== -1 || n.indexOf("suggestion") !== -1) {
+      allFeedbacks.push(sheets[i]);
+    }
+  }
+  // Si plusieurs onglets retours, garder celui qui est propre
+  if (allFeedbacks.length > 1) {
+    for (var f = allFeedbacks.length - 1; f >= 0; f--) {
+      var fbName = allFeedbacks[f].getName();
+      if (/[\u221A\u00FA\u00C4\u00EF\u00F6\u00A9]/.test(fbName) && allFeedbacks.length > 1) {
+        try { ss.deleteSheet(allFeedbacks[f]); allFeedbacks.splice(f, 1); } catch(e) {}
+      }
+    }
+  }
+
+  // Supprimer les onglets fantomes corrompus ou Feuille 1 vide
+  sheets = ss.getSheets();
   for (var i = sheets.length - 1; i >= 0; i--) {
     var s = sheets[i];
     if (s === realDownloads) continue;
-
     var name = s.getName();
-    // Detecte les caracteres de corruption mojibake ou Feuille 1 vide
     var isCorrupted = /[\u221A\u00FA\u00C4\u00EF\u00F6\u00A9]/.test(name) ||
                       name === "Feuille 1" ||
                       name === "Sheet1";
-
-    if (isCorrupted) {
-      // Supprimer si vide ou si c'est un ancien tableau de bord corrompu
-      if (s.getLastRow() <= 1 || name.indexOf("Tableau") !== -1) {
-        try { ss.deleteSheet(s); } catch (e) {}
-      }
+    if (isCorrupted && s.getLastRow() <= 1) {
+      try { ss.deleteSheet(s); } catch(e) {}
     }
   }
 
@@ -173,7 +199,7 @@ function nettoyerEtReparerTout() {
     }
   }
 
-  // Pre-remplissage avec les vrais totaux calcules (garantit que les chiffres sont visibles quoi qu'il arrive)
+  // Pre-remplissage avec les vrais totaux calcules
   dashSheet.getRange("B4").setValue(calcDirect);
   dashSheet.getRange("B5").setValue(calcMac);
   dashSheet.getRange("B6").setValue(calcWin);
@@ -181,7 +207,7 @@ function nettoyerEtReparerTout() {
   dashSheet.getRange("B8").setValue(Math.max(0, dlData.length - 1));
   dashSheet.getRange("B9").setValue(lastDate);
 
-  // 6. Injection des formules dynamiques
+  // 6. Injection des formules dynamiques locales
   reparerFormulesTableau(dashSheet);
 
   // 7. S'assurer que les onglets Recaps et Feedback sont prets et propres
@@ -228,30 +254,33 @@ function setupSheetsIfNeeded(ss) {
 function reparerFormulesTableau(dashSheet) {
   if (!dashSheet) return;
 
-  var formulasEn = [
-    ['=COUNTIF(\'T\u00E9l\u00E9chargements\'!E2:E, "*direct*")'],
-    ['=COUNTIFS(\'T\u00E9l\u00E9chargements\'!B2:B, "*macOS*", \'T\u00E9l\u00E9chargements\'!E2:E, "*direct*")'],
-    ['=COUNTIFS(\'T\u00E9l\u00E9chargements\'!B2:B, "*Windows*", \'T\u00E9l\u00E9chargements\'!E2:E, "*direct*")'],
-    ['=COUNTIF(\'T\u00E9l\u00E9chargements\'!E2:E, "*Intention*")'],
-    ['=MAX(0, COUNTA(\'T\u00E9l\u00E9chargements\'!A2:A) - 1)'],
-    ['=IF(COUNTA(\'T\u00E9l\u00E9chargements\'!A2:A)>1, TEXT(MAX(\'T\u00E9l\u00E9chargements\'!A2:A), "yyyy-mm-dd hh:mm:ss"), "Aucun")']
+  var frenchFormulas = [
+    '=NB.SI(T\u00E9l\u00E9chargements!E2:E; "*direct*")',
+    '=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*macOS*"; T\u00E9l\u00E9chargements!E2:E; "*direct*")',
+    '=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*Windows*"; T\u00E9l\u00E9chargements!E2:E; "*direct*")',
+    '=NB.SI(T\u00E9l\u00E9chargements!E2:E; "*Intention*")',
+    '=MAX(0; NBVAL(T\u00E9l\u00E9chargements!A2:A) - 1)',
+    '=SI(NBVAL(T\u00E9l\u00E9chargements!A2:A)>1; TEXTE(MAX(T\u00E9l\u00E9chargements!A2:A); "AAAA-MM-JJ HH:mm:ss"); "Aucun")'
   ];
 
-  try {
-    dashSheet.getRange(4, 2, formulasEn.length, 1).setFormulas(formulasEn);
-  } catch(e) {}
-
-  // Si le classeur utilise la syntaxe regionale francaise (points-virgules)
-  var sample = String(dashSheet.getRange("B4").getDisplayValue() || "");
-  if (sample.indexOf("#") !== -1 || sample.indexOf("ERROR") !== -1 || sample.indexOf("NOM") !== -1 || sample.indexOf("NAME") !== -1) {
+  for (var i = 0; i < frenchFormulas.length; i++) {
+    var cell = dashSheet.getRange(4 + i, 2);
     try {
-      dashSheet.getRange("B4").setFormulaLocal('=NB.SI(T\u00E9l\u00E9chargements!E2:E; "*direct*")');
-      dashSheet.getRange("B5").setFormulaLocal('=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*macOS*"; T\u00E9l\u00E9chargements!E2:E; "*direct*")');
-      dashSheet.getRange("B6").setFormulaLocal('=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*Windows*"; T\u00E9l\u00E9chargements!E2:E; "*direct*")');
-      dashSheet.getRange("B7").setFormulaLocal('=NB.SI(T\u00E9l\u00E9chargements!E2:E; "*Intention*")');
-      dashSheet.getRange("B8").setFormulaLocal('=MAX(0; NBVAL(T\u00E9l\u00E9chargements!A2:A) - 1)');
-      dashSheet.getRange("B9").setFormulaLocal('=SI(NBVAL(T\u00E9l\u00E9chargements!A2:A)>1; TEXTE(MAX(T\u00E9l\u00E9chargements!A2:A); "AAAA-MM-JJ HH:mm:ss"); "Aucun")');
-    } catch(e2) {}
+      cell.setFormulaLocal(frenchFormulas[i]);
+    } catch(e) {
+      try {
+        var en = frenchFormulas[i]
+          .replace(/NB\.SI\.ENS/g, 'COUNTIFS')
+          .replace(/NB\.SI/g, 'COUNTIF')
+          .replace(/NBVAL/g, 'COUNTA')
+          .replace(/SI/g, 'IF')
+          .replace(/TEXTE/g, 'TEXT')
+          .replace(/AAAA/g, 'yyyy')
+          .replace(/JJ/g, 'dd')
+          .replace(/;/g, ',');
+        cell.setFormula(en);
+      } catch(e2) {}
+    }
   }
 }
 
