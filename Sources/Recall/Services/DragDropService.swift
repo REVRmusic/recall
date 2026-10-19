@@ -41,19 +41,15 @@ public class DraggableGripNSView: NSView, NSDraggingSource {
     
     public override func resetCursorRects() {
         super.resetCursorRects()
-        if UserSettings.shared.isDragDropEnabled {
-            addCursorRect(bounds, cursor: .openHand)
-        }
+        addCursorRect(bounds, cursor: .openHand)
     }
     
     public override func mouseDown(with event: NSEvent) {
-        guard UserSettings.shared.isDragDropEnabled else { return }
         mouseDownLocation = event.locationInWindow
         isDraggingActive = false
     }
     
     public override func mouseDragged(with event: NSEvent) {
-        guard UserSettings.shared.isDragDropEnabled else { return }
         guard let start = mouseDownLocation, !isDraggingActive else { return }
         
         let current = event.locationInWindow
@@ -83,9 +79,7 @@ public class DraggableGripNSView: NSView, NSDraggingSource {
         }
         
         let fileURL = URL(fileURLWithPath: path)
-        let writer = AudioFilePasteboardWriter(fileURL: fileURL)
-        
-        let dragItem = NSDraggingItem(pasteboardWriter: writer)
+        let dragItem = NSDraggingItem(pasteboardWriter: (fileURL as NSURL))
         
         // Génération d'une vignette de glisser moderne
         let previewImage = createDragPreviewImage(for: track)

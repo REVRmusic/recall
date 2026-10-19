@@ -806,27 +806,6 @@ public struct SettingsSheetView: View {
                 Divider()
                     .background(Color.white.opacity(0.08))
                 
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Glisser-déposer de morceaux (Drag & Drop)")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.90))
-                        Text("Permet de glisser des suggestions vers Serato et d'ajouter des pistes dans « À jouer ». Désactivez pour un mode consultation 100% passif sans aucune interaction avec le gestionnaire de glisser macOS.")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.50))
-                    }
-                    
-                    Spacer()
-                    
-                    Toggle("", isOn: $settings.isDragDropEnabled)
-                        .toggleStyle(.switch)
-                        .tint(settings.accentColor)
-                        .scaleEffect(0.90)
-                }
-                
-                Divider()
-                    .background(Color.white.opacity(0.08))
-                
                 SettingActionButton(
                     icon: "arrow.down.right.and.arrow.up.left",
                     title: "Recentrer Recall en bas à droite de l'écran principal"

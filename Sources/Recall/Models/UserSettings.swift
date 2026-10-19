@@ -174,15 +174,6 @@ public class UserSettings: ObservableObject {
             GlobalHotKeyService.shared.updateRegistrations(preset: hotKeyPreset)
         }
     }
-    /// Active ou désactive totalement le glisser-déposer de pistes (Drag & Drop)
-    @Published public var isDragDropEnabled: Bool {
-        didSet {
-            UserDefaults.standard.set(isDragDropEnabled, forKey: "isDragDropEnabled")
-            #if os(macOS)
-            FloatingWindowController.shared.updateDragDropRegistration()
-            #endif
-        }
-    }
     
     public var accentColor: Color {
         djTheme.accentColor
@@ -229,7 +220,6 @@ public class UserSettings: ObservableObject {
         }
         let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.cmdOption.rawValue
         self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .cmdOption
-        self.isDragDropEnabled = def.object(forKey: "isDragDropEnabled") != nil ? def.bool(forKey: "isDragDropEnabled") : true
         
         #if os(macOS)
         updateAppDockIcon()
