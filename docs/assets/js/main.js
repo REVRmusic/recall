@@ -1424,13 +1424,15 @@ function loadDownloadStats() {
   fetch(url + (url.includes("?") ? "&" : "?") + "action=stats")
     .then(res => res.json())
     .then(data => {
-      if (data && data.status === "success" && data.totalDownloads >= 0) {
+      if (data && data.status === "success" && typeof data.totalDownloads === "number") {
         const count = data.totalDownloads;
-        const msg = (typeof currentLang !== "undefined" && currentLang === "en")
-          ? `${count} downloads on macOS & Windows`
-          : `${count} téléchargement${count > 1 ? "s" : ""} sur macOS & Windows`;
-        counterText.textContent = msg;
-        counterBox.style.display = "inline-flex";
+        if (count > 0) {
+          const msg = (typeof currentLang !== "undefined" && currentLang === "en")
+            ? `${count} download${count > 1 ? "s" : ""} on macOS & Windows`
+            : `${count} téléchargement${count > 1 ? "s" : ""} sur macOS & Windows`;
+          counterText.textContent = msg;
+          counterBox.style.display = "inline-flex";
+        }
       }
     })
     .catch(() => {});
