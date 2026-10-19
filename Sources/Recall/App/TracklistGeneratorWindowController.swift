@@ -27,13 +27,17 @@ private class TracklistPanel: NSPanel {
     
     override func sendEvent(_ event: NSEvent) {
         if event.type == .leftMouseDown {
+            if !NSApp.isActive {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            
             let loc = event.locationInWindow
             let h = frame.size.height
             let w = frame.size.width
             
-            // Zone du bouton fermer en haut à droite : ne jamais déclencher de drag
-            let isCloseArea = loc.x >= (w - 60) && loc.y >= (h - 65)
-            if isCloseArea {
+            // Zone des boutons d'actions en haut à droite (Stats du mix + Bouton Fermer) : laisser passer le clic sans drag
+            let isActionButtonsArea = loc.x >= (w - 175) && loc.y >= (h - 60)
+            if isActionButtonsArea {
                 super.sendEvent(event)
                 return
             }

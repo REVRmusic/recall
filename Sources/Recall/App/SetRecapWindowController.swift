@@ -31,15 +31,33 @@ private class SetRecapPanel: NSPanel {
                 NSApp.activate(ignoringOtherApps: true)
             }
             
+            // Si la modale de personnalisation d'export est active, laisser passer tous les clics
+            if SetRecapWindowController.shared.isExportModalPresented {
+                super.sendEvent(event)
+                return
+            }
+            
             let loc = event.locationInWindow
             let h = frame.size.height
+            let w = frame.size.width
             
-            // Seule la zone du titre en haut à gauche (icône + texte, x < 180) déclenche le drag de la fenêtre.
-            // Le sélecteur de session (x >= 180) et les boutons d'action (Photos, Partage, Fermer) reçoivent 100% des clics sans interférence.
-            let isTitleDragArea = loc.x < 180 && loc.y >= (h - 70)
-            if isTitleDragArea {
-                self.performDrag(with: event)
-                return
+            // La barre d'en-tête occupe les 60 points depuis le haut physique de la fenêtre
+            let isInHeaderBar = loc.y >= (h - 60)
+            
+            if isInHeaderBar {
+                // 1. Boutons d'action à droite (Partage, Photos, Fermer) : laisser passer le clic sans drag
+                let isRightButtonsArea = loc.x >= (w - 125)
+                
+                // 2. Menu déroulant du sélecteur de session : laisser passer le clic sans drag
+                let pickerRange = SetRecapWindowController.shared.sessionPickerHorizontalRange ?? (210...420)
+                let isSessionPickerArea = pickerRange.contains(loc.x)
+                
+                // Tout le reste de la barre d'en-tête (icône, titre "Statistiques du Mix", badge "SET RECAP",
+                // sous-titre de statut, et tout l'espace vide central) déclenche le drag fluide natif macOS
+                if !isRightButtonsArea && !isSessionPickerArea {
+                    self.performDrag(with: event)
+                    return
+                }
             }
         }
         super.sendEvent(event)
@@ -51,6 +69,12 @@ public class SetRecapWindowController: NSWindowController, NSWindowDelegate, Obs
     public static let shared = SetRecapWindowController()
     
     @Published public var isVisible: Bool = false
+    
+    /// Plage horizontale dynamique occupée par le sélecteur de session dans la barre d'en-tête
+    public var sessionPickerHorizontalRange: ClosedRange<CGFloat>? = nil
+    
+    /// Indique si la modale de personnalisation avant export est affichée
+    public var isExportModalPresented: Bool = false
     
     private let defaultWidth: CGFloat = 560
     private let defaultHeight: CGFloat = 640

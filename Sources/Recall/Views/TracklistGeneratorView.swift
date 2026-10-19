@@ -137,6 +137,7 @@ public struct TracklistGeneratorView: View {
                 )
             }
         )
+        .ignoresSafeArea()
         .onAppear {
             applyFormatDefaults(for: selectedFormat)
             regenerateText()

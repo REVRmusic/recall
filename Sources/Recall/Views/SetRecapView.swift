@@ -481,7 +481,14 @@ public struct SetRecapView: View {
                     .zIndex(200)
             }
         }
-        .frame(minWidth: 540, minHeight: 620)
+        .coordinateSpace(name: "SetRecapWindowSpace")
+        .onPreferenceChange(SessionPickerFrameKey.self) { frame in
+            SetRecapWindowController.shared.sessionPickerHorizontalRange = (frame.minX - 5)...(frame.maxX + 5)
+        }
+        .onChange(of: isShowingExportCustomization) { isShowing in
+            SetRecapWindowController.shared.isExportModalPresented = isShowing
+        }
+        .frame(minWidth: 500, minHeight: 520)
         .background(
             ZStack {
                 Color(red: 0.08, green: 0.09, blue: 0.12)
@@ -498,6 +505,7 @@ public struct SetRecapView: View {
                 )
             }
         )
+        .ignoresSafeArea()
         .onAppear {
             loadPastSessions()
         }
@@ -719,6 +727,15 @@ public struct SetRecapView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .preference(
+                        key: SessionPickerFrameKey.self,
+                        value: geo.frame(in: .named("SetRecapWindowSpace"))
+                    )
+            }
+        )
         .onHover { isHovered in
             isPickerHovered = isHovered
             if isHovered && (pastSessions.isEmpty || !isLoadingPastSessionsList) {
@@ -2126,5 +2143,13 @@ public struct SetRecapView: View {
         pasteboard.setString(text, forType: .string)
         
         showToast(message: "Statistiques en texte copiées !", icon: "doc.on.doc.fill", color: Color.accentCyan)
+    }
+}
+
+// MARK: - Clé de préférence pour la mesure géométrique du sélecteur de session
+private struct SessionPickerFrameKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        value = nextValue()
     }
 }
