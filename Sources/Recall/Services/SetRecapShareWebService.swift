@@ -87,66 +87,45 @@ public final class SetRecapShareWebService {
             payload["stats"] = statsDict
         }
         
-        // 1. Structure compacte ultra-légère pour un partage web direct, propre et incassable (Instagram, WhatsApp, etc.)
-        var compactPayload: [String: Any] = [
-            "t": sessionTitle,
-            "c": stats.totalTracksCount,
-            "d": Int(round(stats.totalDurationSeconds)),
-            "b": Double(round(stats.averageBpm * 10) / 10),
-            "b0": Int(round(stats.minBpm)),
-            "b1": Int(round(stats.maxBpm)),
-            "k": stats.dominantKey ?? "",
-            "kc": stats.dominantKeyCount,
-            "kp": Double(round(stats.dominantKeyPercentage * 10) / 10),
-            "t0": Int(sessionStartTime.timeIntervalSince1970),
-            "h": hideDuration ? 1 : 0,
-            "g": stats.topGenres.prefix(5).map { [$0.name, $0.count, Double(round($0.percent * 10) / 10)] },
-            "a": stats.topArtists.prefix(5).map { [$0.name, $0.count, Double(round($0.percent * 10) / 10)] },
-            "th": Double(round(stats.tracksPerHour * 10) / 10),
-            "as": Int(round(stats.averageTimePerTrackSeconds))
-        ]
-        if let end = sessionEndTime {
-            compactPayload["t1"] = Int(end.timeIntervalSince1970)
-        }
-        if let ft = stats.fastestTransition {
-            compactPayload["ft"] = [ft.fromTrack, ft.toTrack, Int(round(ft.elapsedSeconds))]
-        }
-        
-        guard let compactData = try? JSONSerialization.data(withJSONObject: compactPayload, options: []) else {
-            completion(.failure(NSError(domain: "RecallShare", code: -2, userInfo: [NSLocalizedDescriptionKey: "Impossible d'encoder les données du set."])))
-            return
-        }
-        
-        let urlSafeBase64 = compactData.base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
-        
-        let webUrlString = "\(publicBaseUrl)/?d=\(urlSafeBase64)"
+        // Génération d'une URL ultra-courte, élégante et professionnelle (ex: https://revrmusic.github.io/recall/recap/?id=rcp_98e7b60d)
+        let webUrlString = "\(publicBaseUrl)/?id=\(token)"
         
         guard let webUrl = URL(string: webUrlString) else {
             completion(.failure(NSError(domain: "RecallShare", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL invalide."])))
             return
         }
         
-        // Copie automatique immédiate du lien dans le presse-papier macOS
+        // Copie automatique immédiate du lien court dans le presse-papier macOS
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(webUrlString, forType: .string)
-        AppLogger.info("Récapitulatif de set publié en ligne avec succès : \(webUrlString)", category: .web)
+        AppLogger.info("Lien court de partage créé et copié : \(webUrlString)", category: .web)
         
-        // Archivage en tâche de fond sur la feuille Google Sheets
-        if let gUrl = URL(string: googleScriptUrl) {
-            var gPayload = payload
-            gPayload["action"] = "save_recap"
-            if let gData = try? JSONSerialization.data(withJSONObject: gPayload, options: []) {
-                var gReq = URLRequest(url: gUrl)
-                gReq.httpMethod = "POST"
-                gReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                gReq.httpBody = gData
-                gReq.timeoutInterval = 10.0
-                URLSession.shared.dataTask(with: gReq) { _, _, _ in
-                    AppLogger.info("Récapitulatif synchronisé sur la feuille Google Sheets", category: .web)
+        // Enregistrement sur la base de données Google Sheets
+        if var components = URLComponents(string: googleScriptUrl) {
+            let statsJsonStr = (try? JSONSerialization.data(withJSONObject: payload["stats"] ?? [:]))
+                .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+            
+            var queryItems = [
+                URLQueryItem(name: "action", value: "save_recap"),
+                URLQueryItem(name: "token", value: token),
+                URLQueryItem(name: "share_token", value: token),
+                URLQueryItem(name: "title", value: sessionTitle),
+                URLQueryItem(name: "session_start_time", value: dateFormatter.string(from: sessionStartTime)),
+                URLQueryItem(name: "hide_duration", value: hideDuration ? "true" : "false"),
+                URLQueryItem(name: "stats", value: statsJsonStr)
+            ]
+            if let end = sessionEndTime {
+                queryItems.append(URLQueryItem(name: "session_end_time", value: dateFormatter.string(from: end)))
+            }
+            components.queryItems = queryItems
+            
+            if let saveUrl = components.url {
+                var saveReq = URLRequest(url: saveUrl)
+                saveReq.httpMethod = "GET"
+                saveReq.timeoutInterval = 10.0
+                URLSession.shared.dataTask(with: saveReq) { _, _, _ in
+                    AppLogger.info("Récapitulatif enregistré sur la feuille Google Sheets (Token: \(token))", category: .web)
                 }.resume()
             }
         }

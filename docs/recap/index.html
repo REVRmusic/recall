@@ -541,9 +541,9 @@
         } catch(e) {}
       }
 
-      // Cas C : Fallback Google Apps Script si token seul (?token=...)
+      // Cas C : Base de données Google Sheets via ID / Token (?id=... ou ?token=...)
       if (!recap) {
-        let token = params.get('token') || '';
+        let token = params.get('id') || params.get('token') || '';
         if (!token) {
           const parts = window.location.pathname.split('/').filter(Boolean);
           const last = parts[parts.length - 1];
@@ -551,6 +551,13 @@
         }
 
         if (token) {
+          container.innerHTML = `
+            <div class="loading-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 14px;">
+              <div style="width: 32px; height: 32px; border: 3px solid rgba(0,240,255,0.2); border-top-color: #00F0FF; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+              <p style="font-size: 13px; color: #94a3b8; font-weight: 500;">Chargement du bilan de mix Recall...</p>
+            </div>
+            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+          `;
           try {
             const GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwRVVec0m7BxPfDXL_06kkrfc75AUU5U2D_YLRL8YcMKCqZEXG6cd77EpEEKiIX-6Ad7g/exec";
             const res = await fetch(`${GOOGLE_SCRIPT}?action=get_recap&token=${encodeURIComponent(token)}`);
@@ -568,10 +575,14 @@
 
       if (!recap || (!recap.stats && !recap.title)) {
         container.innerHTML = `
-          <div class="error-view">
+          <div class="error-view" style="text-align: center; padding: 48px 16px;">
+            <div style="font-size: 38px; margin-bottom: 12px;">📊</div>
             <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Bilan de Mix Introuvable</h2>
-            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 24px;">Ce lien sécurisé n'existe pas ou les données sont invalides.</p>
-            <a href="https://revrmusic.github.io/recall/" class="footer-btn">Découvrir Recall</a>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 24px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">Ce lien sécurisé n'est pas encore synchronisé sur votre feuille Google Sheets ou les données sont indisponibles.</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+              <button onclick="window.location.reload()" class="footer-btn" style="cursor: pointer; border: none;">Réactualiser</button>
+              <a href="https://revrmusic.github.io/recall/" class="footer-btn" style="background: rgba(255,255,255,0.08); color: #fff;">Site Recall</a>
+            </div>
           </div>
         `;
         return;
