@@ -80,59 +80,11 @@ function getFeedbackSheet(ss) {
  */
 function nettoyerEtReparerTout() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheets = ss.getSheets();
 
-  // 1. Trouver la vraie feuille de telechargements (celle avec les vraies lignes)
+  // 1. Trouver d'abord la vraie feuille de telechargements (la seule a ne JAMAIS toucher)
   var realDownloads = getDownloadsSheet(ss);
-
-  // 2. Supprimer les doublons de Tableau de Bord (ne garder que le principal)
-  var allDashboards = [];
-  for (var i = 0; i < sheets.length; i++) {
-    var n = sheets[i].getName().toLowerCase();
-    if (n.indexOf("tableau") !== -1 || n.indexOf("dashboard") !== -1) {
-      allDashboards.push(sheets[i]);
-    }
-  }
-  while (allDashboards.length > 1) {
-    var extraDash = allDashboards.pop();
-    try { ss.deleteSheet(extraDash); } catch(e) {}
-  }
-
-  // Supprimer les doublons de Retours & Suggestions (ex: onglet corrompu)
-  var allFeedbacks = [];
-  for (var i = 0; i < sheets.length; i++) {
-    var n = sheets[i].getName().toLowerCase();
-    if (n.indexOf("retour") !== -1 || n.indexOf("suggestion") !== -1) {
-      allFeedbacks.push(sheets[i]);
-    }
-  }
-  // Si plusieurs onglets retours, garder celui qui est propre
-  if (allFeedbacks.length > 1) {
-    for (var f = allFeedbacks.length - 1; f >= 0; f--) {
-      var fbName = allFeedbacks[f].getName();
-      if (/[\u221A\u00FA\u00C4\u00EF\u00F6\u00A9]/.test(fbName) && allFeedbacks.length > 1) {
-        try { ss.deleteSheet(allFeedbacks[f]); allFeedbacks.splice(f, 1); } catch(e) {}
-      }
-    }
-  }
-
-  // Supprimer les onglets fantomes corrompus ou Feuille 1 vide
-  sheets = ss.getSheets();
-  for (var i = sheets.length - 1; i >= 0; i--) {
-    var s = sheets[i];
-    if (s === realDownloads) continue;
-    var name = s.getName();
-    var isCorrupted = /[\u221A\u00FA\u00C4\u00EF\u00F6\u00A9]/.test(name) ||
-                      name === "Feuille 1" ||
-                      name === "Sheet1";
-    if (isCorrupted && s.getLastRow() <= 1) {
-      try { ss.deleteSheet(s); } catch(e) {}
-    }
-  }
-
-  // 3. Renommer proprement la feuille de donnees
   if (realDownloads) {
-    try { realDownloads.setName("T\u00E9l\u00E9chargements"); } catch (e) {}
+    try { realDownloads.setName("T\u00E9l\u00E9chargements"); } catch(e) {}
   } else {
     realDownloads = ss.insertSheet("T\u00E9l\u00E9chargements");
     var headers = [
@@ -145,7 +97,69 @@ function nettoyerEtReparerTout() {
     realDownloads.setFrozenRows(1);
   }
 
-  // 4. Mettre en place le Tableau de Bord
+  var realId = realDownloads.getSheetId();
+
+  // 2. Supprimer les doublons et feuilles fantomes en une seule passe securisee
+  var sheets = ss.getSheets();
+  var keptDashboardId = null;
+  var keptFeedbackId = null;
+  var keptRecapId = null;
+
+  for (var i = sheets.length - 1; i >= 0; i--) {
+    try {
+      var s = sheets[i];
+      if (!s) continue;
+      var sId = s.getSheetId();
+      if (sId === realId) continue; // Ne jamais supprimer les telechargements
+
+      var name = s.getName();
+      var lower = name.toLowerCase();
+
+      // Detection Tableau de Bord
+      if (lower.indexOf("tableau") !== -1 || lower.indexOf("dashboard") !== -1) {
+        if (!keptDashboardId) {
+          keptDashboardId = sId;
+        } else {
+          try { ss.deleteSheet(s); } catch(delErr) {}
+          continue;
+        }
+      }
+
+      // Detection Retours & Suggestions
+      if (lower.indexOf("retour") !== -1 || lower.indexOf("suggestion") !== -1) {
+        if (/[\u221A\u00FA\u00C4\u00EF\u00F6\u00A9]/.test(name)) {
+          try { ss.deleteSheet(s); } catch(delErr) {}
+          continue;
+        }
+        if (!keptFeedbackId) {
+          keptFeedbackId = sId;
+        } else {
+          try { ss.deleteSheet(s); } catch(delErr) {}
+          continue;
+        }
+      }
+
+      // Detection Recaps
+      if (lower.indexOf("capitulatif") !== -1 || lower.indexOf("recap") !== -1) {
+        if (!keptRecapId) {
+          keptRecapId = sId;
+        } else {
+          try { ss.deleteSheet(s); } catch(delErr) {}
+          continue;
+        }
+      }
+
+      // Feuilles vides ou corrompues
+      var isCorrupted = /[\u221A\u00FA\u00C4\u00EF\u00F6\u00A9]/.test(name) ||
+                        name === "Feuille 1" ||
+                        name === "Sheet1";
+      if (isCorrupted && s.getLastRow() <= 1) {
+        try { ss.deleteSheet(s); } catch(delErr) {}
+      }
+    } catch(sheetErr) {}
+  }
+
+  // 3. Mettre en place le Tableau de Bord
   var dashSheet = getDashboardSheet(ss);
   if (!dashSheet) {
     dashSheet = ss.insertSheet("\uD83D\uDCCA Tableau de Bord", 0);
@@ -173,7 +187,7 @@ function nettoyerEtReparerTout() {
   dashSheet.getRange("B4:B10").setFontWeight("bold").setFontSize(12).setHorizontalAlignment("center").setBackground("#F1F5F9");
   dashSheet.autoResizeColumns(1, 3);
 
-  // 5. Calcul direct des valeurs reelles en fallback immediat
+  // 4. Calcul direct des valeurs reelles
   var dlData = realDownloads.getDataRange().getValues();
   var calcDirect = 0, calcMac = 0, calcWin = 0, calcIntent = 0, lastDate = "Aucun";
 
@@ -207,8 +221,20 @@ function nettoyerEtReparerTout() {
   dashSheet.getRange("B8").setValue(Math.max(0, dlData.length - 1));
   dashSheet.getRange("B9").setValue(lastDate);
 
-  // 6. Injection des formules dynamiques locales
+  // 5. Injection des formules dynamiques locales
   reparerFormulesTableau(dashSheet);
+
+  // 6. Securite visuelle anti-erreur : si une formule produit #ERROR!, remettre la valeur calculee
+  var values = [calcDirect, calcMac, calcWin, calcIntent, Math.max(0, dlData.length - 1), lastDate];
+  for (var v = 0; v < values.length; v++) {
+    try {
+      var c = dashSheet.getRange(4 + v, 2);
+      var disp = String(c.getDisplayValue() || "");
+      if (disp.indexOf("#") !== -1 || disp === "") {
+        c.setValue(values[v]);
+      }
+    } catch(errVal) {}
+  }
 
   // 7. S'assurer que les onglets Recaps et Feedback sont prets et propres
   var recap = getRecapSheet(ss);
