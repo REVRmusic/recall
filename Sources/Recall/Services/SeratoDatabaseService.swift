@@ -1681,10 +1681,11 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 s.id,
                 s.start_time,
                 s.end_time,
-                count(h.id) as track_count,
+                count(DISTINCT lower(trim(ifnull(nullif(h.name, ''), ifnull(nullif(a.name, ''), ifnull(nullif(h.file_name, ''), '')))))) as track_count,
                 ifnull(nullif(s.notes, ''), ifnull(s.comment, '')) as session_notes
             FROM history_session s
             JOIN history_entry h ON h.session_id = s.id AND h.played = 1
+            LEFT JOIN asset a ON a.id = h.asset_id
             GROUP BY s.id
             HAVING track_count >= 3
             ORDER BY s.start_time DESC

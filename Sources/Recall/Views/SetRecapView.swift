@@ -823,22 +823,16 @@ public struct SetRecapView: View {
                         .foregroundColor(.white.opacity(0.45))
                         .tracking(0.5)
                     
-                    let playsToDisplay = stats.totalPlaysCount > 0 ? stats.totalPlaysCount : (selectedPastSession?.trackCount ?? stats.totalTracksCount)
+                    let countToDisplay = stats.totalTracksCount > 0 ? stats.totalTracksCount : (selectedPastSession?.trackCount ?? 0)
                     
                     HStack(spacing: 4) {
-                        Text("\(playsToDisplay)")
+                        Text("\(countToDisplay)")
                             .font(.system(size: 26, weight: .black, design: .rounded))
                             .foregroundColor(Color.accentCyan)
                         
-                        Text("lectures")
+                        Text("morceaux")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.white.opacity(0.6))
-                    }
-                    
-                    if stats.totalTracksCount > 0 && stats.totalTracksCount != playsToDisplay {
-                        Text("\(stats.totalTracksCount) titres uniques")
-                            .font(.system(size: 9.5, weight: .medium))
-                            .foregroundColor(.white.opacity(0.50))
                     }
                 }
             }
@@ -1050,14 +1044,14 @@ public struct SetRecapView: View {
                 subtext: isLoadingPastSession ? "Cadence en cours de calcul…" : (stats.totalTracksCount > 0 ? "Cadence moyenne observée" : "En cours d'analyse...")
             )
             
-            // Indicateur 6 : Total Lectures
+            // Indicateur 6 : Morceaux joués
             metricCard(
-                icon: "music.note.list",
-                iconColor: .green,
-                title: "LECTURES TOTALES",
-                mainValue: isLoadingPastSession ? "\(selectedPastSession?.trackCount ?? 0)" : (stats.totalPlaysCount > 0 ? "\(stats.totalPlaysCount)" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount)" : "--")),
-                unit: "plays",
-                subtext: isLoadingPastSession ? "Lectures en cours de décompte…" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount) morceaux uniques" : "En attente du mix")
+                icon: "music.note",
+                iconColor: Color.accentCyan,
+                title: "MORCEAUX DU SET",
+                mainValue: isLoadingPastSession ? "\(selectedPastSession?.trackCount ?? 0)" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount)" : "--"),
+                unit: "titres",
+                subtext: isLoadingPastSession ? "Décompte en cours…" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount) morceaux joués" : "En attente du mix")
             )
         }
     }
@@ -2101,7 +2095,6 @@ public struct SetRecapView: View {
             let pace = mixPaceInfo(avgSec: stats.averageTimePerTrackSeconds, totalTracks: stats.totalTracksCount).label
             lines.append("🎚 Vitesse de mix : \(formatMinutesSeconds(stats.averageTimePerTrackSeconds)) / track (\(String(format: "%.1f", stats.tracksPerHour)) tracks/h • \(pace))")
         } else if exportHideDuration {
-            lines.append("🎧 Lectures totales : \(stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount) passages")
             lines.append("🎚 Tonalités explorées : \(stats.keyDistribution.count)")
         }
         if stats.averageBpm > 0 {

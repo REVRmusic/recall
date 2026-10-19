@@ -185,11 +185,10 @@ public struct SetRecapExportCardView: View {
                     
                     if hideDuration {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            let plays = stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount
-                            Text("\(plays)")
+                            Text("\(stats.totalTracksCount)")
                                 .font(.system(size: 26, weight: .black, design: .rounded))
                                 .foregroundColor(.white)
-                            Text(plays > 1 ? "lectures" : "lecture")
+                            Text("morceaux joués")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(Color.accentCyan)
                         }
@@ -250,15 +249,15 @@ public struct SetRecapExportCardView: View {
                 if hideDuration {
                     // Métriques préservant la confidentialité de la durée totale du set
                     HStack(spacing: 6) {
-                        Image(systemName: "music.note.list")
+                        Image(systemName: "music.note")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundColor(Color.accentCyan)
                         
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("\(stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount)")
+                            Text("\(stats.totalTracksCount)")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
-                            Text("lectures totales")
+                            Text("morceaux joués")
                                 .font(.system(size: 9.5))
                                 .foregroundColor(.white.opacity(0.55))
                         }
@@ -304,19 +303,12 @@ public struct SetRecapExportCardView: View {
                             .foregroundColor(Color.accentCyan)
                         
                         VStack(alignment: .leading, spacing: 1) {
-                            let plays = stats.totalPlaysCount > 0 ? stats.totalPlaysCount : stats.totalTracksCount
-                            Text("\(plays)")
+                            Text("\(stats.totalTracksCount)")
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
-                            if stats.totalPlaysCount > 0 && stats.totalPlaysCount != stats.totalTracksCount {
-                                Text("lectures (\(stats.totalTracksCount) titres)")
-                                    .font(.system(size: 9.5))
-                                    .foregroundColor(.white.opacity(0.55))
-                            } else {
-                                Text("morceaux joués")
-                                    .font(.system(size: 9.5))
-                                    .foregroundColor(.white.opacity(0.55))
-                            }
+                            Text("morceaux joués")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.55))
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -449,12 +441,12 @@ public struct SetRecapExportCardView: View {
             }
             
             metricCard(
-                icon: "music.note.list",
-                iconColor: .green,
-                title: "LECTURES TOTALES",
-                mainValue: stats.totalPlaysCount > 0 ? "\(stats.totalPlaysCount)" : (stats.totalTracksCount > 0 ? "\(stats.totalTracksCount)" : "--"),
-                unit: "plays",
-                subtext: stats.totalTracksCount > 0 ? "\(stats.totalTracksCount) morceaux uniques" : "En attente du mix"
+                icon: "music.note",
+                iconColor: Color.accentCyan,
+                title: "MORCEAUX DU SET",
+                mainValue: stats.totalTracksCount > 0 ? "\(stats.totalTracksCount)" : "--",
+                unit: "titres",
+                subtext: stats.totalTracksCount > 0 ? "\(stats.totalTracksCount) morceaux joués" : "En attente du mix"
             )
         }
     }

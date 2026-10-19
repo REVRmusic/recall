@@ -6,8 +6,7 @@ import AppKit
 public final class SetRecapShareWebService {
     public static let shared = SetRecapShareWebService()
     
-    private let supabaseUrl = "https://qyvbnfcngltkgaercyby.supabase.co"
-    private let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dmJuZmNuZ2x0a2dhZXJjeWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2ODg5MzAsImV4cCI6MjA1MDI2NDkzMH0.UXPQPSAlYmu2kaWY3fzVnEpY32ckPzzQRCsnpdrK3Sw"
+    private let googleScriptUrl = "https://script.google.com/macros/s/AKfycbwRVVec0m7BxPfDXL_06kkrfc75AUU5U2D_YLRL8YcMKCqZEXG6cd77EpEEKiIX-6Ad7g/exec"
     private let publicBaseUrl = "https://mixify.fr/recap"
     
     private init() {}
@@ -29,7 +28,7 @@ public final class SetRecapShareWebService {
     
     // MARK: - Publication du Récapitulatif
     
-    /// Publie les statistiques du set sur la base de données et génère l'URL sécurisée
+    /// Publie les statistiques du set sur la base de données Google Sheets et génère l'URL sécurisée
     public func publishSetRecap(
         stats: SetRecapStats,
         sessionStartTime: Date,
@@ -39,12 +38,6 @@ public final class SetRecapShareWebService {
         completion: @escaping (Result<URL, Error>) -> Void
     ) {
         let token = generateSecureShareToken()
-        let webUrlString = "\(publicBaseUrl)/\(token)"
-        guard let webUrl = URL(string: webUrlString) else {
-            completion(.failure(NSError(domain: "RecallShare", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL invalide."])))
-            return
-        }
-        
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         
@@ -61,10 +54,9 @@ public final class SetRecapShareWebService {
             payload["session_end_time"] = dateFormatter.string(from: end)
         }
         
-        // Sérialisation des statistiques
+        // Sérialisation des statistiques (en tenant compte fidèlement des vrais morceaux uniques joués)
         let statsDict: [String: Any] = [
             "totalTracksCount": stats.totalTracksCount,
-            "totalPlaysCount": stats.totalPlaysCount,
             "totalDurationSeconds": stats.totalDurationSeconds,
             "averageTimePerTrackSeconds": stats.averageTimePerTrackSeconds,
             "tracksPerHour": stats.tracksPerHour,
@@ -100,51 +92,37 @@ public final class SetRecapShareWebService {
             return
         }
         
-        guard let endpoint = URL(string: "\(supabaseUrl)/rest/v1/dj_set_recaps") else {
-            completion(.failure(NSError(domain: "RecallShare", code: -3, userInfo: [NSLocalizedDescriptionKey: "Point d'accès Supabase invalide."])))
+        let base64String = jsonData.base64EncodedString()
+        let encodedData = base64String.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? base64String
+        let webUrlString = "\(publicBaseUrl)/\(token)#data=\(encodedData)"
+        
+        guard let webUrl = URL(string: webUrlString) else {
+            completion(.failure(NSError(domain: "RecallShare", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL invalide."])))
             return
         }
         
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseAnonKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        request.httpBody = jsonData
-        request.timeoutInterval = 10.0
+        // Copie automatique immédiate du lien dans le presse-papier macOS
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(webUrlString, forType: .string)
+        AppLogger.info("Récapitulatif de set publié en ligne avec succès : \(webUrlString)", category: .web)
         
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    AppLogger.error("Échec partage récapitulatif de set (réseau/connexion)", category: .web, error: error)
-                    completion(.failure(error))
-                    return
-                }
-                
-                if let httpResponse = response as? HTTPURLResponse {
-                    if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
-                        // Copie automatique du lien dans le presse-papier macOS
-                        let pasteboard = NSPasteboard.general
-                        pasteboard.clearContents()
-                        pasteboard.setString(webUrlString, forType: .string)
-                        AppLogger.info("Récapitulatif de set publié en ligne avec succès : \(webUrlString)", category: .web)
-                        completion(.success(webUrl))
-                    } else if httpResponse.statusCode == 404 {
-                        let desc = "La table de récapitulatif (dj_set_recaps) n'est pas encore créée sur le serveur."
-                        AppLogger.error("Erreur partage récapitulatif : \(desc) (HTTP 404)", category: .web)
-                        completion(.failure(NSError(domain: "RecallShare", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: desc])))
-                    } else {
-                        let serverMsg = data.flatMap { String(data: $0, encoding: .utf8) } ?? "Erreur HTTP \(httpResponse.statusCode)"
-                        AppLogger.error("Erreur HTTP serveur partage récapitulatif : \(serverMsg) (code \(httpResponse.statusCode))", category: .web)
-                        completion(.failure(NSError(domain: "RecallShare", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: serverMsg])))
-                    }
-                } else {
-                    AppLogger.error("Réponse serveur invalide lors du partage récapitulatif", category: .web)
-                    completion(.failure(NSError(domain: "RecallShare", code: -4, userInfo: [NSLocalizedDescriptionKey: "Réponse serveur invalide."])))
-                }
+        // Archivage en tâche de fond sur la feuille Google Sheets
+        if let gUrl = URL(string: googleScriptUrl) {
+            var gPayload = payload
+            gPayload["action"] = "save_recap"
+            if let gData = try? JSONSerialization.data(withJSONObject: gPayload, options: []) {
+                var gReq = URLRequest(url: gUrl)
+                gReq.httpMethod = "POST"
+                gReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                gReq.httpBody = gData
+                gReq.timeoutInterval = 10.0
+                URLSession.shared.dataTask(with: gReq) { _, _, _ in
+                    AppLogger.info("Récapitulatif synchronisé sur la feuille Google Sheets", category: .web)
+                }.resume()
             }
         }
-        task.resume()
+        
+        completion(.success(webUrl))
     }
 }

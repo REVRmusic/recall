@@ -101,7 +101,67 @@ function setupSheetsIfNeeded(ss) {
 function handleRequest(params) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   setupSheetsIfNeeded(ss);
-  var sheet = ss.getSheetByName("Téléchargements");
+  // Mode enregistrement d'un récapitulatif de mix (?action=save_recap)
+  if (params.action === "save_recap" || params.action === "recap") {
+    var recapSheet = ss.getSheetByName("📊 Récapitulatifs de Mix");
+    if (!recapSheet) {
+      recapSheet = ss.insertSheet("📊 Récapitulatifs de Mix");
+      var rHeaders = ["Date & Heure", "Token", "Titre du Set", "Début", "Fin", "Durée Masquée", "Stats JSON"];
+      recapSheet.appendRow(rHeaders);
+      var rHeaderRange = recapSheet.getRange(1, 1, 1, rHeaders.length);
+      rHeaderRange.setBackground("#0F172A");
+      rHeaderRange.setFontColor("#00F0FF");
+      rHeaderRange.setFontWeight("bold");
+      recapSheet.setFrozenRows(1);
+    }
+
+    var rDate = new Date();
+    var rToken = params.share_token || params.token || "";
+    var rTitle = params.title || "Set Recap";
+    var rStart = params.session_start_time || "";
+    var rEnd = params.session_end_time || "";
+    var rHideDur = params.hide_duration === true || params.hide_duration === "true";
+    var rStats = typeof params.stats === "string" ? params.stats : JSON.stringify(params.stats || {});
+
+    if (rToken) {
+      recapSheet.appendRow([rDate, rToken, rTitle, rStart, rEnd, rHideDur, rStats]);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      token: rToken
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Mode récupération d'un récapitulatif de mix (?action=get_recap&token=...)
+  if (params.action === "get_recap") {
+    var recapSheet = ss.getSheetByName("📊 Récapitulatifs de Mix");
+    if (recapSheet) {
+      var rData = recapSheet.getDataRange().getValues();
+      var targetToken = params.token || "";
+      for (var i = 1; i < rData.length; i++) {
+        if (String(rData[i][1]) === targetToken) {
+          var parsedStats = {};
+          try { parsedStats = JSON.parse(rData[i][6]); } catch(e) {}
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "success",
+            recap: {
+              share_token: rData[i][1],
+              title: rData[i][2],
+              session_start_time: rData[i][3],
+              session_end_time: rData[i][4],
+              hide_duration: rData[i][5],
+              stats: parsedStats
+            }
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "Récapitulatif introuvable"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 
   // Mode enregistrement d'un retour ou d'une suggestion (?action=feedback)
   if (params.action === "feedback" || params.type === "feedback" || params.is_feedback === "true" || params.suggestion) {
