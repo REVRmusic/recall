@@ -30,6 +30,15 @@ public class SeratoDatabaseService {
     private var lastActiveDecksFingerprint: DatabaseFingerprint? = nil
     private var lastActiveDecksCheckTime: Date = .distantPast
     
+    // Cache haute performance des sessions passées (0 CPU et accès instantané)
+    private static var cachedPastSessions: [PastSessionItem]? = nil
+    private static var lastPastSessionsFingerprint: DatabaseFingerprint? = nil
+    
+    /// Renvoie immédiatement la liste des sessions passées en mémoire cache si disponible
+    public var cachedPastSessionsImmediate: [PastSessionItem]? {
+        return Self.queue.sync { Self.cachedPastSessions }
+    }
+    
     public init(databasePath: String = UserSettings.shared.effectiveDatabasePath) {
         self.dbPath = databasePath
     }
@@ -1656,10 +1665,15 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
         }
     }
     
-    /// Récupère la liste des sessions passées réelles dans Serato (filtre les tests < 5 morceaux)
-    public func fetchPastSessions(limit: Int = 30) -> [PastSessionItem] {
+    /// Récupère la liste des sessions passées réelles dans Serato (filtre les tests < 3 morceaux)
+    public func fetchPastSessions(limit: Int = 30, useCache: Bool = true) -> [PastSessionItem] {
         return Self.queue.sync {
-            guard let db = openDatabase() else { return [] }
+            let currentFp = currentDatabaseFingerprint()
+            if useCache, let cached = Self.cachedPastSessions, let lastFp = Self.lastPastSessionsFingerprint, lastFp == currentFp {
+                return cached
+            }
+            
+            guard let db = openDatabase() else { return Self.cachedPastSessions ?? [] }
             defer { sqlite3_close_v2(db) }
             
             let sql = """
@@ -1672,7 +1686,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
             FROM history_session s
             JOIN history_entry h ON h.session_id = s.id AND h.played = 1
             GROUP BY s.id
-            HAVING track_count >= 5
+            HAVING track_count >= 3
             ORDER BY s.start_time DESC
             LIMIT \(limit);
             """
@@ -1700,6 +1714,10 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                         notes: notes
                     ))
                 }
+            }
+            if !list.isEmpty {
+                Self.cachedPastSessions = list
+                Self.lastPastSessionsFingerprint = currentFp
             }
             return list
         }

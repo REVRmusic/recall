@@ -90,6 +90,16 @@ public class SetRecapWindowController: NSWindowController, NSWindowDelegate, Obs
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
         
+        updateContentView()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    /// Re-monte ou rafraîchit la vue SwiftUI pour garantir que l'affichage est 100% à jour (0 état résiduel)
+    private func updateContentView() {
+        guard let panel = window else { return }
         let contentView = SetRecapView(
             onClose: { [weak self] in
                 self?.closeWindow()
@@ -102,13 +112,13 @@ public class SetRecapWindowController: NSWindowController, NSWindowDelegate, Obs
             }
         )
         
-        let hostingView = NSHostingView(rootView: contentView)
-        hostingView.autoresizingMask = [.width, .height]
-        panel.contentView = hostingView
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        if let hostingView = panel.contentView as? NSHostingView<SetRecapView> {
+            hostingView.rootView = contentView
+        } else {
+            let hostingView = NSHostingView(rootView: contentView)
+            hostingView.autoresizingMask = [.width, .height]
+            panel.contentView = hostingView
+        }
     }
     
     public func show() {
@@ -123,6 +133,8 @@ public class SetRecapWindowController: NSWindowController, NSWindowDelegate, Obs
             let y = vf.midY - (h / 2.0)
             panel.setFrame(NSRect(x: x, y: y, width: w, height: h), display: true)
         }
+        
+        updateContentView()
         
         panel.orderFrontRegardless()
         panel.makeKeyAndOrderFront(nil)

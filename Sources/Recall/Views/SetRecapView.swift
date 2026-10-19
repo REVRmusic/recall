@@ -48,30 +48,34 @@ public struct SetRecapStats {
     public let mostPlayedGenre: GenreRecord?
     public let isLiveSession: Bool
     
+    public static func empty(isLive: Bool = false) -> SetRecapStats {
+        return SetRecapStats(
+            totalTracksCount: 0,
+            totalPlaysCount: 0,
+            totalDurationSeconds: 0.0,
+            averageTimePerTrackSeconds: 0,
+            tracksPerHour: 0,
+            averageBpm: 0,
+            minBpm: 0,
+            maxBpm: 0,
+            dominantKey: nil,
+            dominantKeyCount: 0,
+            dominantKeyPercentage: 0,
+            keyDistribution: [],
+            fastestTransition: nil,
+            longestTransition: nil,
+            topArtists: [],
+            mostPlayedArtist: nil,
+            topGenres: [],
+            mostPlayedGenre: nil,
+            isLiveSession: isLive
+        )
+    }
+    
     public static func compute(from tracks: [SessionPlayedTrack], sessionStartTime: Date) -> SetRecapStats {
         let count = tracks.count
         guard count > 0 else {
-            return SetRecapStats(
-                totalTracksCount: 0,
-                totalPlaysCount: 0,
-                totalDurationSeconds: 0.0,
-                averageTimePerTrackSeconds: 0,
-                tracksPerHour: 0,
-                averageBpm: 0,
-                minBpm: 0,
-                maxBpm: 0,
-                dominantKey: nil,
-                dominantKeyCount: 0,
-                dominantKeyPercentage: 0,
-                keyDistribution: [],
-                fastestTransition: nil,
-                longestTransition: nil,
-                topArtists: [],
-                mostPlayedArtist: nil,
-                topGenres: [],
-                mostPlayedGenre: nil,
-                isLiveSession: false
-            )
+            return empty(isLive: false)
         }
         
         let totalPlays = tracks.reduce(0) { $0 + $1.playCount }
@@ -314,12 +318,12 @@ public struct SetRecapView: View {
     public var onClose: (() -> Void)?
     public var onOpenTracklist: (() -> Void)?
     
-    @State private var liveStats: SetRecapStats? = nil
     @State private var pastSessionStats: SetRecapStats? = nil
-    @State private var pastSessions: [SeratoDatabaseService.PastSessionItem] = []
+    @State private var pastSessions: [SeratoDatabaseService.PastSessionItem] = SeratoDatabaseService.shared.cachedPastSessionsImmediate ?? []
     @State private var selectedPastSession: SeratoDatabaseService.PastSessionItem? = nil
     @State private var pastSessionTracks: [SessionPlayedTrack] = []
     @State private var isLoadingPastSession: Bool = false
+    @State private var isLoadingPastSessionsList: Bool = false
     @State private var pastSessionLoadTask: Task<Void, Never>? = nil
     @State private var pastSessionsListTask: Task<Void, Never>? = nil
     
@@ -341,32 +345,10 @@ public struct SetRecapView: View {
                     sessionStartTime: past.startTime
                 )
             }
-            return SetRecapStats(
-                totalTracksCount: 0,
-                totalPlaysCount: 0,
-                totalDurationSeconds: 0,
-                averageTimePerTrackSeconds: 0,
-                tracksPerHour: 0,
-                averageBpm: 0,
-                minBpm: 0,
-                maxBpm: 0,
-                dominantKey: nil,
-                dominantKeyCount: 0,
-                dominantKeyPercentage: 0,
-                keyDistribution: [],
-                fastestTransition: nil,
-                longestTransition: nil,
-                topArtists: [],
-                mostPlayedArtist: nil,
-                topGenres: [],
-                mostPlayedGenre: nil,
-                isLiveSession: false
-            )
+            return SetRecapStats.empty(isLive: false)
         }
         
-        if let ls = liveStats {
-            return ls
-        }
+        // Session en direct : calcul dynamique et instantané basé sur les morceaux joués en temps réel
         return SetRecapStats.compute(
             from: sessionService.playedTracks,
             sessionStartTime: sessionService.sessionStartTime
@@ -517,10 +499,6 @@ public struct SetRecapView: View {
             }
         )
         .onAppear {
-            liveStats = SetRecapStats.compute(
-                from: sessionService.playedTracks,
-                sessionStartTime: sessionService.sessionStartTime
-            )
             loadPastSessions()
         }
         .onReceive(timer) { newTime in
@@ -528,24 +506,6 @@ public struct SetRecapView: View {
             // on stoppe le rafraîchissement récurrent du timer (0% CPU)
             guard selectedPastSession == nil, stats.isLiveSession else { return }
             currentTime = newTime
-            liveStats = SetRecapStats.compute(
-                from: sessionService.playedTracks,
-                sessionStartTime: sessionService.sessionStartTime
-            )
-        }
-        .onReceive(sessionService.$playedTracks) { tracks in
-            guard selectedPastSession == nil else { return }
-            liveStats = SetRecapStats.compute(
-                from: tracks,
-                sessionStartTime: sessionService.sessionStartTime
-            )
-        }
-        .onReceive(sessionService.$isCurrentlyPlaying) { _ in
-            guard selectedPastSession == nil else { return }
-            liveStats = SetRecapStats.compute(
-                from: sessionService.playedTracks,
-                sessionStartTime: sessionService.sessionStartTime
-            )
         }
     }
     
@@ -713,13 +673,20 @@ public struct SetRecapView: View {
                         }
                     }
                 }
-            } else {
+            } else if isLoadingPastSessionsList {
                 Divider()
                 Text("Chargement des sessions Serato...")
+            } else {
+                Divider()
+                Button {
+                    loadPastSessions(force: true)
+                } label: {
+                    Label("Actualiser les sessions Serato", systemImage: "arrow.clockwise")
+                }
             }
         } label: {
             HStack(spacing: 6) {
-                if isLoadingPastSession {
+                if isLoadingPastSession || (pastSessions.isEmpty && isLoadingPastSessionsList) {
                     ProgressView()
                         .scaleEffect(0.6)
                         .frame(width: 11, height: 11)
@@ -752,18 +719,32 @@ public struct SetRecapView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .onHover { isPickerHovered = $0 }
+        .onHover { isHovered in
+            isPickerHovered = isHovered
+            if isHovered && (pastSessions.isEmpty || !isLoadingPastSessionsList) {
+                loadPastSessions()
+            }
+        }
         .help("Choisir la session à analyser (session en direct ou sessions Serato passées)")
     }
     
-    private func loadPastSessions() {
+    private func loadPastSessions(force: Bool = false) {
+        if pastSessions.isEmpty, let cached = SeratoDatabaseService.shared.cachedPastSessionsImmediate, !cached.isEmpty {
+            self.pastSessions = cached
+        }
+        
+        guard !isLoadingPastSessionsList || force else { return }
+        isLoadingPastSessionsList = true
         pastSessionsListTask?.cancel()
+        
+        let dbPath = settings.effectiveDatabasePath
         pastSessionsListTask = Task { @MainActor in
             let sessions = await Task.detached(priority: .userInitiated) {
-                SeratoDatabaseService.shared.fetchPastSessions(limit: 30)
+                SeratoDatabaseService(databasePath: dbPath).fetchPastSessions(limit: 30, useCache: !force)
             }.value
             guard !Task.isCancelled else { return }
             self.pastSessions = sessions
+            self.isLoadingPastSessionsList = false
         }
     }
     
@@ -805,10 +786,6 @@ public struct SetRecapView: View {
         pastSessionStats = nil
         pastSessionTracks = []
         exportSessionTitleInput = SetRecapExportCardView.formatFullDayDate(sessionService.sessionStartTime)
-        liveStats = SetRecapStats.compute(
-            from: sessionService.playedTracks,
-            sessionStartTime: sessionService.sessionStartTime
-        )
     }
     
     // MARK: - 2. Hero Card Durée & Pacing
