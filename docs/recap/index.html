@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiques du Mix — Recall</title>
+  <meta name="description" content="Récapitulatif et analyse détaillée de session de mix DJ via Recall.">
+  <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0c10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #07090e;
+      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+    .secure-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    .copy-btn.copied {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: #00F0FF;
+      color: #00F0FF;
+    }
+    .recap-card {
+      background: #0e1117;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 24px 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 240, 255, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+    @media (min-width: 640px) {
+      .recap-card { padding: 30px 28px; }
+    }
+    .neon-line {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), #00F0FF 40%, #a855f7 70%, rgba(168, 85, 247, 0.2));
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #151821;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .title-text {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .recap-pill {
+      font-size: 9.5px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #00F0FF;
+      background: rgba(0, 240, 255, 0.15);
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .session-meta {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .session-meta strong { color: #f1f5f9; }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+    .brand-right {
+      text-align: right;
+    }
+    .brand-name {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #00F0FF, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-sub {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+    .hero-card {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 18px 20px;
+    }
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .hero-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+    .pace-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fbbf24;
+    }
+    .hero-main {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+    @media (min-width: 640px) {
+      .hero-main { font-size: 38px; }
+    }
+    .hero-times {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+    .hero-times strong {
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (min-width: 640px) {
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    }
+    .metric-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .metric-card-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .metric-card-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .metric-card-sub {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .section-block {
+      margin-top: 16px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+    .section-title {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title span.top-highlight {
+      font-size: 11px;
+      color: #00F0FF;
+      font-weight: 700;
+      text-transform: none;
+    }
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+    .rank-num {
+      font-weight: 800;
+      color: #64748b;
+      width: 16px;
+    }
+    .rank-name {
+      font-weight: 600;
+      color: #e2e8f0;
+      width: 130px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rank-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .rank-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+    .rank-count {
+      font-size: 11px;
+      font-weight: 700;
+      width: 55px;
+      text-align: right;
+    }
+    .rank-count span {
+      font-size: 9.5px;
+      font-weight: 500;
+      color: #64748b;
+    }
+    .key-badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .key-badge-label {
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #a855f7;
+    }
+    .key-badge-count {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .footer-cta {
+      margin-top: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #00F0FF, #0077ff);
+      color: #050811;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(0, 240, 255, 0.3);
+      transition: transform 0.15s ease;
+    }
+    .footer-btn:hover {
+      transform: translateY(-1px);
+    }
+    .footer-note {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .footer-note a {
+      color: #94a3b8;
+      text-decoration: none;
+    }
+    .footer-note a:hover { color: #00F0FF; }
+    .loading-view, .error-view {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #00F0FF;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="content">
+      <div class="loading-view">
+        <div class="spinner"></div>
+        <p style="font-size: 13px; color: #94a3b8;">Chargement des statistiques du mix…</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function() {
+      const container = document.getElementById('content');
+
+      function formatDuration(sec) {
+        const total = Math.max(0, Math.round(sec));
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        if (h > 0) return `${h}h ${m < 10 ? '0' : ''}${m}m ${s < 10 ? '0' : ''}${s}s`;
+        return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+      }
+
+      function formatTime(sec) {
+        const total = Math.max(0, Math.round(sec));
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+      }
+
+      function getPace(avgSec) {
+        if (avgSec <= 0) return { label: "En cours", icon: "⚡️", color: "#94a3b8" };
+        if (avgSec < 90) return { label: "Ultra Rapide", icon: "⚡️", color: "#f43f5e" };
+        if (avgSec < 135) return { label: "Dynamique", icon: "🎯", color: "#f97316" };
+        if (avgSec < 195) return { label: "Rythmé", icon: "🔥", color: "#fbbf24" };
+        if (avgSec < 270) return { label: "Progressif", icon: "🌊", color: "#38bdf8" };
+        return { label: "Posé", icon: "☕️", color: "#a855f7" };
+      }
+
+      // 1. Extraction des données : hash (#data=...) ou query param (?data=... ou ?token=...)
+      let recap = null;
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      let encodedData = '';
+
+      if (hash.includes('data=')) {
+        encodedData = hash.split('data=')[1].split('&')[0];
+      } else if (search.includes('data=')) {
+        const params = new URLSearchParams(search);
+        encodedData = params.get('data') || '';
+      }
+
+      if (encodedData) {
+        try {
+          const raw = decodeURIComponent(escape(atob(decodeURIComponent(encodedData))));
+          recap = JSON.parse(raw);
+        } catch(e) {
+          console.warn("Échec décodage immédiat :", e);
+        }
+      }
+
+      // 2. Fallback Google Apps Script si token seul
+      if (!recap) {
+        let token = '';
+        if (search.includes('token=')) {
+          token = new URLSearchParams(search).get('token') || '';
+        } else {
+          const parts = window.location.pathname.split('/').filter(Boolean);
+          const last = parts[parts.length - 1];
+          if (last && last.startsWith('rcp_')) token = last;
+        }
+
+        if (token) {
+          try {
+            const GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwRVVec0m7BxPfDXL_06kkrfc75AUU5U2D_YLRL8YcMKCqZEXG6cd77EpEEKiIX-6Ad7g/exec";
+            const res = await fetch(`${GOOGLE_SCRIPT}?action=get_recap&token=${encodeURIComponent(token)}`);
+            if (res.ok) {
+              const json = await res.json();
+              if (json && json.status === 'success' && json.recap) {
+                recap = json.recap;
+              }
+            }
+          } catch(err) {
+            console.warn("Erreur Google Sheet :", err);
+          }
+        }
+      }
+
+      if (!recap || (!recap.stats && !recap.title)) {
+        container.innerHTML = `
+          <div class="error-view">
+            <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Bilan de Mix Introuvable</h2>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 24px;">Ce lien sécurisé n'existe pas ou les données sont invalides.</p>
+            <a href="https://revrmusic.github.io/recall/" class="footer-btn">Découvrir Recall</a>
+          </div>
+        `;
+        return;
+      }
+
+      const stats = recap.stats || {};
+      const title = recap.title || "Session de Mix";
+      const hideDuration = Boolean(recap.hide_duration || stats.hideDuration);
+      const tracksCount = stats.totalTracksCount || 0;
+      const durationSec = stats.totalDurationSeconds || 0;
+      const avgSec = stats.averageTimePerTrackSeconds || 0;
+      const pace = getPace(avgSec);
+
+      let formattedStart = "";
+      let formattedEnd = "";
+      if (recap.session_start_time) {
+        try {
+          const d = new Date(recap.session_start_time);
+          formattedStart = `${d.getHours()}h${d.getMinutes() < 10 ? '0' : ''}${d.getMinutes()}`;
+        } catch(e) {}
+      }
+      if (recap.session_end_time) {
+        try {
+          const d = new Date(recap.session_end_time);
+          formattedEnd = `${d.getHours()}h${d.getMinutes() < 10 ? '0' : ''}${d.getMinutes()}`;
+        } catch(e) {}
+      }
+
+      const topGenres = stats.topGenres || [];
+      const topArtists = stats.topArtists || [];
+      const keys = stats.keyDistribution || [];
+
+      container.innerHTML = `
+        <div class="top-bar">
+          <div class="secure-badge">
+            <span class="pulse-dot"></span>
+            <span>Lien sécurisé et confidentiel</span>
+          </div>
+          <button id="copyLinkBtn" class="copy-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copier le lien</span>
+          </button>
+        </div>
+
+        <div class="recap-card">
+          <div class="neon-line"></div>
+
+          <div class="header">
+            <div class="header-left">
+              <img src="../assets/images/app-icon.png" alt="Recall" class="app-icon">
+              <div>
+                <div class="title-row">
+                  <span class="title-text">Statistiques du Mix</span>
+                  <span class="recap-pill">SET RECAP</span>
+                </div>
+                <div class="session-meta">
+                  <strong>${escapeHtml(title)}</strong>
+                  <span>•</span>
+                  <span class="status-dot"></span>
+                  <span>Session archivée</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="brand-right">
+              <div class="brand-name">RECALL</div>
+              <div class="brand-sub">DJ Companion</div>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <div class="hero-top">
+              <span class="hero-label">${hideDuration ? "Total du Mix" : "Durée totale du mix"}</span>
+              <div class="pace-badge" style="color: ${pace.color};">
+                <span>${pace.icon}</span>
+                <span>${pace.label}</span>
+              </div>
+            </div>
+
+            ${hideDuration ? `
+              <div class="hero-main" style="color: #00F0FF;">
+                ${tracksCount} <span style="font-size: 18px; font-weight: 700; color: #fff;">morceaux joués</span>
+              </div>
+            ` : `
+              <div class="hero-main">${formatDuration(durationSec)}</div>
+              ${formattedStart ? `
+                <div class="hero-times">
+                  <span>Début : <strong>${formattedStart}</strong></span>
+                  ${formattedEnd ? `<span>•</span><span>Fin : <strong>${formattedEnd}</strong></span>` : ''}
+                </div>
+              ` : ''}
+            `}
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-card-label">⚡️ BPM Moyen</div>
+              <div class="metric-card-val">${stats.averageBpm > 0 ? stats.averageBpm.toFixed(1) : '--'} <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">BPM</span></div>
+              <div class="metric-card-sub">Plage : ${Math.round(stats.minBpm || 0)} - ${Math.round(stats.maxBpm || 0)} BPM</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card-label">🎹 Tonalité</div>
+              <div class="metric-card-val" style="color: #00F0FF; font-family: 'JetBrains Mono', monospace;">${stats.dominantKey || '--'}</div>
+              <div class="metric-card-sub">${stats.dominantKeyCount || 0} tracks (${Math.round(stats.dominantKeyPercentage || 0)}%)</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card-label">🎧 Genre Top 1</div>
+              <div class="metric-card-val" style="font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(topGenres[0]?.name || '--')}</div>
+              <div class="metric-card-sub">${topGenres[0]?.count || 0} tracks (${Math.round(topGenres[0]?.percent || 0)}%)</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card-label">🔥 Transition rapide</div>
+              <div class="metric-card-val">${stats.fastestTransition ? formatTime(stats.fastestTransition.elapsedSeconds) : '--'}</div>
+              <div class="metric-card-sub" title="${escapeHtml(stats.fastestTransition?.toTrack || '')}">${escapeHtml(stats.fastestTransition?.toTrack || 'Aucune')}</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card-label">🎚 Vitesse de Mix</div>
+              <div class="metric-card-val">${stats.tracksPerHour > 0 ? stats.tracksPerHour.toFixed(1) : '--'} <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">tr/h</span></div>
+              <div class="metric-card-sub">${avgSec > 0 ? formatTime(avgSec) + ' / track' : 'Cadence observée'}</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card-label">🎵 Morceaux du Set</div>
+              <div class="metric-card-val" style="color: #00F0FF;">${tracksCount} <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">titres</span></div>
+              <div class="metric-card-sub">${tracksCount} morceaux joués</div>
+            </div>
+          </div>
+
+          ${topGenres.length > 0 ? `
+            <div class="section-block">
+              <div class="section-title">
+                <span>Genres les plus joués</span>
+                <span class="top-highlight">Top 1 : ${escapeHtml(topGenres[0].name)}</span>
+              </div>
+              <div class="rank-list">
+                ${topGenres.slice(0, 5).map((g, i) => `
+                  <div class="rank-row">
+                    <span class="rank-num">${i + 1}.</span>
+                    <span class="rank-name" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>
+                    <div class="rank-bar-bg">
+                      <div class="rank-bar-fill" style="width: ${Math.max(8, Math.min(100, g.percent))}%; background: linear-gradient(90deg, #f59e0b, #f97316);"></div>
+                    </div>
+                    <span class="rank-count" style="color: #f59e0b;">${g.count} <span>tracks</span></span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${topArtists.length > 0 ? `
+            <div class="section-block">
+              <div class="section-title">
+                <span>Artistes les plus joués</span>
+                <span class="top-highlight" style="color: #a855f7;">Top 1 : ${escapeHtml(topArtists[0].name)}</span>
+              </div>
+              <div class="rank-list">
+                ${topArtists.slice(0, 5).map((a, i) => `
+                  <div class="rank-row">
+                    <span class="rank-num">${i + 1}.</span>
+                    <span class="rank-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
+                    <div class="rank-bar-bg">
+                      <div class="rank-bar-fill" style="width: ${Math.max(8, Math.min(100, a.percent * 3))}%; background: linear-gradient(90deg, #a855f7, #00F0FF);"></div>
+                    </div>
+                    <span class="rank-count" style="color: #a855f7;">${a.count} <span>tracks</span></span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${keys.length > 0 ? `
+            <div class="section-block">
+              <div class="section-title">
+                <span>Distribution des Tonalités</span>
+                <span class="top-highlight" style="color: #94a3b8;">${keys.length} clés explorées</span>
+              </div>
+              <div class="key-badge-list">
+                ${keys.slice(0, 8).map(k => `
+                  <div class="key-badge">
+                    <span class="key-badge-label">${k.key}</span>
+                    <span class="key-badge-count">${k.count} (${Math.round(k.percent)}%)</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="footer-cta">
+          <a href="https://revrmusic.github.io/recall/" class="footer-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Télécharger Recall pour Mac & PC</span>
+          </a>
+          <p class="footer-note">
+            Généré par <a href="https://revrmusic.github.io/recall/">Recall</a> • Le Copilote Intelligent Hors-Ligne pour DJs Serato & Rekordbox
+          </p>
+        </div>
+      `;
+
+      document.getElementById('copyLinkBtn').addEventListener('click', function() {
+        navigator.clipboard.writeText(window.location.href);
+        this.classList.add('copied');
+        this.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Lien copié !</span>
+        `;
+        setTimeout(() => {
+          this.classList.remove('copied');
+          this.innerHTML = `
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copier le lien</span>
+          `;
+        }, 2200);
+      });
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

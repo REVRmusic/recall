@@ -7,7 +7,7 @@ public final class SetRecapShareWebService {
     public static let shared = SetRecapShareWebService()
     
     private let googleScriptUrl = "https://script.google.com/macros/s/AKfycbwRVVec0m7BxPfDXL_06kkrfc75AUU5U2D_YLRL8YcMKCqZEXG6cd77EpEEKiIX-6Ad7g/exec"
-    private let publicBaseUrl = "https://mixify.fr/recap"
+    private let publicBaseUrl = "https://revrmusic.github.io/recall/recap"
     
     private init() {}
     

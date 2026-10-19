@@ -471,7 +471,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(NSMenuItem.separator())
         
         let websiteItem = NSMenuItem(
-            title: "Site officiel (mixify.fr)",
+            title: "Site officiel (Recall)",
             action: #selector(openWebsiteAction),
             keyEquivalent: ""
         )
@@ -479,7 +479,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         helpMenu.addItem(websiteItem)
         
         let supportItem = NSMenuItem(
-            title: "Support DJ (support@mixify.fr)",
+            title: "Support DJ & Retours",
             action: #selector(openSupportEmailAction),
             keyEquivalent: ""
         )
@@ -553,13 +553,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openFeedbackWebsiteAction() {
-        if let url = URL(string: "https://mixify.fr") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
             NSWorkspace.shared.open(url)
         }
     }
     
     @objc private func openSupportEmailAction() {
-        if let url = URL(string: "mailto:support@mixify.fr?subject=Recall%20Support%20DJ") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -702,7 +702,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func openWebsiteAction() {
-        if let url = URL(string: "https://mixify.fr") {
+        if let url = URL(string: "https://revrmusic.github.io/recall/") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -727,7 +727,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
                 try report.write(to: url, atomically: true, encoding: .utf8)
                 let alert = NSAlert()
                 alert.messageText = "Rapport de diagnostic exporté"
-                alert.informativeText = "Le rapport de diagnostic a été enregistré avec succès.\nVous pouvez l'envoyer à support@mixify.fr pour nous aider à analyser tout dysfonctionnement."
+                alert.informativeText = "Le rapport de diagnostic a été enregistré avec succès.\nVous pouvez le partager sur https://revrmusic.github.io/recall/?feedback=1 pour nous aider à analyser tout dysfonctionnement."
                 alert.alertStyle = .informational
                 alert.addButton(withTitle: "Afficher dans le Finder")
                 alert.addButton(withTitle: "OK")

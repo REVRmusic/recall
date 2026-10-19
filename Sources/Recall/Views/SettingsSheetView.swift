@@ -1139,7 +1139,7 @@ public struct SettingsSheetView: View {
                         icon: "paperplane.fill",
                         title: "Faire un retour (Web) ↗"
                     ) {
-                        if let url = URL(string: "https://mixify.fr") {
+                        if let url = URL(string: "https://revrmusic.github.io/recall/?feedback=1&source=app_macos") {
                             NSWorkspace.shared.open(url)
                         }
                     }

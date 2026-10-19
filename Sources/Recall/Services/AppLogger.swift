@@ -444,9 +444,8 @@ public final class AppLogger {
         report += "Architecture : \(getSystemArchitecture())\n"
         report += "Processeur : \(ProcessInfo.processInfo.processorCount) cœurs\n"
         report += "Mémoire vive totale : \(ProcessInfo.processInfo.physicalMemory / (1024 * 1024 * 1024)) Go\n"
-        report += "Taille des journaux locaux : \(getLogFileSizeDescription())\n"
-        report += "Contact Support : support@mixify.fr\n"
-        report += "Site web : https://mixify.fr\n\n"
+        report += "Contact Support & Retours : https://revrmusic.github.io/recall/?feedback=1\n"
+        report += "Site web : https://revrmusic.github.io/recall/\n\n"
         
         report += "=== ÉTAT DES SERVICES DJ ===\n"
         let runningApps = NSWorkspace.shared.runningApplications
