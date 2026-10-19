@@ -918,7 +918,116 @@ public struct SettingsSheetView: View {
             }
         }
         
-        // CARTE 2 : Outils de Session & Récapitulatif
+        // CARTE 2 : Démarrage Silencieux & Agent en Arrière-Plan
+        settingCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    sectionHeader(icon: "bolt.horizontal.circle.fill", title: "Démarrage & Agent en Arrière-Plan")
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(settings.accentColor)
+                        Text("Recommandé DJ")
+                            .font(.system(size: 9.5, weight: .bold))
+                            .foregroundColor(settings.accentColor)
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(settings.accentColor.opacity(0.18))
+                    .cornerRadius(5)
+                }
+                
+                // Toggle 1 : Démarrage automatique
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Lancer Recall au démarrage du Mac")
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.92))
+                        Text("Démarre Recall silencieusement dès l'allumage pour ne jamais rater un début de set.")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.white.opacity(0.55))
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $settings.launchAtLogin)
+                        .toggleStyle(.switch)
+                        .tint(settings.accentColor)
+                        .scaleEffect(0.90)
+                }
+                
+                Divider()
+                    .background(Color.white.opacity(0.08))
+                
+                // Toggle 2 : Compagnon en barre des menus
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Compagnon résident dans la barre des menus")
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.92))
+                        Text("Affiche une icône discrète en haut de l'écran pour surveiller le statut et rouvrir Recall en 1 clic.")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.white.opacity(0.55))
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $settings.enableMenuBarCompanion)
+                        .toggleStyle(.switch)
+                        .tint(settings.accentColor)
+                        .scaleEffect(0.90)
+                }
+                
+                // Explication détaillée de l'intérêt DJ
+                VStack(alignment: .leading, spacing: 9) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundColor(settings.accentColor)
+                        Text("Pourquoi laisser cette option active ?")
+                            .font(.system(size: 10.5, weight: .bold))
+                            .foregroundColor(settings.accentColor)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 7) {
+                        benefitRow(
+                            icon: "headphones",
+                            title: "Ne ratez aucun set :",
+                            description: "Plus besoin de penser à lancer Recall avant de mixer. Dès que Serato ou Rekordbox démarre, Recall est déjà réveillé et capture votre historique."
+                        )
+                        benefitRow(
+                            icon: "bolt.fill",
+                            title: "Démarrage instantané (Zéro attente) :",
+                            description: "Votre bibliothèque et vos historiques restent préchargés en mémoire vive pour un affichage immédiat."
+                        )
+                        benefitRow(
+                            icon: "leaf.fill",
+                            title: "0 % CPU (Empreinte imperceptible) :",
+                            description: "L'agent en veille ne consomme quasiment aucune ressource système. Aucun ralentissement de votre logiciel DJ pendant vos prestations."
+                        )
+                        benefitRow(
+                            icon: "macwindow",
+                            title: "Discrétion totale en live :",
+                            description: "Fermer la fenêtre (⌘W) ne coupe pas votre historique : Recall veille en silence dans la barre des menus et se rouvre en un clic."
+                        )
+                    }
+                }
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white.opacity(0.04))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(settings.accentColor.opacity(0.22), lineWidth: 1)
+                        )
+                )
+            }
+        }
+        
+        // CARTE 3 : Outils de Session & Récapitulatif
         settingCard {
             VStack(alignment: .leading, spacing: 10) {
                 sectionHeader(icon: "wrench.and.screwdriver.fill", title: "Outils de Session & Récapitulatif")
@@ -1249,6 +1358,26 @@ public struct SettingsSheetView: View {
             Text(title)
                 .font(.system(size: 12, weight: .bold))
                 .foregroundColor(.white)
+        }
+    }
+    
+    private func benefitRow(icon: String, title: String, description: String) -> some View {
+        HStack(alignment: .top, spacing: 7) {
+            Image(systemName: icon)
+                .font(.system(size: 9.5, weight: .semibold))
+                .foregroundColor(settings.accentColor.opacity(0.90))
+                .frame(width: 14)
+                .padding(.top, 1)
+            
+            VStack(alignment: .leading, spacing: 1.5) {
+                Text(title)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white.opacity(0.92))
+                Text(description)
+                    .font(.system(size: 9))
+                    .foregroundColor(.white.opacity(0.60))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
     

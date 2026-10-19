@@ -28,6 +28,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         // Configuration de la barre de menus native de macOS
         setupMainMenu()
         
+        // Initialisation du compagnon résident dans la barre des menus
+        MenuBarCompanionService.shared.setup()
+        
         let windowController = FloatingWindowController.shared
         windowController.show()
         NSApp.activate(ignoringOtherApps: true)

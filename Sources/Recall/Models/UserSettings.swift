@@ -175,6 +175,26 @@ public class UserSettings: ObservableObject {
         }
     }
     
+    /// Lancement automatique de Recall au démarrage de macOS en tâche de fond (Recommandé DJ)
+    @Published public var launchAtLogin: Bool {
+        didSet {
+            UserDefaults.standard.set(launchAtLogin, forKey: "launchAtLogin")
+            Task { @MainActor in
+                LaunchAtLoginService.setEnabled(launchAtLogin)
+            }
+        }
+    }
+    
+    /// Présence d'un compagnon résident dans la barre des menus macOS
+    @Published public var enableMenuBarCompanion: Bool {
+        didSet {
+            UserDefaults.standard.set(enableMenuBarCompanion, forKey: "enableMenuBarCompanion")
+            Task { @MainActor in
+                MenuBarCompanionService.shared.setEnabled(enableMenuBarCompanion)
+            }
+        }
+    }
+    
     public var accentColor: Color {
         djTheme.accentColor
     }
@@ -220,6 +240,21 @@ public class UserSettings: ObservableObject {
         }
         let rawHotKey = def.string(forKey: "hotKeyPreset") ?? HotKeyModifierPreset.cmdOption.rawValue
         self.hotKeyPreset = HotKeyModifierPreset(rawValue: rawHotKey) ?? .cmdOption
+        
+        if def.object(forKey: "launchAtLogin") == nil {
+            self.launchAtLogin = true
+            Task { @MainActor in
+                LaunchAtLoginService.setEnabled(true)
+            }
+        } else {
+            self.launchAtLogin = def.bool(forKey: "launchAtLogin")
+        }
+        
+        if def.object(forKey: "enableMenuBarCompanion") == nil {
+            self.enableMenuBarCompanion = true
+        } else {
+            self.enableMenuBarCompanion = def.bool(forKey: "enableMenuBarCompanion")
+        }
         
         #if os(macOS)
         updateAppDockIcon()

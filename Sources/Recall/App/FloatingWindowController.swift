@@ -223,6 +223,23 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.orderFrontRegardless()
     }
     
+    public var isVisible: Bool {
+        return window?.isVisible ?? false
+    }
+    
+    public func hide() {
+        window?.orderOut(nil)
+    }
+    
+    public func toggle() {
+        if isVisible {
+            hide()
+        } else {
+            show()
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+    
     public func show() {
         if !hasPositionedOnLaunch {
             positionAtBottomRight()
