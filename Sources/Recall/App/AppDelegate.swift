@@ -144,46 +144,18 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(appMenuItem)
         
         // -------------------------------------------------------------
-        // 2. Menu "Fichier"
+        // 2. Menu "Fichier" (Standard macOS, épuré, zéro doublon)
         // -------------------------------------------------------------
         let fileMenuItem = NSMenuItem()
         let fileMenu = NSMenu(title: "Fichier")
         
         let newSessionItem = NSMenuItem(
-            title: "Nouvelle session DJ…",
+            title: "Nouvelle session DJ (Réinitialiser le set)…",
             action: #selector(resetSessionAction),
             keyEquivalent: "n"
         )
         newSessionItem.target = self
         fileMenu.addItem(newSessionItem)
-        
-        let resyncItem = NSMenuItem(
-            title: "Resynchroniser avec le logiciel DJ",
-            action: #selector(triggerSessionResyncAction),
-            keyEquivalent: "r"
-        )
-        resyncItem.target = self
-        fileMenu.addItem(resyncItem)
-        
-        fileMenu.addItem(NSMenuItem.separator())
-        
-        let tracklistItem = NSMenuItem(
-            title: "Générateur de Tracklist…",
-            action: #selector(openTracklistGeneratorAction),
-            keyEquivalent: "T"
-        )
-        tracklistItem.keyEquivalentModifierMask = [.command, .shift]
-        tracklistItem.target = self
-        fileMenu.addItem(tracklistItem)
-        
-        let setRecapItem = NSMenuItem(
-            title: "Statistiques du Mix (Set Recap)…",
-            action: #selector(openSetRecapAction),
-            keyEquivalent: "S"
-        )
-        setRecapItem.keyEquivalentModifierMask = [.command, .shift]
-        setRecapItem.target = self
-        fileMenu.addItem(setRecapItem)
         
         fileMenu.addItem(NSMenuItem.separator())
         
@@ -199,7 +171,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(fileMenuItem)
         
         // -------------------------------------------------------------
-        // 3. Menu "Édition" (Annuler, Rétablir, Couper, Copier, Coller)
+        // 3. Menu "Édition" (Standard macOS)
         // -------------------------------------------------------------
         let editMenuItem = NSMenuItem()
         let editMenu = NSMenu(title: "Édition")
@@ -223,24 +195,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         searchItem.target = self
         editMenu.addItem(searchItem)
         
-        editMenu.addItem(NSMenuItem.separator())
-        
-        let clearToPlayItem = NSMenuItem(
-            title: "Vider la liste « À jouer »…",
-            action: #selector(clearToPlayAction),
-            keyEquivalent: ""
-        )
-        clearToPlayItem.target = self
-        editMenu.addItem(clearToPlayItem)
-        
         editMenuItem.submenu = editMenu
         mainMenu.addItem(editMenuItem)
         
         // -------------------------------------------------------------
-        // 4. Menu "Outils de session"
+        // 4. Menu "Outils" (Impératif, hub central de l'activité DJ)
         // -------------------------------------------------------------
         let sessionMenuItem = NSMenuItem()
-        let sessionMenu = NSMenu(title: "Outils de session")
+        let sessionMenu = NSMenu(title: "Outils")
         sessionMenu.delegate = self
         
         let sessionRecapItem = NSMenuItem(
@@ -272,17 +234,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         
         sessionMenu.addItem(NSMenuItem.separator())
         
-        let sessionResyncItem = NSMenuItem(
-            title: "Resynchroniser avec Serato / Rekordbox",
-            action: #selector(triggerSessionResyncAction),
-            keyEquivalent: "R"
-        )
-        sessionResyncItem.keyEquivalentModifierMask = [.command, .shift]
-        sessionResyncItem.target = self
-        sessionMenu.addItem(sessionResyncItem)
+        // Section Gestion du Set
+        let sessionHeaderItem = NSMenuItem(title: "GESTION DU SET", action: nil, keyEquivalent: "")
+        sessionHeaderItem.isEnabled = false
+        sessionMenu.addItem(sessionHeaderItem)
         
         let sessionResetItem = NSMenuItem(
-            title: "Nouvelle session DJ (Réinitialiser le set)…",
+            title: "Réinitialiser l'historique du set (Nouvelle session)…",
             action: #selector(resetSessionAction),
             keyEquivalent: "N"
         )
@@ -291,7 +249,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         sessionMenu.addItem(sessionResetItem)
         
         let sessionClearToPlayItem = NSMenuItem(
-            title: "Vider la liste « À jouer »…",
+            title: "Vider la liste « À jouer » (Morceaux préparés)…",
             action: #selector(clearToPlayAction),
             keyEquivalent: ""
         )
@@ -305,6 +263,17 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         )
         sessionClearOverrideItem.target = self
         sessionMenu.addItem(sessionClearOverrideItem)
+        
+        sessionMenu.addItem(NSMenuItem.separator())
+        
+        let sessionResyncItem = NSMenuItem(
+            title: "Resynchroniser avec Serato / Rekordbox",
+            action: #selector(triggerSessionResyncAction),
+            keyEquivalent: "r"
+        )
+        sessionResyncItem.keyEquivalentModifierMask = [.command, .shift]
+        sessionResyncItem.target = self
+        sessionMenu.addItem(sessionResyncItem)
         
         sessionMenu.addItem(NSMenuItem.separator())
         
@@ -345,6 +314,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         toggleVisibilityItem.keyEquivalentModifierMask = [.command, .option]
         toggleVisibilityItem.target = self
         windowMenu.addItem(toggleVisibilityItem)
+        
+        let recenterItem = NSMenuItem(
+            title: "Recentrer au coin inférieur droit",
+            action: #selector(recenterRecallAction),
+            keyEquivalent: ""
+        )
+        recenterItem.target = self
+        windowMenu.addItem(recenterItem)
         
         let toggleCompactItem = NSMenuItem(
             title: "Mode Compact (Bandeau DJ)",
@@ -460,16 +437,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         )
         hotkeyItem.target = self
         helpMenu.addItem(hotkeyItem)
-        
-        helpMenu.addItem(NSMenuItem.separator())
-        
-        let checkUpdateHelpItem = NSMenuItem(
-            title: "Rechercher les mises à jour…",
-            action: #selector(checkForUpdatesAction),
-            keyEquivalent: ""
-        )
-        checkUpdateHelpItem.target = self
-        helpMenu.addItem(checkUpdateHelpItem)
         
         helpMenu.addItem(NSMenuItem.separator())
         
@@ -589,15 +556,31 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc private func resetSessionAction() {
         let alert = NSAlert()
-        alert.messageText = "Démarrer une nouvelle session de mix ?"
-        alert.informativeText = "Cette action réinitialise l'historique des morceaux joués pour le set en cours.\nLes suggestions et statistiques repartiront à zéro.\n\nVos favoris, combos et préréglages restent intacts."
+        alert.messageText = "Démarrer une nouvelle session DJ ?"
+        alert.informativeText = "Cette action clôture le set actuel et réinitialise l'historique des morceaux déjà joués, le chronomètre du mix et les statistiques.\n\nVos favoris, combos et préréglages restent intacts."
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Réinitialiser la session")
         alert.addButton(withTitle: "Annuler")
         
+        let toPlayCount = ToPlayService.shared.tracks.count
+        var clearToPlayCheck: NSButton? = nil
+        if toPlayCount > 0 {
+            let check = NSButton(
+                checkboxWithTitle: "Vider également la liste des morceaux préparés (« À jouer » — \(toPlayCount) en attente)",
+                target: nil,
+                action: nil
+            )
+            check.state = .off
+            alert.accessoryView = check
+            clearToPlayCheck = check
+        }
+        
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
             SessionHistoryService.shared.resetSession()
+            if clearToPlayCheck?.state == .on {
+                ToPlayService.shared.clearAll()
+            }
         }
     }
     
@@ -607,15 +590,21 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         
         let alert = NSAlert()
         alert.messageText = "Vider la liste « À jouer » ?"
-        alert.informativeText = "Cette action retirera les \(count) morceau(x) actuellement mis en attente pour votre mix."
+        alert.informativeText = "Cette action retire les \(count) morceau(x) actuellement mis de côté dans votre liste de préparation pour ce set.\n\nL'historique des morceaux déjà joués et les statistiques du mix ne sont pas affectés."
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Vider la liste")
+        alert.addButton(withTitle: "Vider la sélection")
         alert.addButton(withTitle: "Annuler")
         
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
             ToPlayService.shared.clearAll()
         }
+    }
+    
+    @objc private func recenterRecallAction() {
+        FloatingWindowController.shared.positionAtBottomRight()
+        FloatingWindowController.shared.show()
+        NSApp.activate(ignoringOtherApps: true)
     }
     
     @objc private func clearManualOverrideAction() {
@@ -758,7 +747,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     public func menuNeedsUpdate(_ menu: NSMenu) {
-        if menu.title == "Outils de session" {
+        if menu.title == "Outils" || menu.title == "Outils de session" {
             updateSessionMenuLiveInfo(menu)
         }
     }
@@ -824,7 +813,7 @@ extension AppDelegate: NSMenuItemValidation {
             menuItem.state = abs(UserSettings.shared.glassTranslucency - 0.0) < 0.05 ? .on : .off
         } else if menuItem.action == #selector(clearToPlayAction) {
             let count = ToPlayService.shared.tracks.count
-            menuItem.title = count > 0 ? "Vider la liste « À jouer » (\(count))…" : "Vider la liste « À jouer »…"
+            menuItem.title = count > 0 ? "Vider la liste « À jouer » (\(count) préparés)…" : "Vider la liste « À jouer » (Morceaux préparés)…"
             return count > 0
         } else if menuItem.action == #selector(clearManualOverrideAction) {
             return SeratoMonitorService.shared.manualTrackOverride != nil
