@@ -1420,10 +1420,35 @@
       }
 
       const url = getTrackerUrl();
-      const apiUrl = url + (url.includes("?") ? "&" : "?") + "action=admin_data";
+      const sep = url.includes("?") ? "&" : "?";
 
       try {
-        const response = await fetch(apiUrl, { cache: "no-cache" });
+        // Les anciennes versions du script enregistrent un faux téléchargement pour toute action inconnue
+        // (dont admin_data) : on vérifie d'abord la version via action=stats, comprise par toutes les versions.
+        const statsRes = await fetch(url + sep + "action=stats", { cache: "no-cache" });
+        const statsData = await statsRes.json();
+        const isUpToDateScript = statsData && statsData.status === "success" && statsData.totalUniqueUsers !== undefined;
+
+        if (!isUpToDateScript) {
+          if (statsData && statsData.status === "success") {
+            if (!state.data.stats) state.data.stats = {};
+            state.data.stats.totalDownloads = statsData.totalDownloads ?? state.data.stats.totalDownloads;
+            state.data.stats.macOS = statsData.macOS ?? state.data.stats.macOS;
+            state.data.stats.windows = statsData.windows ?? state.data.stats.windows;
+            state.data.stats.intents = statsData.intents ?? state.data.stats.intents;
+            state.data.stats.totalEvents = statsData.totalEvents ?? state.data.stats.totalEvents;
+            renderKPIs();
+            renderAnalytics();
+            if (statusPill) {
+              statusPill.className = "status-pill syncing";
+              statusText.textContent = "Script Google à redéployer (" + statsData.totalDownloads + " dl, non dédoublonnés)";
+            }
+            return;
+          }
+          throw new Error("Script Google injoignable");
+        }
+
+        const response = await fetch(url + sep + "action=admin_data", { cache: "no-cache" });
         const data = await response.json();
 
         if (data && data.status === "success" && data.stats) {
@@ -1437,27 +1462,6 @@
           }
           return;
         } else {
-          // Si action=admin_data n'est pas encore déployé sur le script distant,
-          // récupérer au moins les compteurs officiels via action=stats
-          try {
-            const statsRes = await fetch(url + (url.includes("?") ? "&" : "?") + "action=stats", { cache: "no-cache" });
-            const statsData = await statsRes.json();
-            if (statsData && statsData.status === "success" && (statsData.totalDownloads !== undefined || statsData.totalEvents !== undefined)) {
-              if (!state.data.stats) state.data.stats = {};
-              state.data.stats.totalDownloads = statsData.totalDownloads ?? state.data.stats.totalDownloads;
-              state.data.stats.macOS = statsData.macOS ?? state.data.stats.macOS;
-              state.data.stats.windows = statsData.windows ?? state.data.stats.windows;
-              state.data.stats.intents = statsData.intents ?? state.data.stats.intents;
-              state.data.stats.totalEvents = statsData.totalEvents ?? state.data.stats.totalEvents;
-              renderKPIs();
-              renderAnalytics();
-              if (statusPill) {
-                statusPill.className = "status-pill";
-                statusText.textContent = "Google Sheets connecté (" + statsData.totalDownloads + " dl)";
-              }
-              return;
-            }
-          } catch(sErr) {}
           throw new Error("Action admin_data indisponible");
         }
       } catch (err) {
