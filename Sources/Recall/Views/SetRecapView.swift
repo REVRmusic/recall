@@ -438,6 +438,11 @@ public struct SetRecapView: View {
                         if !stats.keyDistribution.isEmpty {
                             harmonicDistributionSection
                         }
+                        
+                        // 7. Section Évolution des styles au fil du set (Graphique temporel tout en bas)
+                        if !effectiveTracks.isEmpty {
+                            genreTimelineSection
+                        }
                     }
                     .padding(14)
                 }
@@ -1595,6 +1600,17 @@ public struct SetRecapView: View {
         )
     }
     
+    // MARK: - 6b. Évolution des styles musicaux au fil du set
+    
+    private var genreTimelineSection: some View {
+        GenreTimelineChartView(
+            tracks: effectiveTracks,
+            sessionStartTime: effectiveSessionStartTime,
+            sessionEndTime: setTimeRange.end,
+            isLive: setTimeRange.isLive
+        )
+    }
+    
     // MARK: - 6. Actions Footer
     
     private var footerActionsView: some View {
@@ -1874,7 +1890,8 @@ public struct SetRecapView: View {
             sessionStartTime: setTimeRange.start,
             sessionEndTime: setTimeRange.end,
             eventTitle: title,
-            hideDuration: exportHideDuration
+            hideDuration: exportHideDuration,
+            tracks: effectiveTracks
         ) else {
             isExporting = false
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
@@ -1897,7 +1914,8 @@ public struct SetRecapView: View {
             sessionStartTime: setTimeRange.start,
             sessionEndTime: setTimeRange.end,
             eventTitle: title,
-            hideDuration: exportHideDuration
+            hideDuration: exportHideDuration,
+            tracks: effectiveTracks
         ) else {
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
             return
@@ -1912,7 +1930,8 @@ public struct SetRecapView: View {
             sessionStartTime: setTimeRange.start,
             sessionEndTime: setTimeRange.end,
             eventTitle: title,
-            hideDuration: exportHideDuration
+            hideDuration: exportHideDuration,
+            tracks: effectiveTracks
         ) else {
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
             return
@@ -1931,7 +1950,8 @@ public struct SetRecapView: View {
             sessionStartTime: setTimeRange.start,
             sessionEndTime: setTimeRange.end,
             eventTitle: title,
-            hideDuration: exportHideDuration
+            hideDuration: exportHideDuration,
+            tracks: effectiveTracks
         ) else {
             showToast(message: "Échec de génération de l'image", icon: "xmark.circle.fill", color: .red)
             return

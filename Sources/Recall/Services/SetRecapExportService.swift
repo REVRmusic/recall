@@ -18,7 +18,8 @@ public final class SetRecapExportService {
         sessionStartTime: Date,
         sessionEndTime: Date? = nil,
         eventTitle: String? = nil,
-        hideDuration: Bool = false
+        hideDuration: Bool = false,
+        tracks: [SessionPlayedTrack] = []
     ) -> NSImage? {
         let exportView = SetRecapExportCardView(
             stats: stats,
@@ -26,7 +27,8 @@ public final class SetRecapExportService {
             sessionEndTime: sessionEndTime,
             eventTitle: eventTitle,
             generationDate: Date(),
-            hideDuration: hideDuration
+            hideDuration: hideDuration,
+            tracks: tracks
         )
         
         // 1. Priorité moderne : ImageRenderer SwiftUI (macOS 13+)

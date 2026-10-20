@@ -10,6 +10,7 @@ public struct SetRecapExportCardView: View {
     public let eventTitle: String?
     public let generationDate: Date
     public let hideDuration: Bool
+    public let tracks: [SessionPlayedTrack]
     
     public init(
         stats: SetRecapStats,
@@ -17,7 +18,8 @@ public struct SetRecapExportCardView: View {
         sessionEndTime: Date? = nil,
         eventTitle: String? = nil,
         generationDate: Date = Date(),
-        hideDuration: Bool = false
+        hideDuration: Bool = false,
+        tracks: [SessionPlayedTrack] = []
     ) {
         self.stats = stats
         self.sessionStartTime = sessionStartTime
@@ -25,6 +27,7 @@ public struct SetRecapExportCardView: View {
         self.eventTitle = eventTitle
         self.generationDate = generationDate
         self.hideDuration = hideDuration
+        self.tracks = tracks
     }
     
     public var body: some View {
@@ -51,6 +54,15 @@ public struct SetRecapExportCardView: View {
             // 6. Section Distribution Harmonique
             if !stats.keyDistribution.isEmpty {
                 harmonicDistributionSection
+            }
+            
+            // 6b. Évolution des styles musicaux au fil du set
+            if !tracks.isEmpty {
+                GenreTimelineExportSectionView(
+                    tracks: tracks,
+                    sessionStartTime: sessionStartTime,
+                    sessionEndTime: sessionEndTime
+                )
             }
             
             // 7. Signature de marque inférieure
