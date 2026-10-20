@@ -52,75 +52,50 @@ public final class MenuBarCompanionService: NSObject, NSMenuDelegate, Observable
         button.image = createVinylStatusImage(size: 18.0)
     }
     
-    /// Dessine une icône de vinyle haute précision qui reproduit fidèlement le disque vinyle officiel de Recall
-    /// avec les micro-sillons, le reflet de lumière et le macaron central aux couleurs du thème DJ actif.
+    /// Dessine une icône de vinyle monochrome native macOS (Template Image).
+    /// Sur macOS, `isTemplate = true` permet d'adapter automatiquement le rendu en blanc pur sur fond sombre
+    /// et en noir sur fond clair, s'intégrant parfaitement avec les autres icônes système de la barre des menus.
     private func createVinylStatusImage(size: CGFloat = 18.0) -> NSImage {
-        let theme = UserSettings.shared.djTheme
-        let accent1 = theme.nsAccentColor
-        let accent2 = theme.nsSecondaryColor
-        
         let img = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
             let center = CGPoint(x: rect.midX, y: rect.midY)
             let radius = (size - 2.0) / 2.0
             
-            // 1. Corps principal du vinyle (noir profond avec texture vinyle)
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            
+            // 1. Cercle extérieur du vinyle (contour net)
             let discRect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
             let discPath = NSBezierPath(ovalIn: discRect)
-            NSColor(white: 0.11, alpha: 1.0).setFill()
-            discPath.fill()
-            
-            // 2. Reflet spéculaire des sillons (deux éclats coniques opposés à 40° et 220°)
-            let ctx = NSGraphicsContext.current?.cgContext
-            ctx?.saveGState()
-            discPath.addClip()
-            for angleDeg in [40.0, 220.0] {
-                let sheenPath = NSBezierPath()
-                sheenPath.move(to: center)
-                sheenPath.appendArc(withCenter: center, radius: radius, startAngle: CGFloat(angleDeg - 22.0), endAngle: CGFloat(angleDeg + 22.0), clockwise: false)
-                sheenPath.close()
-                NSColor(white: 0.95, alpha: 0.11).setFill()
-                sheenPath.fill()
-            }
-            ctx?.restoreGState()
-            
-            // 3. Sillons concentriques du disque
-            for gr in [radius * 0.82, radius * 0.67, radius * 0.52] {
-                let gp = NSBezierPath(ovalIn: CGRect(x: center.x - gr, y: center.y - gr, width: gr * 2, height: gr * 2))
-                NSColor(white: 0.75, alpha: 0.30).setStroke()
-                gp.lineWidth = 0.65
-                gp.stroke()
-            }
-            
-            // 4. Filet extérieur de contraste métallique (visibilité parfaite sur fond sombre comme clair)
-            let rimColor = NSColor(white: 0.45, alpha: 0.85)
-            rimColor.setStroke()
-            discPath.lineWidth = 0.8
+            NSColor.black.setStroke()
+            discPath.lineWidth = 1.3
             discPath.stroke()
             
-            // 5. Macaron central aux couleurs du thème DJ de Recall
-            let labelRadius = radius * 0.38
+            // 2. Micro-sillons concentriques stylisés
+            for gr in [radius * 0.76, radius * 0.58] {
+                let groovePath = NSBezierPath(ovalIn: CGRect(x: center.x - gr, y: center.y - gr, width: gr * 2, height: gr * 2))
+                NSColor.black.withAlphaComponent(0.7).setStroke()
+                groovePath.lineWidth = 0.8
+                groovePath.stroke()
+            }
+            
+            // 3. Macaron central plein
+            let labelRadius = radius * 0.36
             let labelRect = CGRect(x: center.x - labelRadius, y: center.y - labelRadius, width: labelRadius * 2, height: labelRadius * 2)
             let labelPath = NSBezierPath(ovalIn: labelRect)
+            NSColor.black.setFill()
+            labelPath.fill()
             
-            let gradient = NSGradient(colors: [accent1, accent2])
-            gradient?.draw(in: labelPath, angle: 45)
-            
-            // Anneau fin délimitant le macaron
-            NSColor(white: 0.05, alpha: 0.7).setStroke()
-            labelPath.lineWidth = 0.5
-            labelPath.stroke()
-            
-            // 6. Trou central du vinyle (spindle)
-            let holeRadius = radius * 0.13
+            // 4. Trou central (spindle) évidé
+            let holeRadius = radius * 0.14
             let holeRect = CGRect(x: center.x - holeRadius, y: center.y - holeRadius, width: holeRadius * 2, height: holeRadius * 2)
-            let holePath = NSBezierPath(ovalIn: holeRect)
-            NSColor(white: 0.07, alpha: 1.0).setFill()
-            holePath.fill()
+            ctx.saveGState()
+            ctx.setBlendMode(.clear)
+            ctx.fillEllipse(in: holeRect)
+            ctx.restoreGState()
             
             return true
         }
         
-        img.isTemplate = false
+        img.isTemplate = true
         return img
     }
     
