@@ -11,9 +11,12 @@ public struct FilterBarView: View {
     
     public var body: some View {
         GeometryReader { proxy in
-            let isNarrow = proxy.size.width < 345
+            // Seuil 1 (< 345px) : On retire le texte "sélec" pour n'avoir que le chiffre (ex: 🔖 10)
+            // Seuil 2 (< 275px) : Si la fenêtre devenait encore plus étroite, on masque les libellés BPM/Harm/Favs
+            let isSelecCompact = proxy.size.width < 345
+            let isUltraNarrow = proxy.size.width < 275
             
-            HStack(spacing: isNarrow ? 3 : 4) {
+            HStack(spacing: 3.5) {
                 // Mini sélecteur de direction d'enchaînement (Après / Avant / Tout)
                 directionSegmentedPicker
                 
@@ -23,11 +26,11 @@ public struct FilterBarView: View {
                     .frame(width: 1, height: 13)
                     .padding(.horizontal, 1)
                 
-                // Filtre BPM ±10%
+                // Filtre BPM
                 filterButton(
                     icon: "metronome",
                     title: "BPM",
-                    isNarrow: isNarrow,
+                    hideTitle: isUltraNarrow,
                     isActive: settings.isBpmFilterActive,
                     accentColor: Color.accentCyan
                 ) {
@@ -39,7 +42,7 @@ public struct FilterBarView: View {
                 filterButton(
                     icon: "circle.grid.cross.fill",
                     title: "Harm.",
-                    isNarrow: isNarrow,
+                    hideTitle: isUltraNarrow,
                     isActive: settings.isHarmonicFilterActive,
                     accentColor: Color(hex: "#C471ED")
                 ) {
@@ -51,7 +54,7 @@ public struct FilterBarView: View {
                 filterButton(
                     icon: "heart.fill",
                     title: "Favs",
-                    isNarrow: isNarrow,
+                    hideTitle: isUltraNarrow,
                     isActive: settings.isFavoritesFilterActive && !settings.isToPlayFilterActive,
                     accentColor: Color(hex: "#FF5252")
                 ) {
@@ -62,13 +65,13 @@ public struct FilterBarView: View {
                 }
                 .help("Afficher uniquement vos transitions favorites mémorisées")
                 
-                // Filtre / Onglet Morceaux Sélec
-                toPlayFilterButton(isNarrow: isNarrow)
+                // Filtre / Onglet Morceaux Sélec (compact = chiffre seul)
+                toPlayFilterButton(isCompact: isSelecCompact)
                 
                 Spacer(minLength: 2)
                 
                 // Compteur de résultats
-                matchCountBadge(isNarrow: isNarrow)
+                matchCountBadge(isCompact: isSelecCompact)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
@@ -82,7 +85,7 @@ public struct FilterBarView: View {
     private func filterButton(
         icon: String,
         title: String,
-        isNarrow: Bool,
+        hideTitle: Bool,
         isActive: Bool,
         accentColor: Color,
         action: @escaping () -> Void
@@ -90,15 +93,15 @@ public struct FilterBarView: View {
         Button(action: action) {
             HStack(spacing: 2.5) {
                 Image(systemName: icon)
-                    .font(.system(size: isNarrow ? 8 : 7.5, weight: .bold))
+                    .font(.system(size: hideTitle ? 8 : 7.5, weight: .bold))
                 
-                if !isNarrow {
+                if !hideTitle {
                     Text(title)
                         .font(.system(size: 8.5, weight: .semibold))
                         .lineLimit(1)
                 }
             }
-            .padding(.horizontal, isNarrow ? 5 : 5.5)
+            .padding(.horizontal, hideTitle ? 5 : 5.5)
             .frame(height: 20)
             .background(isActive ? accentColor.opacity(0.25) : Color.white.opacity(0.06))
             .foregroundColor(isActive ? accentColor : Color.white.opacity(0.7))
@@ -113,7 +116,7 @@ public struct FilterBarView: View {
     
     // MARK: - Bouton Filtre Sélec (Spécial : affiche le nombre seul quand l'espace manque)
     
-    private func toPlayFilterButton(isNarrow: Bool) -> some View {
+    private func toPlayFilterButton(isCompact: Bool) -> some View {
         let count = toPlayService.tracks.count
         let isActive = settings.isToPlayFilterActive
         let accentColor = Color(hex: "#FFB300")
@@ -123,9 +126,9 @@ public struct FilterBarView: View {
         } label: {
             HStack(spacing: 2.5) {
                 Image(systemName: "bookmark.fill")
-                    .font(.system(size: isNarrow ? 8 : 7.5, weight: .bold))
+                    .font(.system(size: isCompact ? 8 : 7.5, weight: .bold))
                 
-                if isNarrow {
+                if isCompact {
                     if count > 0 {
                         Text("\(count)")
                             .font(.system(size: 8.5, weight: .heavy, design: .rounded))
@@ -143,7 +146,7 @@ public struct FilterBarView: View {
                     }
                 }
             }
-            .padding(.horizontal, isNarrow ? 5 : 5.5)
+            .padding(.horizontal, isCompact ? 5 : 5.5)
             .frame(height: 20)
             .background(isActive ? accentColor.opacity(0.25) : Color.white.opacity(0.06))
             .foregroundColor(isActive ? accentColor : Color.white.opacity(0.7))
@@ -159,7 +162,7 @@ public struct FilterBarView: View {
     
     // MARK: - Badge Compteur de matchs
     
-    private func matchCountBadge(isNarrow: Bool) -> some View {
+    private func matchCountBadge(isCompact: Bool) -> some View {
         let countLabel = settings.isToPlayFilterActive ?
             "sélec" :
             (suggestionsCount > 1 ? "matchs" : "match")
@@ -169,14 +172,14 @@ public struct FilterBarView: View {
                 .font(.system(size: 9.5, weight: .bold, design: .rounded))
                 .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : .white.opacity(0.65))
             
-            if !isNarrow {
+            if !isCompact {
                 Text(countLabel)
                     .font(.system(size: 8.5, weight: .semibold))
                     .foregroundColor(.white.opacity(0.40))
                     .lineLimit(1)
             }
         }
-        .padding(.horizontal, isNarrow ? 4 : 5)
+        .padding(.horizontal, isCompact ? 4 : 5)
         .frame(height: 20)
         .background(Color.white.opacity(0.05))
         .cornerRadius(5)
