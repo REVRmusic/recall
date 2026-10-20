@@ -74,6 +74,94 @@ function getFeedbackSheet(ss) {
   return null;
 }
 
+// Statuts ecrits dans la colonne O (Statut Utilisateur) de l'onglet Telechargements
+var STATUT_UNIQUE = "Unique (1er T\u00E9l\u00E9chargement)";
+var STATUT_DOUBLON = "R\u00E9-t\u00E9l\u00E9chargement (Doublon filtr\u00E9)";
+var STATUT_INTENTION = "Intention";
+var STATUT_IGNORE = "Ignor\u00E9 (requ\u00EAte sans navigateur)";
+
+function estEvenementTelechargement(eventType) {
+  var ev = String(eventType || "").toLowerCase();
+  if (ev.indexOf("intention") !== -1 || ev.indexOf("intent") !== -1) return false;
+  return ev.indexOf("direct") !== -1 || ev.indexOf("unique") !== -1 || ev.indexOf("chargement") !== -1;
+}
+
+function estEvenementIntention(eventType) {
+  var ev = String(eventType || "").toLowerCase();
+  return ev.indexOf("intention") !== -1 || ev.indexOf("intent") !== -1;
+}
+
+// Un utilisateur est reconnu par l'ID stocke dans son navigateur OU par son nom de DJ.
+// Les anciennes lignes sans ID ni nom retombent sur l'empreinte navigateur + resolution.
+function clesUtilisateur(deviceId, djName, userAgent, resolution) {
+  var cles = [];
+  var dev = String(deviceId || "").trim();
+  var dj = String(djName || "").trim().toLowerCase();
+  if (dev) cles.push("dev:" + dev);
+  if (dj && dj !== "anonyme") cles.push("dj:" + dj);
+  if (cles.length === 0) cles.push("fp:" + String(userAgent || "") + "_" + String(resolution || ""));
+  return cles;
+}
+
+/**
+ * Source unique de verite pour tous les compteurs (landing, console admin, tableau de bord).
+ * Le statut deja ecrit en colonne O est prioritaire ; sinon il est deduit chronologiquement.
+ */
+function analyserTelechargements(data) {
+  var dejaVus = {};
+  var statuts = [];
+  var stats = { uniques: 0, mac: 0, windows: 0, doublons: 0, intentions: 0, ignores: 0, bruts: 0 };
+
+  for (var r = 1; r < data.length; r++) {
+    var row = data[r];
+    if (!row || !row[0]) { statuts[r] = ""; continue; }
+
+    var ev = row[4];
+    var statut = "";
+
+    if (estEvenementIntention(ev)) {
+      statut = STATUT_INTENTION;
+      stats.intentions++;
+    } else if (estEvenementTelechargement(ev)) {
+      var ua = String(row[10] || "").trim();
+      if (!ua) {
+        // Appels sans navigateur (ex: ancienne console admin) : jamais comptes comme telechargement
+        statut = STATUT_IGNORE;
+        stats.ignores++;
+      } else {
+        stats.bruts++;
+        var cles = clesUtilisateur(row[13], row[11], ua, row[8]);
+        var dejaVu = false;
+        for (var c = 0; c < cles.length; c++) {
+          if (dejaVus[cles[c]]) dejaVu = true;
+          dejaVus[cles[c]] = true;
+        }
+
+        var statutStocke = String(row[14] || "");
+        var estUnique;
+        if (statutStocke.indexOf("Unique") === 0) estUnique = true;
+        else if (statutStocke.indexOf("R\u00E9-t") === 0) estUnique = false;
+        else estUnique = !dejaVu;
+
+        if (estUnique) {
+          statut = STATUT_UNIQUE;
+          stats.uniques++;
+          var pl = String(row[1] || "").toLowerCase();
+          if (pl.indexOf("mac") !== -1) stats.mac++;
+          if (pl.indexOf("win") !== -1) stats.windows++;
+        } else {
+          statut = STATUT_DOUBLON;
+          stats.doublons++;
+        }
+      }
+    }
+
+    statuts[r] = statut;
+  }
+
+  return { statuts: statuts, stats: stats, dejaVus: dejaVus };
+}
+
 /**
  * Nettoyage automatique des onglets fantomes corrompus et reparation complete
  * Selectionnez cette fonction dans Apps Script et cliquez sur 'Executer'
@@ -86,9 +174,13 @@ function nettoyerEtReparerTout() {
   if (realDownloads) {
     try { realDownloads.setName("T\u00E9l\u00E9chargements"); } catch(e) {}
     try {
-      if (realDownloads.getLastColumn() < 13) {
-        realDownloads.getRange(1, 12, 1, 2).setValues([["Nom DJ / Artiste", "Ville / Pays"]]);
-        realDownloads.getRange(1, 12, 1, 2).setBackground("#0F172A").setFontColor("#00F0FF").setFontWeight("bold");
+      if (realDownloads.getLastColumn() < 16) {
+        var curCols = realDownloads.getLastColumn();
+        if (curCols < 13) {
+          realDownloads.getRange(1, 12, 1, 2).setValues([["Nom DJ / Artiste", "Ville / Pays"]]);
+        }
+        realDownloads.getRange(1, 14, 1, 3).setValues([["ID Appareil / Client ID", "Statut Utilisateur", "Mod\u00E8le Appareil"]]);
+        realDownloads.getRange(1, 12, 1, 5).setBackground("#0F172A").setFontColor("#00F0FF").setFontWeight("bold");
       }
     } catch(eCol) {}
   } else {
@@ -96,7 +188,7 @@ function nettoyerEtReparerTout() {
     var headers = [
       "Date & Heure", "Plateforme", "Fichier", "Version", "Type d'\u00E9v\u00E9nement",
       "Emplacement Clic", "Langue Site", "Langue Nav.", "R\u00E9solution", "R\u00E9f\u00E9rent", "Navigateur / OS",
-      "Nom DJ / Artiste", "Ville / Pays"
+      "Nom DJ / Artiste", "Ville / Pays", "ID Appareil / Client ID", "Statut Utilisateur", "Mod\u00E8le Appareil"
     ];
     realDownloads.appendRow(headers);
     var hRange = realDownloads.getRange(1, 1, 1, headers.length);
@@ -180,9 +272,10 @@ function nettoyerEtReparerTout() {
 
   var kpis = [
     ["M\u00E9trique", "Total", "Description"],
-    ["Total T\u00E9l\u00E9chargements R\u00E9els", "", "Nombre total de clics sur les fichiers d'installation (.dmg, .zip)"],
-    ["T\u00E9l\u00E9chargements macOS", "", "Total des t\u00E9l\u00E9chargements version Mac"],
-    ["T\u00E9l\u00E9chargements Windows", "", "Total des t\u00E9l\u00E9chargements version PC Windows"],
+    ["Total T\u00E9l\u00E9chargements Uniques", "", "Nombre de personnes / appareils uniques ayant t\u00E9l\u00E9charg\u00E9 (1 par utilisateur)"],
+    ["T\u00E9l\u00E9chargements macOS (Uniques)", "", "Total des utilisateurs uniques version Mac"],
+    ["T\u00E9l\u00E9chargements Windows (Uniques)", "", "Total des utilisateurs uniques version PC Windows"],
+    ["R\u00E9-t\u00E9l\u00E9chargements (Doublons filtr\u00E9s)", "", "Clics r\u00E9p\u00E9t\u00E9s d'utilisateurs d\u00E9j\u00E0 comptabilis\u00E9s"],
     ["Clics d'Intention (Hero / Nav)", "", "Visiteurs ayant cliqu\u00E9 sur les boutons d'appel \u00E0 l'action"],
     ["Total Tous \u00C9v\u00E9nements", "", "Volume global de signaux collect\u00E9s"],
     ["Dernier \u00C9v\u00E9nement", "", "Horodatage de la derni\u00E8re action"]
@@ -190,27 +283,31 @@ function nettoyerEtReparerTout() {
 
   dashSheet.getRange(3, 1, kpis.length, 3).setValues(kpis);
   dashSheet.getRange("A3:C3").setBackground("#1E293B").setFontColor("#FFFFFF").setFontWeight("bold");
-  dashSheet.getRange("A4:A10").setFontWeight("bold");
-  dashSheet.getRange("B4:B10").setFontWeight("bold").setFontSize(12).setHorizontalAlignment("center").setBackground("#F1F5F9");
+  dashSheet.getRange("A4:A11").setFontWeight("bold");
+  dashSheet.getRange("B4:B11").setFontWeight("bold").setFontSize(12).setHorizontalAlignment("center").setBackground("#F1F5F9");
   dashSheet.autoResizeColumns(1, 3);
 
-  // 4. Calcul direct des valeurs reelles
+  // 4. Calcul direct des valeurs reelles (dedoublonnage par utilisateur / appareil)
   var dlData = realDownloads.getDataRange().getValues();
-  var calcDirect = 0, calcMac = 0, calcWin = 0, calcIntent = 0, lastDate = "Aucun";
+  var analyse = analyserTelechargements(dlData);
+  var calcDirect = analyse.stats.uniques;
+  var calcMac = analyse.stats.mac;
+  var calcWin = analyse.stats.windows;
+  var calcIntent = analyse.stats.intentions;
+  var calcDuplicates = analyse.stats.doublons;
+  var lastDate = "Aucun";
+
+  // Les anciennes lignes recoivent leur statut en colonne O pour que les formules du tableau restent justes
+  if (dlData.length > 1) {
+    var colStatuts = [];
+    for (var s = 1; s < dlData.length; s++) {
+      colStatuts.push([analyse.statuts[s] || String(dlData[s][14] || "")]);
+    }
+    realDownloads.getRange(2, 15, colStatuts.length, 1).setValues(colStatuts);
+  }
 
   for (var r = 1; r < dlData.length; r++) {
-    var ev = String(dlData[r][4] || "").toLowerCase();
-    var pl = String(dlData[r][1] || "").toLowerCase();
     var dt = dlData[r][0];
-
-    if (ev.indexOf("direct") !== -1 || (ev.indexOf("chargement") !== -1 && ev.indexOf("intention") === -1)) {
-      calcDirect++;
-      if (pl.indexOf("mac") !== -1) calcMac++;
-      if (pl.indexOf("win") !== -1) calcWin++;
-    } else if (ev.indexOf("intention") !== -1 || ev.indexOf("intent") !== -1) {
-      calcIntent++;
-    }
-
     if (dt) {
       if (dt instanceof Date) {
         lastDate = Utilities.formatDate(dt, Session.getScriptTimeZone() || "GMT", "yyyy-MM-dd HH:mm:ss");
@@ -224,15 +321,16 @@ function nettoyerEtReparerTout() {
   dashSheet.getRange("B4").setValue(calcDirect);
   dashSheet.getRange("B5").setValue(calcMac);
   dashSheet.getRange("B6").setValue(calcWin);
-  dashSheet.getRange("B7").setValue(calcIntent);
-  dashSheet.getRange("B8").setValue(Math.max(0, dlData.length - 1));
-  dashSheet.getRange("B9").setValue(lastDate);
+  dashSheet.getRange("B7").setValue(calcDuplicates);
+  dashSheet.getRange("B8").setValue(calcIntent);
+  dashSheet.getRange("B9").setValue(Math.max(0, dlData.length - 1));
+  dashSheet.getRange("B10").setValue(lastDate);
 
   // 5. Injection des formules dynamiques locales
   reparerFormulesTableau(dashSheet);
 
   // 6. Securite visuelle anti-erreur : si une formule produit #ERROR!, remettre la valeur calculee
-  var values = [calcDirect, calcMac, calcWin, calcIntent, Math.max(0, dlData.length - 1), lastDate];
+  var values = [calcDirect, calcMac, calcWin, calcDuplicates, calcIntent, Math.max(0, dlData.length - 1), lastDate];
   for (var v = 0; v < values.length; v++) {
     try {
       var c = dashSheet.getRange(4 + v, 2);
@@ -287,12 +385,14 @@ function setupSheetsIfNeeded(ss) {
 function reparerFormulesTableau(dashSheet) {
   if (!dashSheet) return;
 
+  // Une formule par ligne B4 -> B10, dans le meme ordre que le tableau kpis
   var frenchFormulas = [
-    '=NB.SI(T\u00E9l\u00E9chargements!E2:E; "*direct*")',
-    '=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*macOS*"; T\u00E9l\u00E9chargements!E2:E; "*direct*")',
-    '=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*Windows*"; T\u00E9l\u00E9chargements!E2:E; "*direct*")',
+    '=NB.SI(T\u00E9l\u00E9chargements!O2:O; "Unique*")',
+    '=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*macOS*"; T\u00E9l\u00E9chargements!O2:O; "Unique*")',
+    '=NB.SI.ENS(T\u00E9l\u00E9chargements!B2:B; "*Windows*"; T\u00E9l\u00E9chargements!O2:O; "Unique*")',
+    '=NB.SI(T\u00E9l\u00E9chargements!O2:O; "R\u00E9-t*")',
     '=NB.SI(T\u00E9l\u00E9chargements!E2:E; "*Intention*")',
-    '=MAX(0; NBVAL(T\u00E9l\u00E9chargements!A2:A) - 1)',
+    '=NBVAL(T\u00E9l\u00E9chargements!A2:A)',
     '=SI(NBVAL(T\u00E9l\u00E9chargements!A2:A)>1; TEXTE(MAX(T\u00E9l\u00E9chargements!A2:A); "AAAA-MM-JJ HH:mm:ss"); "Aucun")'
   ];
 
@@ -342,30 +442,18 @@ function handleRequest(params) {
   if (params.action === "stats") {
     var downloadSheet = getDownloadsSheet(ss);
     var data = downloadSheet ? downloadSheet.getDataRange().getValues() : [];
-    var totalDownloads = 0;
-    var macDownloads = 0;
-    var winDownloads = 0;
-    var intentClicks = 0;
-
-    for (var i = 1; i < data.length; i++) {
-      var eventType = String(data[i][4] || "").toLowerCase();
-      var platform = String(data[i][1] || "").toLowerCase();
-
-      if (eventType.indexOf("direct") !== -1 || (eventType.indexOf("chargement") !== -1 && eventType.indexOf("intention") === -1)) {
-        totalDownloads++;
-        if (platform.indexOf("mac") !== -1) macDownloads++;
-        if (platform.indexOf("win") !== -1) winDownloads++;
-      } else if (eventType.indexOf("intention") !== -1 || eventType.indexOf("intent") !== -1) {
-        intentClicks++;
-      }
-    }
+    var st = analyserTelechargements(data).stats;
 
     var statsOut = {
       status: "success",
-      totalDownloads: totalDownloads,
-      macOS: macDownloads,
-      windows: winDownloads,
-      intents: intentClicks,
+      totalDownloads: st.uniques,
+      totalUniqueUsers: st.uniques,
+      totalRawDownloads: st.bruts,
+      duplicatesFiltered: st.doublons,
+      ignored: st.ignores,
+      macOS: st.mac,
+      windows: st.windows,
+      intents: st.intentions,
       totalEvents: Math.max(0, data.length - 1)
     };
 
@@ -385,10 +473,7 @@ function handleRequest(params) {
     var dlData = dlSheet ? dlSheet.getDataRange().getValues() : [];
     var fbData = fbSheet ? fbSheet.getDataRange().getValues() : [];
 
-    var totalDownloads = 0;
-    var macDownloads = 0;
-    var winDownloads = 0;
-    var intentClicks = 0;
+    var analyseAdmin = analyserTelechargements(dlData);
     var djsCount = 0;
 
     var downloadsList = [];
@@ -424,27 +509,22 @@ function handleRequest(params) {
       var ua = String(row[10] || "");
       var dj = String(row[11] || "").trim();
       var city = String(row[12] || "").trim();
+      var devId = String(row[13] || "");
+      var devModel = String(row[15] || "");
 
-      var evLower = ev.toLowerCase();
-      var plLower = pl.toLowerCase();
-
-      var isReal = evLower.indexOf("direct") !== -1 || (evLower.indexOf("chargement") !== -1 && evLower.indexOf("intention") === -1);
-      if (isReal) {
-        totalDownloads++;
-        if (plLower.indexOf("mac") !== -1) macDownloads++;
-        if (plLower.indexOf("win") !== -1) winDownloads++;
-      } else if (evLower.indexOf("intention") !== -1 || evLower.indexOf("intent") !== -1) {
-        intentClicks++;
-      }
+      var userStatus = analyseAdmin.statuts[i] || String(row[14] || "");
+      var isUnique = userStatus === STATUT_UNIQUE;
 
       if (dj || city) {
-        djsCount++;
+        if (isUnique) djsCount++;
         djsList.push({
           djName: dj || "Anonyme",
           djCity: city || "Non pr\u00E9cis\u00E9",
           platform: pl,
           date: dtStr,
-          version: ver
+          version: ver,
+          deviceId: devId,
+          isUnique: isUnique
         });
       }
 
@@ -461,7 +541,11 @@ function handleRequest(params) {
         referrer: ref,
         userAgent: ua,
         djName: dj,
-        djCity: city
+        djCity: city,
+        deviceId: devId,
+        statusUser: userStatus,
+        deviceModel: devModel,
+        isUnique: isUnique
       });
     }
 
@@ -488,10 +572,14 @@ function handleRequest(params) {
       status: "success",
       timestamp: new Date().toISOString(),
       stats: {
-        totalDownloads: totalDownloads,
-        macOS: macDownloads,
-        windows: winDownloads,
-        intents: intentClicks,
+        totalDownloads: analyseAdmin.stats.uniques,
+        totalUniqueUsers: analyseAdmin.stats.uniques,
+        totalRawDownloads: analyseAdmin.stats.bruts,
+        duplicatesFiltered: analyseAdmin.stats.doublons,
+        ignored: analyseAdmin.stats.ignores,
+        macOS: analyseAdmin.stats.mac,
+        windows: analyseAdmin.stats.windows,
+        intents: analyseAdmin.stats.intentions,
         totalEvents: Math.max(0, dlData.length - 1),
         djsCount: djsCount,
         feedbacksCount: feedbacksList.length
@@ -634,6 +722,17 @@ function handleRequest(params) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // Seul un vrai clic de telechargement (sans action, avec fichier ou plateforme) peut creer une ligne
+  if (params.action || (!params.file && !params.platform)) {
+    var refusOut = { status: "error", message: "Action inconnue ou requ\u00EAte incompl\u00E8te : aucun t\u00E9l\u00E9chargement enregistr\u00E9" };
+    if (params.callback) {
+      return ContentService.createTextOutput(params.callback + "(" + JSON.stringify(refusOut) + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(JSON.stringify(refusOut))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   // Enregistrement d'un nouvel evenement de telechargement
   var downloadSheet = getDownloadsSheet(ss);
   if (!downloadSheet) {
@@ -654,31 +753,64 @@ function handleRequest(params) {
   var userAgent = params.ua || "";
   var djName = params.dj_name || params.djName || params.artist || "";
   var djCity = params.dj_city || params.djCity || params.location_dj || params.city || "";
+  var deviceId = String(params.device_id || params.client_id || "").trim();
+  var deviceModel = String(params.device_name || params.device_model || "").trim();
+
+  // 1 seul telechargement par utilisateur : marqueur du navigateur OU trace deja presente en base
+  var isDownload = estEvenementTelechargement(eventType);
+  var marqueurNavigateur = params.is_redownload === "1" || params.is_redownload === 1 || params.is_redownload === true;
+  var dejaEnBase = false;
+  if (isDownload && downloadSheet && downloadSheet.getLastRow() > 1) {
+    var vus = analyserTelechargements(downloadSheet.getDataRange().getValues()).dejaVus;
+    var clesVisiteur = clesUtilisateur(deviceId, djName, userAgent, resolution);
+    for (var cv = 0; cv < clesVisiteur.length; cv++) {
+      if (vus[clesVisiteur[cv]]) dejaEnBase = true;
+    }
+  }
+  var isFirstForUser = isDownload && !!userAgent && !marqueurNavigateur && !dejaEnBase;
+
+  var userStatus;
+  if (!isDownload) {
+    userStatus = STATUT_INTENTION;
+  } else if (!userAgent) {
+    userStatus = STATUT_IGNORE;
+  } else if (isFirstForUser) {
+    userStatus = STATUT_UNIQUE;
+    eventType = "T\u00E9l\u00E9chargement unique (1er)";
+  } else {
+    userStatus = STATUT_DOUBLON;
+    eventType = "R\u00E9-t\u00E9l\u00E9chargement (existant)";
+  }
 
   if (downloadSheet) {
     try {
-      if (downloadSheet.getLastColumn() < 13) {
-        downloadSheet.getRange(1, 12, 1, 2).setValues([["Nom DJ / Artiste", "Ville / Pays"]]);
-        downloadSheet.getRange(1, 12, 1, 2).setBackground("#0F172A").setFontColor("#00F0FF").setFontWeight("bold");
+      if (downloadSheet.getLastColumn() < 16) {
+        var curCols = downloadSheet.getLastColumn();
+        if (curCols < 13) {
+          downloadSheet.getRange(1, 12, 1, 2).setValues([["Nom DJ / Artiste", "Ville / Pays"]]);
+        }
+        downloadSheet.getRange(1, 14, 1, 3).setValues([["ID Appareil / Client ID", "Statut Utilisateur", "Mod\u00E8le Appareil"]]);
+        downloadSheet.getRange(1, 12, 1, 5).setBackground("#0F172A").setFontColor("#00F0FF").setFontWeight("bold");
       }
     } catch(eCol) {}
 
     downloadSheet.appendRow([
-      now, platform, file, version, eventType, location, siteLang, browserLang, resolution, referrer, userAgent, djName, djCity
+      now, platform, file, version, eventType, location, siteLang, browserLang, resolution, referrer, userAgent, djName, djCity, deviceId, userStatus, deviceModel
     ]);
   }
 
-  // Notification par e-mail a REVR si un DJ a renseigne son nom ou sa ville
-  if (djName || djCity) {
+  // Notification par e-mail a REVR uniquement si c'est un premier telechargement unique
+  if (isFirstForUser && (djName || djCity)) {
     try {
       var ownerEmail = Session.getEffectiveUser().getEmail();
       if (ownerEmail && ownerEmail.indexOf("@") !== -1) {
         MailApp.sendEmail({
           to: ownerEmail,
           subject: "\uD83C\uDFA7 Nouveau t\u00E9l\u00E9chargement Recall : " + (djName || "DJ") + (djCity ? " (" + djCity + ")" : ""),
-          body: "Salut REVR,\n\nUn DJ vient de t\u00E9l\u00E9charger Recall (" + platform + ") :\n\n" +
+          body: "Salut REVR,\n\nUn DJ vient de t\u00E9l\u00E9charger Recall pour la 1\u00E8re fois (" + platform + ") :\n\n" +
                 "\u2022 Nom DJ / Artiste : " + (djName || "Non pr\u00E9cis\u00E9") + "\n" +
                 "\u2022 Ville / Pays : " + (djCity || "Non pr\u00E9cis\u00E9") + "\n" +
+                "\u2022 Appareil : " + (deviceModel || "Standard") + " (ID: " + deviceId + ")\n" +
                 "\u2022 Plateforme : " + platform + "\n" +
                 "\u2022 Fichier : " + file + "\n" +
                 "\u2022 Emplacement : " + location + "\n" +
@@ -693,7 +825,10 @@ function handleRequest(params) {
     status: "success",
     timestamp: now.toISOString(),
     platform: platform,
-    file: file
+    file: file,
+    isUnique: isFirstForUser,
+    userStatus: userStatus,
+    deviceId: deviceId
   };
 
   return ContentService.createTextOutput(JSON.stringify(dlOut))

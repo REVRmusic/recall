@@ -657,6 +657,9 @@
 
     .tag-direct { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
     .tag-intent { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+    .tag-unique { background: rgba(0, 240, 255, 0.15); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.35); }
+    .tag-repeat { background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.35); }
+    .device-pill { font-family: var(--font-mono); font-size: 0.73rem; color: #94a3b8; background: rgba(255, 255, 255, 0.04); padding: 2px 6px; border-radius: 4px; display: inline-block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
 
     .empty-state {
       padding: 48px 20px;
@@ -1059,13 +1062,13 @@
     <section class="kpi-grid">
       <div class="kpi-card" style="--card-accent: #00f0ff;">
         <div class="kpi-header">
-          <span class="kpi-label">Téléchargements Réels</span>
+          <span class="kpi-label">Téléchargements Uniques</span>
           <span class="kpi-icon">🚀</span>
         </div>
         <div class="kpi-value" id="kpi-total-dl">0</div>
         <div class="kpi-sub">
-          <span class="kpi-badge badge-cyan" id="kpi-dl-ratio">100% install</span>
-          <span>Fichiers DMG & ZIP</span>
+          <span class="kpi-badge badge-cyan" id="kpi-dl-ratio">1 par utilisateur</span>
+          <span id="kpi-dl-sub-text">Fichiers DMG & ZIP</span>
         </div>
       </div>
 
@@ -1157,6 +1160,7 @@
 
         <div class="filter-pills" id="filters-dl">
           <button class="filter-pill active" data-filter="all">Tous</button>
+          <button class="filter-pill" data-filter="unique_only">✨ Uniques uniquement</button>
           <button class="filter-pill" data-filter="djs_only">🎧 Avec Nom DJ / Ville</button>
           <button class="filter-pill" data-filter="macOS">🍎 macOS</button>
           <button class="filter-pill" data-filter="Windows">🪟 Windows</button>
@@ -1173,13 +1177,14 @@
                 <th>Ville / Pays</th>
                 <th>OS</th>
                 <th>Fichier</th>
-                <th>Type</th>
+                <th>Statut</th>
+                <th>Appareil / Empreinte</th>
                 <th>Emplacement</th>
               </tr>
             </thead>
             <tbody id="tbody-downloads">
               <tr>
-                <td colspan="7" class="empty-state">
+                <td colspan="8" class="empty-state">
                   <div class="empty-icon">⏳</div>
                   <div>Chargement des téléchargements en cours...</div>
                 </td>
@@ -1483,30 +1488,55 @@
         const localDl = JSON.parse(localStorage.getItem("recall_downloads_history") || "[]");
         const localFb = JSON.parse(localStorage.getItem("recall_feedbacks_history") || "[]");
 
-        let totalDl = 0, macDl = 0, winDl = 0, djsCount = 0;
+        let totalDl = 0, macDl = 0, winDl = 0, djsCount = 0, rawDl = 0, intentsCount = 0;
         const downloads = [];
         const djs = [];
+        const seenUsers = new Set();
 
-        localDl.reverse().forEach(item => {
+        // 1ère passe : identifier les téléchargements uniques chronologiquement
+        localDl.forEach(item => {
           const pl = item.platform || "macOS";
           const dj = item.dj_name || "";
           const city = item.dj_city || "";
-          totalDl++;
-          if (pl.toLowerCase().includes("mac")) macDl++;
-          if (pl.toLowerCase().includes("win")) winDl++;
+          const devId = item.device_id || "";
+          const devModel = item.device_name || "";
+          const ev = item.event || "Téléchargement direct";
+          const isDirect = (ev.toLowerCase().includes("direct") || ev.toLowerCase().includes("unique") || !ev.toLowerCase().includes("intention"));
+
+          const userKey = devId || (dj && dj.toLowerCase() !== "anonyme" ? "dj:" + dj.toLowerCase() : "") || ((item.ua || "") + "_" + (item.resolution || ""));
+
+          let isUnique = false;
+          if (isDirect) {
+            rawDl++;
+            if (!seenUsers.has(userKey)) {
+              seenUsers.add(userKey);
+              isUnique = true;
+              totalDl++;
+              if (pl.toLowerCase().includes("mac")) macDl++;
+              if (pl.toLowerCase().includes("win")) winDl++;
+            }
+          } else {
+            intentsCount++;
+          }
+
           if (dj || city) {
             djsCount++;
-            djs.push({ djName: dj || "Anonyme", djCity: city || "-", platform: pl, date: item.date || "" });
+            djs.push({ djName: dj || "Anonyme", djCity: city || "-", platform: pl, date: item.date || "", isUnique: isUnique });
           }
-          downloads.push({
+
+          downloads.unshift({
             date: item.date || "",
             platform: pl,
             file: item.file || "",
             version: item.version || "1.0.5",
-            eventType: item.event || "Téléchargement direct",
+            eventType: ev,
             location: item.location || "",
             djName: dj,
-            djCity: city
+            djCity: city,
+            deviceId: devId || "Empreinte locale",
+            deviceModel: devModel || "Navigateur Web",
+            statusUser: isUnique ? "Unique (1er Téléchargement)" : (isDirect ? "Ré-téléchargement (Doublon filtré)" : "Intention"),
+            isUnique: isUnique
           });
         });
 
@@ -1524,11 +1554,12 @@
         if (downloads.length === 0) {
           // Jeu de données d'amorçage pour démonstration si l'historique local du navigateur est vierge
           const seedDownloads = [
-            { date: "2026-10-20 01:45:12", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Téléchargement direct", location: "Hero Principal", djName: "DJ Shadow", djCity: "San Francisco, USA" },
-            { date: "2026-10-20 01:12:04", platform: "Windows", file: "Recall-Windows.zip", version: "1.0.5", eventType: "Téléchargement direct", location: "Carte Windows", djName: "Laurent G.", djCity: "Paris (France)" },
-            { date: "2026-10-19 23:30:19", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Téléchargement direct", location: "Hero Principal", djName: "Carl Cox Tribute", djCity: "Manchester, UK" },
-            { date: "2026-10-19 22:15:45", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Téléchargement direct", location: "Hero Principal", djName: "DJ Snake Fan", djCity: "Lyon" },
-            { date: "2026-10-19 21:05:00", platform: "Windows", file: "Recall-Windows.zip", version: "1.0.5", eventType: "Téléchargement direct", location: "Carte Windows", djName: "Boris Brejcha Style", djCity: "Berlin" }
+            { date: "2026-10-20 01:45:12", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Téléchargement direct", location: "Hero Principal", djName: "DJ Shadow", djCity: "San Francisco, USA", deviceId: "rc_dev_demo_01", deviceModel: "Mac (Apple Silicon)", statusUser: "Unique (1er Téléchargement)", isUnique: true },
+            { date: "2026-10-20 01:12:04", platform: "Windows", file: "Recall-Windows.zip", version: "1.0.5", eventType: "Téléchargement direct", location: "Carte Windows", djName: "Laurent G.", djCity: "Paris (France)", deviceId: "rc_dev_demo_02", deviceModel: "PC Windows 11", statusUser: "Unique (1er Téléchargement)", isUnique: true },
+            { date: "2026-10-19 23:45:10", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Ré-téléchargement (existant)", location: "Hero Principal", djName: "DJ Shadow", djCity: "San Francisco, USA", deviceId: "rc_dev_demo_01", deviceModel: "Mac (Apple Silicon)", statusUser: "Ré-téléchargement (Doublon filtré)", isUnique: false },
+            { date: "2026-10-19 23:30:19", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Téléchargement direct", location: "Hero Principal", djName: "Carl Cox Tribute", djCity: "Manchester, UK", deviceId: "rc_dev_demo_03", deviceModel: "Mac (Apple Silicon)", statusUser: "Unique (1er Téléchargement)", isUnique: true },
+            { date: "2026-10-19 22:15:45", platform: "macOS", file: "Recall.dmg", version: "1.0.5", eventType: "Téléchargement direct", location: "Hero Principal", djName: "DJ Snake Fan", djCity: "Lyon", deviceId: "rc_dev_demo_04", deviceModel: "Mac Intel (x86_64)", statusUser: "Unique (1er Téléchargement)", isUnique: true },
+            { date: "2026-10-19 21:05:00", platform: "Windows", file: "Recall-Windows.zip", version: "1.0.5", eventType: "Téléchargement direct", location: "Carte Windows", djName: "Boris Brejcha Style", djCity: "Berlin", deviceId: "rc_dev_demo_05", deviceModel: "PC Windows 10", statusUser: "Unique (1er Téléchargement)", isUnique: true }
           ];
           const seedFeedbacks = [
             { date: "2026-10-20 01:30:00", category: "Suggestion d'amélioration", message: "Serait-il possible d'ajouter un filtre par tonalité spécifique dans l'onglet Sélec ?", author: "DJ Alex", email: "alex@example.com", software: "Serato DJ Pro", source: "App macOS", version: "1.0.5" },
@@ -1537,29 +1568,36 @@
           ];
           state.data = {
             stats: {
-              totalDownloads: 24,
-              macOS: 22,
+              totalDownloads: 5,
+              totalUniqueUsers: 5,
+              totalRawDownloads: 6,
+              duplicatesFiltered: 1,
+              macOS: 3,
               windows: 2,
               intents: 1,
-              totalEvents: 27,
+              totalEvents: 7,
               djsCount: 5,
               feedbacksCount: 3
             },
             downloads: seedDownloads,
-            djs: seedDownloads.map(d => ({ djName: d.djName, djCity: d.djCity, platform: d.platform, date: d.date })),
+            djs: seedDownloads.filter(d => d.isUnique).map(d => ({ djName: d.djName, djCity: d.djCity, platform: d.platform, date: d.date })),
             feedbacks: seedFeedbacks
           };
           renderAll();
           return;
         }
 
+        const duplicates = Math.max(0, rawDl - totalDl);
         state.data = {
           stats: {
             totalDownloads: totalDl,
+            totalUniqueUsers: totalDl,
+            totalRawDownloads: rawDl,
+            duplicatesFiltered: duplicates,
             macOS: macDl,
             windows: winDl,
-            intents: 0,
-            totalEvents: totalDl,
+            intents: intentsCount,
+            totalEvents: rawDl + intentsCount,
             djsCount: djsCount,
             feedbacksCount: feedbacks.length
           },
@@ -1583,7 +1621,9 @@
 
     function renderKPIs() {
       const stats = state.data.stats || {};
-      const total = stats.totalDownloads || 0;
+      const total = stats.totalDownloads || stats.totalUniqueUsers || 0;
+      const rawDl = stats.totalRawDownloads || total;
+      const duplicates = stats.duplicatesFiltered || Math.max(0, rawDl - total);
       const mac = stats.macOS || 0;
       const win = stats.windows || 0;
       const djs = stats.djsCount || 0;
@@ -1598,6 +1638,16 @@
       document.getElementById("kpi-fb-count").textContent = fbs.toLocaleString();
       document.getElementById("kpi-intents-count").textContent = intents.toLocaleString();
       document.getElementById("kpi-events-total").textContent = `Total événements : ${allEv}`;
+
+      const subDlText = document.getElementById("kpi-dl-sub-text");
+      if (subDlText) {
+        if (duplicates > 0) {
+          subDlText.textContent = `+${duplicates} doublon${duplicates > 1 ? "s" : ""} filtré${duplicates > 1 ? "s" : ""}`;
+          subDlText.title = `${rawDl} clics de téléchargement bruts au total, dédoublonnés à 1 par utilisateur`;
+        } else {
+          subDlText.textContent = `Fichiers DMG & ZIP`;
+        }
+      }
 
       const macPct = total > 0 ? Math.round((mac / total) * 100) : 0;
       const winPct = total > 0 ? Math.round((win / total) * 100) : 0;
@@ -1618,6 +1668,7 @@
       // Filtrage
       const filtered = list.filter(item => {
         // Filtre catégorie
+        if (state.filterDl === "unique_only" && !item.isUnique) return false;
         if (state.filterDl === "djs_only" && !item.djName && !item.djCity) return false;
         if (state.filterDl === "macOS" && !item.platform.toLowerCase().includes("mac")) return false;
         if (state.filterDl === "Windows" && !item.platform.toLowerCase().includes("win")) return false;
@@ -1630,7 +1681,9 @@
           const matchPl = (item.platform || "").toLowerCase().includes(q);
           const matchLoc = (item.location || "").toLowerCase().includes(q);
           const matchFile = (item.file || "").toLowerCase().includes(q);
-          if (!matchDj && !matchCity && !matchPl && !matchLoc && !matchFile) return false;
+          const matchDev = (item.deviceId || "").toLowerCase().includes(q) || (item.deviceModel || "").toLowerCase().includes(q);
+          const matchStatus = (item.statusUser || "").toLowerCase().includes(q);
+          if (!matchDj && !matchCity && !matchPl && !matchLoc && !matchFile && !matchDev && !matchStatus) return false;
         }
 
         return true;
@@ -1639,7 +1692,7 @@
       if (filtered.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" class="empty-state">
+            <td colspan="8" class="empty-state">
               <div class="empty-icon">🎧</div>
               <div>Aucun téléchargement ne correspond aux filtres sélectionnés.</div>
             </td>
@@ -1653,7 +1706,17 @@
         const osClass = isMac ? "os-mac" : "os-win";
         const osIcon = isMac ? "🍎 macOS" : "🪟 Windows";
         const isDirect = (item.eventType || "").toLowerCase().includes("direct") || !(item.eventType || "").toLowerCase().includes("intention");
-        const tagClass = isDirect ? "tag-direct" : "tag-intent";
+
+        let statusBadge = "";
+        if ((item.statusUser || "").startsWith("Ignor")) {
+          statusBadge = `<span class="tag-pill tag-repeat" title="Requête sans navigateur (ancienne console admin) : jamais comptée">🚫 Ignoré</span>`;
+        } else if (!isDirect) {
+          statusBadge = `<span class="tag-pill tag-intent">🎯 Intention</span>`;
+        } else if (item.isUnique) {
+          statusBadge = `<span class="tag-pill tag-unique" title="Premier téléchargement enregistré pour cet utilisateur">✨ Unique (1er DL)</span>`;
+        } else {
+          statusBadge = `<span class="tag-pill tag-repeat" title="Téléchargement répété / déjà comptabilisé dans les métriques">🔄 Ré-téléchargement</span>`;
+        }
 
         const djBadge = item.djName 
           ? `<span class="dj-badge-active">🎧 ${escapeHtml(item.djName)}</span>`
@@ -1663,6 +1726,10 @@
           ? `<span class="dj-city-badge">📍 ${escapeHtml(item.djCity)}</span>`
           : `<span style="color: var(--text-dim);">-</span>`;
 
+        const devDisplay = item.deviceModel || item.deviceId || "Inconnu";
+        const devTooltip = `ID: ${item.deviceId || 'Inconnu'}${item.deviceModel ? ' | Modèle: ' + item.deviceModel : ''}`;
+        const deviceBadge = `<span class="device-pill" title="${escapeHtml(devTooltip)}">💻 ${escapeHtml(devDisplay)}</span>`;
+
         return `
           <tr>
             <td style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim);">${escapeHtml(item.date || "-")}</td>
@@ -1670,7 +1737,8 @@
             <td>${cityBadge}</td>
             <td><span class="os-badge ${osClass}">${osIcon}</span></td>
             <td style="font-family: var(--font-mono); font-size: 0.8rem;">${escapeHtml(item.file || "-")}</td>
-            <td><span class="tag-pill ${tagClass}">${escapeHtml(item.eventType || "Téléchargement")}</span></td>
+            <td>${statusBadge}</td>
+            <td>${deviceBadge}</td>
             <td style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(item.location || "-")}</td>
           </tr>
         `;

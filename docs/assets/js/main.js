@@ -917,10 +917,90 @@ function initMockupTabs() {
 }
 
 // ==========================================================================
-// Tracker de Téléchargements Google Sheets
+// Tracker de Téléchargements Google Sheets & Identification d'Appareil Unique
 // ==========================================================================
 let lastDownloadTrackerTime = 0;
 let lastDownloadTrackerFile = "";
+
+function getCookie(name) {
+  try {
+    const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+    return match ? decodeURIComponent(match[3]) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setCookie(name, value, days = 3650) {
+  try {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+  } catch (e) {}
+}
+
+function getOrCreateDeviceId() {
+  let deviceId = "";
+  try {
+    deviceId = localStorage.getItem("recall_device_id") || getCookie("recall_device_id") || "";
+  } catch (e) {}
+
+  if (!deviceId) {
+    const rand = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 6);
+    deviceId = "rc_dev_" + Date.now().toString(36) + "_" + rand;
+  }
+
+  try {
+    localStorage.setItem("recall_device_id", deviceId);
+    setCookie("recall_device_id", deviceId);
+  } catch (e) {}
+
+  return deviceId;
+}
+
+function getDeviceModelInfo() {
+  const ua = navigator.userAgent || "";
+  let osName = "Inconnu";
+  if (/Macintosh|Mac OS X/i.test(ua)) {
+    osName = "Mac";
+  } else if (/Windows NT 10.0/i.test(ua)) {
+    osName = "Windows 10/11";
+  } else if (/Windows/i.test(ua)) {
+    osName = "Windows PC";
+  } else if (/iPhone/i.test(ua)) {
+    osName = "iPhone";
+  } else if (/iPad/i.test(ua)) {
+    osName = "iPad";
+  } else if (/Android/i.test(ua)) {
+    osName = "Android";
+  } else if (/Linux/i.test(ua)) {
+    osName = "Linux";
+  }
+
+  const res = `${window.screen.width}x${window.screen.height}`;
+  const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency}c` : "";
+  return `${osName} (${res}${cores ? " • " + cores : ""})`;
+}
+
+function hasDeviceAlreadyDownloaded() {
+  try {
+    if (localStorage.getItem("recall_has_downloaded") === "true") return true;
+    if (getCookie("recall_has_downloaded") === "true") return true;
+    // Visiteurs ayant téléchargé avant l'ajout du marqueur
+    if (parseInt(localStorage.getItem("recall_downloads_count") || "0", 10) > 0) return true;
+  } catch (e) {}
+  return false;
+}
+
+function markDeviceAsDownloaded() {
+  try {
+    localStorage.setItem("recall_has_downloaded", "true");
+    if (!localStorage.getItem("recall_first_download_date")) {
+      localStorage.setItem("recall_first_download_date", new Date().toISOString());
+    }
+    setCookie("recall_has_downloaded", "true");
+  } catch (e) {}
+}
 
 function sendDownloadEvent(eventData) {
   const now = Date.now();
@@ -934,6 +1014,26 @@ function sendDownloadEvent(eventData) {
   lastDownloadTrackerTime = now;
   lastDownloadTrackerFile = file;
 
+  const deviceId = getOrCreateDeviceId();
+  const deviceModel = getDeviceModelInfo();
+  const isDirectDownload = eventData.event !== "Intention Téléchargement" && !eventData.is_intent;
+  const isFirstForDevice = !hasDeviceAlreadyDownloaded();
+
+  let eventLabel = "Téléchargement direct";
+  let isUnique = isFirstForDevice;
+
+  if (isDirectDownload) {
+    if (isFirstForDevice) {
+      eventLabel = "Téléchargement unique (1er)";
+      markDeviceAsDownloaded();
+    } else {
+      eventLabel = "Ré-téléchargement (existant)";
+      isUnique = false;
+    }
+  } else {
+    eventLabel = eventData.event || "Intention Téléchargement";
+  }
+
   const url = localStorage.getItem("recall_tracker_url") || 
               (new URLSearchParams(window.location.search)).get("tracker_url") || 
               GOOGLE_SHEET_TRACKER_URL;
@@ -942,7 +1042,7 @@ function sendDownloadEvent(eventData) {
     platform: eventData.platform || "macOS",
     file: file,
     version: "1.0.5",
-    event: "Téléchargement direct",
+    event: eventLabel,
     location: eventData.location || "Section Téléchargement",
     site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
     browser_lang: navigator.language || "",
@@ -950,15 +1050,32 @@ function sendDownloadEvent(eventData) {
     referrer: document.referrer || "Direct",
     ua: navigator.userAgent,
     dj_name: eventData.dj_name || "",
-    dj_city: eventData.dj_city || ""
+    dj_city: eventData.dj_city || "",
+    device_id: deviceId,
+    device_name: deviceModel,
+    is_unique: isUnique ? "1" : "0",
+    is_redownload: isFirstForDevice ? "0" : "1"
   };
 
-  // 1. Sauvegarde locale immédiate (utile pour tests / debug)
+  // 1. Sauvegarde locale immédiate (1 seul téléchargement par utilisateur/appareil)
   try {
-    const localCount = parseInt(localStorage.getItem("recall_downloads_count") || "0", 10) + 1;
-    localStorage.setItem("recall_downloads_count", localCount.toString());
+    let localCount = parseInt(localStorage.getItem("recall_downloads_count") || "0", 10);
+    if (isDirectDownload) {
+      if (isFirstForDevice || localCount === 0) {
+        localCount = 1; // 1 seul compte par utilisateur
+        localStorage.setItem("recall_downloads_count", localCount.toString());
+      }
+      // En cas de ré-téléchargement, le compteur local reste à 1 !
+    }
+
     const history = JSON.parse(localStorage.getItem("recall_downloads_history") || "[]");
-    history.push({ date: new Date().toISOString(), ...payload });
+    history.push({
+      date: new Date().toISOString(),
+      device_id: deviceId,
+      device_name: deviceModel,
+      is_unique: isUnique,
+      ...payload
+    });
     localStorage.setItem("recall_downloads_history", JSON.stringify(history.slice(-50)));
   } catch (e) {}
 
@@ -1591,7 +1708,7 @@ function loadDownloadStats() {
   if (!url || url.includes("VOTRE_ID_GOOGLE_SCRIPT_ICI")) {
     const local = parseInt(localStorage.getItem("recall_downloads_count") || "0", 10);
     if (local > 0) {
-      counterText.textContent = `${local} téléchargement${local > 1 ? "s" : ""} enregistré${local > 1 ? "s" : ""} (local)`;
+      counterText.textContent = `${local} téléchargement unique enregistré (local)`;
       counterBox.style.display = "inline-flex";
     }
     return;
@@ -1604,8 +1721,8 @@ function loadDownloadStats() {
         const count = data.totalDownloads;
         if (count > 0) {
           const msg = (typeof currentLang !== "undefined" && currentLang === "en")
-            ? `${count} download${count > 1 ? "s" : ""} on macOS & Windows`
-            : `${count} téléchargement${count > 1 ? "s" : ""} sur macOS & Windows`;
+            ? `${count} unique download${count > 1 ? "s" : ""} on macOS & Windows`
+            : `${count} téléchargement${count > 1 ? "s" : ""} unique${count > 1 ? "s" : ""} sur macOS & Windows`;
           counterText.textContent = msg;
           counterBox.style.display = "inline-flex";
         }
