@@ -47,7 +47,7 @@ namespace Recall.Services
         private static AutoUpdateService? _shared;
         public static AutoUpdateService Shared => _shared ??= new AutoUpdateService();
 
-        public const string CurrentAppVersion = "1.0.8";
+        public const string CurrentAppVersion = "1.0.9";
         public string Version => CurrentAppVersion;
 
         private const string RepoApiUrl = "https://api.github.com/repos/REVRmusic/recall/releases/latest";

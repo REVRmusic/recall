@@ -1,10 +1,10 @@
-# 🎧 Recall v1.0.8 — Mise à Jour Automatique 1-Clic & Compagnon Téléphone Live
+# 🎧 Recall v1.0.9 — Mise à Jour Automatique 1-Clic & Compagnon Téléphone Live
 
-Cette version **v1.0.8** apporte l'**installation automatique en 1 clic des mises à jour** (sans passer par le navigateur ni blocage Gatekeeper macOS) ainsi que le **Compagnon Téléphone Live** (Wi‑Fi local / Hotspot sans Internet).
+Cette version **v1.0.9** apporte l'**installation automatique en 1 clic des mises à jour** (sans passer par le navigateur ni blocage Gatekeeper macOS) ainsi que le **Compagnon Téléphone Live** (Wi‑Fi local / Hotspot sans Internet).
 
 ---
 
-### 🌟 Nouveautés v1.0.8
+### 🌟 Nouveautés v1.0.9
 
 #### ⚡ Mise à jour automatique en 1 clic (macOS & Windows)
 - **Installation directe intégrée** : cliquer sur **« Installer et relancer »** télécharge l'application en tâche de fond avec barre de progression, remplace automatiquement `/Applications/Recall.app` et relance Recall.

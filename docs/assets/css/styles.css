@@ -62,6 +62,9 @@ html {
   background-color: var(--bg-deep);
   color: var(--text-main);
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -70,6 +73,8 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
+  max-width: 100%;
+  overscroll-behavior-x: none;
   position: relative;
   background-image: 
     radial-gradient(circle at 15% 10%, rgba(0, 210, 255, 0.08) 0%, transparent 40%),
@@ -2097,15 +2102,36 @@ img {
 
 @media (max-width: 768px) {
   .mockup-tabs-bar {
-    justify-content: flex-start;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
+    justify-content: center;
+    overflow-x: visible;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 4px;
   }
   .mockup-tab-btn {
     white-space: nowrap;
+    flex-shrink: 1;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+  .mockup-chrome-bar {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .mockup-chrome-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+  }
+  .mockup-chrome-badge {
     flex-shrink: 0;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+  .mockup-media-stage {
+    min-height: 220px;
   }
   .mockup-caption-overlay {
     position: static;
@@ -2163,7 +2189,7 @@ img {
 
 .problem-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 24px;
 }
 
@@ -2559,7 +2585,7 @@ img {
    ========================================================================== */
 .compat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 24px;
   margin-top: 40px;
 }
@@ -2682,7 +2708,7 @@ img {
 
 .download-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 30px;
   max-width: 900px;
   margin: 0 auto 50px auto;
@@ -2945,7 +2971,7 @@ img {
 
 .legal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 36px;
   margin-bottom: 30px;
 }
@@ -3126,12 +3152,21 @@ img {
   }
   
   .table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
   }
   
   .comp-table {
-    min-width: 620px;
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .comp-table th,
+  .comp-table td {
+    padding: 12px 10px;
+    font-size: 0.78rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
   
   .section {
@@ -3303,6 +3338,44 @@ img {
   .sim-caption-bar {
     padding: 10px 12px;
     font-size: 0.76rem;
+  }
+
+  .container {
+    padding: 0 14px;
+  }
+
+  .showcase-header {
+    padding: 10px 12px;
+  }
+
+  .showcase-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sim-mode-switcher {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sim-mode-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 5px 6px;
+    font-size: 0.7rem;
+  }
+
+  .recall-sim-filter-bar {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .sim-filters-group {
+    flex-wrap: wrap;
+  }
+
+  .download-card {
+    padding: 26px 18px;
   }
 }
 
