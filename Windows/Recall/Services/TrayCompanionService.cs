@@ -232,7 +232,7 @@ namespace Recall.Services
             // 1. En-tête : Titre & Version
             var headerItem = new MenuItem
             {
-                Header = "Recall • Copilote DJ (v1.0.7)",
+                Header = "Recall • Copilote DJ (v1.0.8)",
                 IsEnabled = false,
                 FontWeight = FontWeights.Bold,
                 Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(20, 200, 176))

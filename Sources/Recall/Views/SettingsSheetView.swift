@@ -1268,9 +1268,9 @@ public struct SettingsSheetView: View {
                         Spacer()
                         
                         Button {
-                            autoUpdate.openDownload()
+                            UpdateWindowController.shared.showAndInstall()
                         } label: {
-                            Text("Télécharger (DMG)")
+                            Text(autoUpdate.isInstalling ? "Installation…" : "Installer et relancer")
                                 .font(.system(size: 10, weight: .heavy))
                                 .foregroundColor(.black)
                                 .padding(.horizontal, 10)

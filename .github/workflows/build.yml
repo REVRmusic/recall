@@ -24,9 +24,6 @@ jobs:
       run: |
         chmod +x build.sh
         ./build.sh --dmg
-        cd build
-        rm -f Recall-macOS.zip
-        zip -r -y Recall-macOS.zip Recall.app
 
     - name: Upload macOS DMG Artifact
       uses: actions/upload-artifact@v4
@@ -108,7 +105,7 @@ jobs:
           release-assets/Recall-macOS.zip
           release-assets/Recall-Windows-x64.zip
           release-assets/Recall.exe
-        name: Recall ${{ github.ref_name }} — Compagnon Téléphone Live
+        name: Recall ${{ github.ref_name }} — Auto-Update 1-Clic & Compagnon Téléphone Live
         body_path: .github/release-notes.md
         draft: false
         prerelease: false

@@ -87,8 +87,22 @@ public class UpdateWindowController: NSWindowController, NSWindowDelegate, Obser
         NSApp.activate(ignoringOtherApps: true)
         isVisible = true
         
-        // Déclenchement automatique de la recherche
-        AutoUpdateService.shared.checkForUpdatesManually()
+        // Déclenchement automatique de la recherche si aucune installation ou mise à jour n'est déjà prête
+        if !AutoUpdateService.shared.isInstalling && !AutoUpdateService.shared.isUpdateAvailable {
+            AutoUpdateService.shared.checkForUpdatesManually()
+        }
+    }
+    
+    /// Ouvre la fenêtre de mise à jour et démarre immédiatement l'installation automatique en 1 clic
+    public func showAndInstall() {
+        guard let panel = window else { return }
+        
+        panel.center()
+        panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        isVisible = true
+        
+        AutoUpdateService.shared.installUpdate()
     }
     
     public func closeWindow() {

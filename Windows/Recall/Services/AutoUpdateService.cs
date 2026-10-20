@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.NetworkInformation;
@@ -45,7 +47,7 @@ namespace Recall.Services
         private static AutoUpdateService? _shared;
         public static AutoUpdateService Shared => _shared ??= new AutoUpdateService();
 
-        public const string CurrentAppVersion = "1.0.7";
+        public const string CurrentAppVersion = "1.0.8";
         public string Version => CurrentAppVersion;
 
         private const string RepoApiUrl = "https://api.github.com/repos/REVRmusic/recall/releases/latest";
@@ -171,6 +173,94 @@ namespace Recall.Services
             catch (Exception ex)
             {
                 return (false, false, "", "", $"Erreur de vérification : {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Télécharge automatiquement Recall-Windows.zip, extrait le nouvel exécutable,
+        /// remplace Recall.exe en place et relance l'application.
+        /// </summary>
+        public async Task<(bool success, string message)> InstallUpdateAndRestartAsync(IProgress<string>? statusProgress = null)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(DownloadUrl) || !DownloadUrl.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    OpenDownloadInBrowser();
+                    return (true, "Ouverture du téléchargement dans le navigateur...");
+                }
+
+                statusProgress?.Report($"Téléchargement de Recall {AvailableVersion} en cours...");
+
+                var workDir = Path.Combine(Path.GetTempPath(), "RecallUpdate-" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(workDir);
+                var zipPath = Path.Combine(workDir, "Recall-Windows.zip");
+                var extractDir = Path.Combine(workDir, "extracted");
+
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromMinutes(3);
+                    client.DefaultRequestHeaders.Add("User-Agent", $"Recall-Windows/{CurrentAppVersion}");
+                    using var response = await client.GetAsync(DownloadUrl, HttpCompletionOption.ResponseHeadersRead);
+                    response.EnsureSuccessStatusCode();
+                    await using var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    await response.Content.CopyToAsync(fs);
+                }
+
+                statusProgress?.Report("Extraction et vérification de la mise à jour...");
+                ZipFile.ExtractToDirectory(zipPath, extractDir, true);
+
+                var newExePath = Directory.GetFiles(extractDir, "Recall.exe", SearchOption.AllDirectories).FirstOrDefault();
+                if (string.IsNullOrEmpty(newExePath) || !File.Exists(newExePath))
+                {
+                    return (false, "Fichier Recall.exe introuvable dans l'archive téléchargée.");
+                }
+
+                var currentExePath = Process.GetCurrentProcess().MainModule?.FileName;
+                if (string.IsNullOrEmpty(currentExePath))
+                {
+                    OpenDownloadInBrowser();
+                    return (false, "Impossible de déterminer l'emplacement actuel de Recall.exe.");
+                }
+
+                var pid = Environment.ProcessId;
+                var batPath = Path.Combine(workDir, "install_update.bat");
+                var batContent = $@"@echo off
+timeout /t 1 /nobreak >nul
+:waitloop
+tasklist /FI ""PID eq {pid}"" 2>NUL | find /I ""{pid}"" >NUL
+if ""%ERRORLEVEL%""==""0"" (
+    timeout /t 1 /nobreak >nul
+    goto waitloop
+)
+copy /Y ""{newExePath}"" ""{currentExePath}"" >nul
+start """" ""{currentExePath}""
+rmdir /S /Q ""{workDir}"" 2>nul
+";
+                await File.WriteAllTextAsync(batPath, batContent);
+
+                statusProgress?.Report("Redémarrage de Recall...");
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/C \"{batPath}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                });
+
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    Application.Current.Shutdown();
+                });
+
+                return (true, "Redémarrage en cours...");
+            }
+            catch (Exception ex)
+            {
+                OpenDownloadInBrowser();
+                return (false, $"Installation automatique impossible ({ex.Message}). Téléchargement ouvert dans le navigateur.");
             }
         }
 

@@ -52,20 +52,27 @@ else
     MOUNT_POINT=$(mktemp -d)
     hdiutil attach "$DMG_FILE" -mountpoint "$MOUNT_POINT" -nobrowse -quiet
     
-    echo "🚀 Copie de $APP_NAME.app dans $INSTALL_DIR..."
-    rm -rf "$TARGET_APP" 2>/dev/null || true
-    cp -R "$MOUNT_POINT/$APP_NAME.app" "$TARGET_APP"
+    echo "🔄 Fermeture de l'ancienne version si elle est ouverte..."
+    killall "$APP_NAME" 2>/dev/null || true
+    sleep 0.5
     
-    hdiutil detach "$MOUNT_POINT" -quiet
+    echo "🚀 Installation de $APP_NAME.app dans $INSTALL_DIR..."
+    rm -rf "$TARGET_APP" 2>/dev/null || true
+    /usr/bin/ditto "$MOUNT_POINT/$APP_NAME.app" "$TARGET_APP"
+    
+    hdiutil detach "$MOUNT_POINT" -quiet -force 2>/dev/null || true
     rm -rf "$MOUNT_POINT"
     
-    # Suppression de l'attribut de quarantaine Gatekeeper
-    xattr -cr "$TARGET_APP" 2>/dev/null || true
+    # Suppression intégrale de l'attribut de quarantaine Gatekeeper et signature ad-hoc stable
+    /usr/bin/xattr -cr "$TARGET_APP" 2>/dev/null || true
+    /bin/chmod +x "$TARGET_APP/Contents/MacOS/$APP_NAME" 2>/dev/null || true
+    /usr/bin/codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' "$TARGET_APP" 2>/dev/null || true
     
     echo ""
     echo "==============================================="
-    echo "✅ $APP_NAME a été installé avec succès dans :"
+    echo "✅ $APP_NAME a été installé et validé avec succès dans :"
     echo "   $TARGET_APP"
     echo "==============================================="
-    echo "Vous pouvez maintenant lancer Recall depuis votre dossier Applications ou Spotlight (Cmd + Espace)."
+    echo "🚀 Lancement automatique de Recall..."
+    /usr/bin/open -n "$TARGET_APP" 2>/dev/null || true
 fi

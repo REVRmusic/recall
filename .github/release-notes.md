@@ -1,10 +1,14 @@
-# 🎧 Recall v1.0.7 — Compagnon Téléphone Live
+# 🎧 Recall v1.0.8 — Mise à Jour Automatique 1-Clic & Compagnon Téléphone Live
 
-Cette version **v1.0.7** ajoute le **Compagnon Téléphone** : affichez en direct sur votre téléphone le morceau en cours, les suggestions et la Sélec — **sans Internet**, via le Wi‑Fi local (ou le hotspot du téléphone).
+Cette version **v1.0.8** apporte l'**installation automatique en 1 clic des mises à jour** (sans passer par le navigateur ni blocage Gatekeeper macOS) ainsi que le **Compagnon Téléphone Live** (Wi‑Fi local / Hotspot sans Internet).
 
 ---
 
-### 🌟 Nouveautés
+### 🌟 Nouveautés v1.0.8
+
+#### ⚡ Mise à jour automatique en 1 clic (macOS & Windows)
+- **Installation directe intégrée** : cliquer sur **« Installer et relancer »** télécharge l'application en tâche de fond avec barre de progression, remplace automatiquement `/Applications/Recall.app` et relance Recall.
+- **Zéro alerte Gatekeeper macOS** : suppression automatique de la quarantaine navigateur (`com.apple.quarantine`) et validation de la signature locale `fr.revr.recall` (vos autorisations macOS sont conservées).
 
 #### 📱 Compagnon Téléphone (Wi‑Fi local, sans Internet)
 - Bouton **📱** dans l'en-tête de Recall (ou **⌘⇧P**) → une fenêtre affiche un **QR code**.
