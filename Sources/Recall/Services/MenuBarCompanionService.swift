@@ -205,6 +205,16 @@ public final class MenuBarCompanionService: NSObject, NSMenuDelegate, Observable
         tracklistItem.target = self
         menu.addItem(tracklistItem)
         
+        let phoneClients = PhoneCompanionService.shared.connectedClients
+        let phoneTitle = phoneClients > 0
+            ? "Compagnon Téléphone (\(phoneClients) connecté\(phoneClients > 1 ? "s" : ""))…"
+            : "Compagnon Téléphone (QR code)…"
+        let phoneItem = NSMenuItem(title: phoneTitle, action: #selector(openPhoneCompanionAction), keyEquivalent: "P")
+        phoneItem.keyEquivalentModifierMask = [.command, .shift]
+        phoneItem.target = self
+        phoneItem.state = PhoneCompanionService.shared.isRunning ? .on : .off
+        menu.addItem(phoneItem)
+        
         let resyncItem = NSMenuItem(title: "Resynchroniser avec le logiciel DJ", action: #selector(resyncAction), keyEquivalent: "r")
         resyncItem.target = self
         menu.addItem(resyncItem)
@@ -252,6 +262,10 @@ public final class MenuBarCompanionService: NSObject, NSMenuDelegate, Observable
     
     @objc private func openTracklistGeneratorAction() {
         TracklistGeneratorWindowController.shared.show()
+    }
+    
+    @objc private func openPhoneCompanionAction() {
+        PhoneCompanionWindowController.shared.show()
     }
     
     @objc private func resyncAction() {

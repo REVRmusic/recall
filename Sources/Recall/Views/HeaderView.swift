@@ -31,6 +31,9 @@ public struct HeaderView: View {
                 
                 // Bouton Statistiques du mix (Set Recap)
                 SetRecapHeaderButton()
+                
+                // Bouton Compagnon Téléphone (suggestions en direct sur mobile)
+                PhoneCompanionHeaderButton()
             }
             .fixedSize(horizontal: true, vertical: false)
             .padding(.leading, 1)
@@ -310,6 +313,55 @@ struct SetRecapHeaderButton: View {
         .focusable(false)
         .onHover { isHovered = $0 }
         .help("Statistiques du Mix (Set Recap) : durée, artistes, genres et tonalités")
+    }
+}
+
+/// Bouton d'ouverture du Compagnon Téléphone (QR code) avec indicateur de téléphones connectés
+struct PhoneCompanionHeaderButton: View {
+    @ObservedObject private var companionWindow = PhoneCompanionWindowController.shared
+    @ObservedObject private var companion = PhoneCompanionService.shared
+    @EnvironmentObject var settings: UserSettings
+    @State private var isHovered: Bool = false
+    
+    private var isActive: Bool { companionWindow.isVisible || companion.connectedClients > 0 }
+    
+    var body: some View {
+        Button {
+            companionWindow.toggle()
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                ZStack {
+                    Circle()
+                        .fill(isActive ? settings.accentColor.opacity(0.25) : Color.white.opacity(isHovered ? 0.08 : 0.04))
+                        .frame(width: 20, height: 20)
+                    
+                    Image(systemName: "iphone")
+                        .font(.system(size: 8.5, weight: .bold))
+                        .foregroundColor(isActive ? settings.accentColor : .white.opacity(isHovered ? 0.85 : 0.55))
+                }
+                .overlay(
+                    Circle()
+                        .stroke(
+                            isActive ? settings.accentColor.opacity(0.65) : Color.white.opacity(isHovered ? 0.15 : 0.08),
+                            lineWidth: 0.8
+                        )
+                )
+                
+                if companion.connectedClients > 0 {
+                    Circle()
+                        .fill(Color(hex: "#38EB61"))
+                        .frame(width: 6, height: 6)
+                        .overlay(Circle().stroke(Color.black.opacity(0.6), lineWidth: 1))
+                        .offset(x: 1, y: -1)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .onHover { isHovered = $0 }
+        .help(companion.connectedClients > 0 ?
+              "Compagnon Téléphone : \(companion.connectedClients) appareil(s) suivent vos suggestions en direct" :
+              "Compagnon Téléphone : afficher les suggestions en direct sur votre téléphone (QR code, sans Internet)")
     }
 }
 
