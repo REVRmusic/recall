@@ -151,6 +151,11 @@
           <span data-i18n="hero-other-os-text">Également disponible pour </span>
           <a href="#download" class="hero-other-os-link" id="hero-other-os-link" data-i18n="hero-other-os-link">Windows (PC)</a>
         </div>
+
+        <div class="hero-opt-note">
+          <span class="hero-opt-dot"></span>
+          <span data-i18n="hero-opt-note">Recall est actuellement optimisé pour <strong>Mac & Serato</strong> · Travail actif en cours pour rendre <strong>Windows & Rekordbox</strong> aussi complets</span>
+        </div>
       </div>
 
       <!-- Trust Badges Row -->
@@ -478,7 +483,10 @@
           <div class="compat-header">
             <div class="compat-icon-wrap" style="color: var(--serato-blue);">🎚️</div>
             <div>
-              <h3 class="compat-software-title" data-i18n="compat-serato-title">Serato DJ Pro</h3>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h3 class="compat-software-title" data-i18n="compat-serato-title">Serato DJ Pro</h3>
+                <span class="compat-status-badge flagship" data-i18n="compat-badge-serato">✨ 100% Optimisé</span>
+              </div>
               <span class="compat-software-ver" data-i18n="compat-serato-ver">v2.5, v3.0, v3.1, v3.2+</span>
             </div>
           </div>
@@ -507,7 +515,10 @@
           <div class="compat-header">
             <div class="compat-icon-wrap" style="color: var(--rekordbox-cyan);">🎧</div>
             <div>
-              <h3 class="compat-software-title" data-i18n="compat-rekordbox-title">Pioneer DJ Rekordbox</h3>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h3 class="compat-software-title" data-i18n="compat-rekordbox-title">Pioneer DJ Rekordbox</h3>
+                <span class="compat-status-badge dev" data-i18n="compat-badge-rekordbox">🚀 En Perfectionnement Actif</span>
+              </div>
               <span class="compat-software-ver" data-i18n="compat-rekordbox-ver">v6.x & v7.x</span>
             </div>
           </div>
@@ -530,6 +541,11 @@
             </li>
           </ul>
         </div>
+      </div>
+
+      <!-- Compatibility Optimization Note -->
+      <div class="compat-opt-note" data-i18n="compat-opt-note">
+        💡 <strong>Écosystème & Roadmap :</strong> Recall est actuellement <strong>pleinement optimisé pour Mac et avec Serato DJ Pro</strong>. Le développement sur <strong>Windows et Rekordbox</strong> avance activement pour offrir une parité fonctionnelle et une fluidité identiques.
       </div>
 
       <!-- Comparison Table -->
@@ -605,12 +621,34 @@
         </div>
       </div>
 
+      <!-- Optimization Notice Banner -->
+      <div class="optimization-banner">
+        <div class="opt-banner-header">
+          <div class="opt-banner-badges">
+            <span class="opt-badge-mac">
+              <span class="opt-pulse-dot"></span>
+              <span data-i18n="opt-banner-mac-badge">🍏 Mac + Serato · Pleinement Optimisé</span>
+            </span>
+            <span class="opt-badge-dev">
+              <span>⚡️</span>
+              <span data-i18n="opt-banner-win-badge">Windows + Rekordbox · En Développement Actif</span>
+            </span>
+          </div>
+        </div>
+        <p class="opt-banner-text" data-i18n="opt-banner-desc">
+          <strong>Note importante de transparence :</strong> Recall est actuellement <strong>pleinement optimisé pour être utilisé sur Mac et avec le logiciel Serato</strong>. Je travaille activement pour rendre la version <strong>Windows / Rekordbox</strong> tout aussi complète et fluide que la version Mac / Serato. Vos retours et suggestions me sont précieux pour m'aider à y parvenir !
+        </p>
+      </div>
+
       <div class="download-grid">
         <!-- macOS Download Card -->
         <div class="download-card primary">
           <div>
-            <div class="os-icon-badge mac">
-              <img src="assets/images/apple-logo.png" alt="Apple macOS" class="os-icon-img-mac">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px;">
+              <div class="os-icon-badge mac">
+                <img src="assets/images/apple-logo.png" alt="Apple macOS" class="os-icon-img-mac">
+              </div>
+              <span class="os-status-pill flagship" data-i18n="dl-badge-mac-opt">✨ Version Optimisée</span>
             </div>
             <h3 class="download-title" data-i18n="dl-mac-title">macOS</h3>
             <p class="download-specs" data-i18n="dl-mac-specs">
@@ -634,10 +672,13 @@
         <!-- Windows Download Card -->
         <div class="download-card">
           <div>
-            <div class="os-icon-badge win">
-              <svg width="44" height="44" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true">
-                <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
-              </svg>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px;">
+              <div class="os-icon-badge win">
+                <svg width="44" height="44" viewBox="0 0 88 88" fill="currentColor" aria-hidden="true">
+                  <path d="M0 0h41.6v41.6H0V0zm46.4 0H88v41.6H46.4V0zM0 46.4h41.6V88H0V46.4zm46.4 0H88V88H46.4V46.4z"/>
+                </svg>
+              </div>
+              <span class="os-status-pill dev" data-i18n="dl-badge-win-dev">🚀 Travail Actif en Cours</span>
             </div>
             <h3 class="download-title" data-i18n="dl-win-title">Windows</h3>
             <p class="download-specs" data-i18n="dl-win-specs">
@@ -677,6 +718,19 @@
       </div>
 
       <div class="faq-list">
+        <!-- Q-OPT: Optimisation Mac / Serato vs Windows / Rekordbox -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span data-i18n="q-opt">Recall est-il optimisé de la même façon sur Mac, Windows, Serato et Rekordbox ?</span>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="a-opt">
+              Recall est actuellement pleinement optimisé pour être utilisé sur <strong>Mac</strong> et avec le logiciel <strong>Serato DJ Pro</strong>. C'est l'environnement de référence sur lequel l'outil a été initialement éprouvé. La version <strong>Windows</strong> et l'intégration de <strong>Rekordbox</strong> sont d'ores et déjà disponibles, et je travaille activement chaque jour pour les rendre tout aussi complètes, réactives et performantes que la version Mac/Serato.
+            </div>
+          </div>
+        </div>
+
         <!-- Q1 -->
         <div class="faq-item">
           <button class="faq-question">
@@ -921,7 +975,7 @@
           J'y ai également intégré des fonctionnalités pour nous aider à <strong>sortir plus facilement de nos routines</strong> et explorer de nouvelles idées en plein mix. J'espère sincèrement que ça vous plaira&nbsp;! Si c'est le cas, n'hésitez pas à le partager autour de vous, à vos ami·e·s DJs (débutant·e·s comme confirmé·e·s).
         </p>
         <p class="welcome-p" data-i18n="welcome-p3">
-          Plus j'aurai de retours, plus je pourrai faire évoluer l'outil à notre image à toutes et à tous&nbsp;! Cœur sur vous et plein d'énergie dans vos futures dates&nbsp;!
+          Plus j'aurai de retours, plus je pourrai faire évoluer l'outil à notre image à toutes et à tous&nbsp;! Recall est actuellement optimisé pour Mac et Serato, et je travaille activement pour rendre les versions Windows et Rekordbox tout aussi abouties et complètes. Cœur sur vous et plein d'énergie dans vos futures dates&nbsp;!
         </p>
 
         <div class="welcome-feedback-banner">
