@@ -150,6 +150,56 @@ extension DJTheme {
         
         return NSApp.applicationIconImage
     }
+    
+    /// Image de l'icône de l'application adaptée aux spécifications Apple HIG (Human Interface Guidelines)
+    /// pour macOS : canevas 1024×1024 avec squircle de 850×850 px centré, marge transparente de sécurité
+    /// et double ombre portée native, garantissant une taille parfaitement identique aux applications Apple
+    /// (Safari, Réglages, Rappels, Finder) dans le Dock et le commutateur d'applications Cmd+Tab.
+    public var dockIconImage: NSImage? {
+        guard let rawIcon = self.iconImage else { return nil }
+        
+        let targetSize: CGFloat = 1024.0
+        let squircleSize: CGFloat = 850.0
+        let squircleRadius: CGFloat = 190.0
+        let margin = (targetSize - squircleSize) / 2.0
+        
+        let padded = NSImage(size: NSSize(width: targetSize, height: targetSize), flipped: false) { rect in
+            let ctx = NSGraphicsContext.current?.cgContext
+            let squircleRect = CGRect(x: margin, y: margin - 6, width: squircleSize, height: squircleSize)
+            let squirclePath = NSBezierPath(roundedRect: squircleRect, xRadius: squircleRadius, yRadius: squircleRadius)
+            
+            // 1. Ombre portée principale Apple HIG
+            ctx?.saveGState()
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor(white: 0.0, alpha: 0.35)
+            shadow.shadowOffset = NSSize(width: 0, height: -10)
+            shadow.shadowBlurRadius = 24.0
+            shadow.set()
+            NSColor.black.setFill()
+            squirclePath.fill()
+            ctx?.restoreGState()
+            
+            // Ombre d'ambiance douce
+            ctx?.saveGState()
+            let ambShadow = NSShadow()
+            ambShadow.shadowColor = NSColor(white: 0.0, alpha: 0.20)
+            ambShadow.shadowOffset = NSSize(width: 0, height: -2)
+            ambShadow.shadowBlurRadius = 8.0
+            ambShadow.set()
+            NSColor.black.setFill()
+            squirclePath.fill()
+            ctx?.restoreGState()
+            
+            // 2. Rendu de l'icône de thème découpée au squircle
+            ctx?.saveGState()
+            squirclePath.addClip()
+            rawIcon.draw(in: squircleRect, from: NSRect(origin: .zero, size: rawIcon.size), operation: .sourceOver, fraction: 1.0)
+            ctx?.restoreGState()
+            
+            return true
+        }
+        return padded
+    }
 }
 #endif
 

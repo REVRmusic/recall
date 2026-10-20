@@ -265,7 +265,7 @@ public class UserSettings: ObservableObject {
     /// Met à jour dynamiquement l'icône de l'application dans le Dock macOS pour refléter le thème DJ choisi
     public func updateAppDockIcon() {
         DispatchQueue.main.async {
-            if let icon = self.djTheme.iconImage {
+            if let icon = self.djTheme.dockIconImage ?? self.djTheme.iconImage {
                 NSApplication.shared.applicationIconImage = icon
             }
         }
