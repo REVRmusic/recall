@@ -542,7 +542,10 @@ enum PhoneCompanionSnapshotBuilder {
                 "version": AutoUpdateService.shared.currentAppVersion,
                 "theme": settings.djTheme.rawValue,
                 "accent": settings.djTheme.hexCode,
-                "accent2": hex(from: settings.djTheme.nsSecondaryColor)
+                "accent2": hex(from: settings.djTheme.nsSecondaryColor),
+                // Couleur & style des morceaux déjà joués (synchronisés en temps réel avec les Paramètres Mac)
+                "playedColor": settings.playedTrackColorHex,
+                "playedStyle": settings.playedTrackHighlightStyle.rawValue
             ],
             "status": [
                 "software": software,

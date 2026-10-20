@@ -1,10 +1,16 @@
-# 🎧 Recall v1.0.9 — Mise à Jour Automatique 1-Clic & Compagnon Téléphone Live
+# 🎧 Recall v1.0.10 — Morceaux déjà joués colorés sur téléphone + Sync thème temps réel
 
-Cette version **v1.0.9** apporte l'**installation automatique en 1 clic des mises à jour** (sans passer par le navigateur ni blocage Gatekeeper macOS) ainsi que le **Compagnon Téléphone Live** (Wi‑Fi local / Hotspot sans Internet).
+Cette version **v1.0.10** aligne l'affichage des **morceaux déjà joués** du Compagnon Téléphone sur la version Mac (couleur bleue / personnalisable), avec synchronisation **temps réel** du thème DJ et de la couleur des pistes lues.
 
 ---
 
-### 🌟 Nouveautés v1.0.9
+### 🌟 Nouveautés v1.0.10
+
+#### 📱 Compagnon Téléphone — Morceaux déjà joués & sync design
+- Les morceaux déjà joués s'affichent en **bleu** (ou dans la couleur choisie dans Paramètres → Couleur des morceaux joués), exactement comme sur Mac.
+- Le **style de surbrillance** (Texte & Fond / Texte seul / Fond seul) est respecté sur le téléphone.
+- Changement de **thème DJ**, de **couleur des joués** ou de **style** dans les Paramètres Mac → mise à jour **instantanée** sur le téléphone (flux SSE).
+- Scroll horizontal verrouillé pour une lecture fluide en live.
 
 #### ⚡ Mise à jour automatique en 1 clic (macOS & Windows)
 - **Installation directe intégrée** : cliquer sur **« Installer et relancer »** télécharge l'application en tâche de fond avec barre de progression, remplace automatiquement `/Applications/Recall.app` et relance Recall.

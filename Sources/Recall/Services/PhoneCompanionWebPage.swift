@@ -18,7 +18,7 @@ enum PhoneCompanionWebPage {
     
     static let html = #"""
     <!DOCTYPE html>
-    <html lang="fr">
+    <html lang="fr" data-played-style="both">
     <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
@@ -32,6 +32,7 @@ enum PhoneCompanionWebPage {
       :root {
         --accent: #00D9E6;
         --accent2: #3399FF;
+        --played: #0FA2FF;
         --bg: #0B0E14;
         --card: rgba(255,255,255,0.045);
         --card-border: rgba(255,255,255,0.08);
@@ -101,7 +102,25 @@ enum PhoneCompanionWebPage {
         background: var(--card); border: 1px solid var(--card-border); transition: transform .15s; }
       .row:active { transform: scale(.985); }
       .row.top { border-color: color-mix(in srgb, var(--accent) 45%, var(--card-border)); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--card)), var(--card)); }
-      .row.played { opacity: .5; }
+      /* Morceaux déjà joués : synchronisés avec playedTrackColor / playedTrackHighlightStyle du Mac */
+      html[data-played-style="both"] .row.played,
+      html[data-played-style="bgOnly"] .row.played {
+        background: color-mix(in srgb, var(--played) 14%, var(--card));
+        border-color: color-mix(in srgb, var(--played) 42%, var(--card-border));
+      }
+      html[data-played-style="both"] .row.played.top,
+      html[data-played-style="bgOnly"] .row.played.top {
+        background: linear-gradient(135deg, color-mix(in srgb, var(--played) 18%, var(--card)), color-mix(in srgb, var(--played) 8%, var(--card)));
+        border-color: color-mix(in srgb, var(--played) 50%, var(--card-border));
+      }
+      html[data-played-style="both"] .row.played .t,
+      html[data-played-style="both"] .row.played .idx,
+      html[data-played-style="textOnly"] .row.played .t,
+      html[data-played-style="textOnly"] .row.played .idx { color: var(--played); }
+      html[data-played-style="both"] .row.played .a,
+      html[data-played-style="textOnly"] .row.played .a { color: color-mix(in srgb, var(--played) 72%, transparent); }
+      html[data-played-style="both"] .row.played .bpm,
+      html[data-played-style="textOnly"] .row.played .bpm { color: var(--played); }
       .row .idx { font-size: 12px; font-weight: 800; color: var(--faint); text-align: center; }
       .row.top .idx { color: var(--accent); }
       .row .info { min-width: 0; overflow: hidden; }
@@ -116,7 +135,8 @@ enum PhoneCompanionWebPage {
       .b.favorite, .b.heart { background: rgba(255,82,82,0.16); color: var(--red); }
       .b.rel { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
       .b.boost { background: rgba(56,235,97,0.16); color: var(--green); }
-      .b.played { background: rgba(255,255,255,0.08); color: var(--muted); }
+      .b.played { background: color-mix(in srgb, var(--played) 20%, transparent); color: var(--played);
+        border: 1px solid color-mix(in srgb, var(--played) 55%, transparent); }
       .row .right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; white-space: nowrap; }
       .key { min-width: 42px; text-align: center; padding: 4px 7px; border-radius: 8px; font-size: 12.5px; font-weight: 900; color: #0B0E14; background: rgba(255,255,255,0.15); }
       .key.none { color: var(--faint); background: rgba(255,255,255,0.06); }
@@ -229,6 +249,9 @@ enum PhoneCompanionWebPage {
         if (s.app) {
           if (s.app.accent) root.style.setProperty('--accent', s.app.accent);
           if (s.app.accent2) root.style.setProperty('--accent2', s.app.accent2);
+          // Couleur & style des morceaux déjà joués (sync temps réel avec les Paramètres Mac)
+          if (s.app.playedColor) root.style.setProperty('--played', s.app.playedColor);
+          root.setAttribute('data-played-style', s.app.playedStyle || 'both');
         }
         var st = s.status || {};
         var now = s.nowPlaying;
@@ -287,7 +310,7 @@ enum PhoneCompanionWebPage {
             var badges = matchBadge(t);
             if (t.relation) badges += '<span class="b ' + (t.energyBoost ? 'boost' : 'rel') + '">' + esc(t.relation) + '</span>';
             if (t.isFavorite && t.matchType !== 'favorite') badges += '<span class="b heart">♥</span>';
-            if (t.played) badges += '<span class="b played">✓ Joué</span>';
+            if (t.played) badges += '<span class="b played">✓ JOUÉ</span>';
             html += '<div class="row' + (i === 0 && mode !== 'toplay' ? ' top' : '') + (t.played ? ' played' : '') + '">' +
               '<div class="idx">' + (i + 1) + '</div>' +
               '<div class="info"><div class="t">' + esc(t.title) + '</div><div class="a">' + esc(t.artist) + '</div>' +
