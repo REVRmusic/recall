@@ -59,7 +59,7 @@ public class AutoUpdateService: ObservableObject {
         if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String, !version.isEmpty {
             return version
         }
-        return "1.0.5"
+        return "1.0.6"
     }
     
     // MARK: - Déclenchement au Démarrage de l'Application

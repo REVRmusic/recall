@@ -27,7 +27,7 @@
                     </Border>
                     <TextBlock Text="Paramètres Recall" FontWeight="Bold" FontSize="13" Foreground="White" VerticalAlignment="Center"/>
                     <Border Background="#1C2F3D" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                        <TextBlock x:Name="TxtAppVersionBadge" Text="v1.0.5" FontSize="9" FontWeight="Bold" Foreground="#14C8B0"/>
+                        <TextBlock x:Name="TxtAppVersionBadge" Text="v1.0.6" FontSize="9" FontWeight="Bold" Foreground="#14C8B0"/>
                     </Border>
                 </StackPanel>
                 <Button Content="✕" Width="24" Height="24" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
@@ -167,12 +167,12 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- SECTION 7 : Mise à jour de l'application (v1.0.5) -->
+                    <!-- SECTION 7 : Mise à jour de l'application (v1.0.6) -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <Grid Margin="0,0,0,6">
                                 <TextBlock Text="Mise à jour du logiciel" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB"/>
-                                <TextBlock x:Name="TxtVersionInfo" Text="Version 1.0.5 installée" HorizontalAlignment="Right" FontSize="9.5" Foreground="#9CA3AF"/>
+                                <TextBlock x:Name="TxtVersionInfo" Text="Version 1.0.6 installée" HorizontalAlignment="Right" FontSize="9.5" Foreground="#9CA3AF"/>
                             </Grid>
                             
                             <TextBlock x:Name="TxtUpdateStatus" Text="Recall recherche automatiquement les mises à jour au démarrage." FontSize="9.5" Foreground="#9CA3AF" TextWrapping="Wrap" Margin="0,0,0,8"/>

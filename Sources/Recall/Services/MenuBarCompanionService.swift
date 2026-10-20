@@ -160,7 +160,7 @@ public final class MenuBarCompanionService: NSObject, NSMenuDelegate, Observable
         let isVisible = FloatingWindowController.shared.isVisible
         
         // 1. En-tête : Titre & Version
-        let titleItem = NSMenuItem(title: "Recall • Copilote DJ (v1.0.5)", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "Recall • Copilote DJ (v1.0.6)", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
         

@@ -85,6 +85,12 @@ jobs:
     permissions:
       contents: write
     steps:
+    - name: Checkout release notes
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: .github/release-notes.md
+        sparse-checkout-cone-mode: false
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
@@ -102,7 +108,8 @@ jobs:
           release-assets/Recall-macOS.zip
           release-assets/Recall-Windows-x64.zip
           release-assets/Recall.exe
-        name: Recall ${{ github.ref_name }} — Horaires du Set, Masquage Export & Diagnostics
+        name: Recall ${{ github.ref_name }} — Parité Windows, Sessions Filtrées & Partage Web
+        body_path: .github/release-notes.md
         draft: false
         prerelease: false
 
