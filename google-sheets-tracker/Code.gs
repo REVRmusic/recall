@@ -85,11 +85,18 @@ function nettoyerEtReparerTout() {
   var realDownloads = getDownloadsSheet(ss);
   if (realDownloads) {
     try { realDownloads.setName("T\u00E9l\u00E9chargements"); } catch(e) {}
+    try {
+      if (realDownloads.getLastColumn() < 13) {
+        realDownloads.getRange(1, 12, 1, 2).setValues([["Nom DJ / Artiste", "Ville / Pays"]]);
+        realDownloads.getRange(1, 12, 1, 2).setBackground("#0F172A").setFontColor("#00F0FF").setFontWeight("bold");
+      }
+    } catch(eCol) {}
   } else {
     realDownloads = ss.insertSheet("T\u00E9l\u00E9chargements");
     var headers = [
       "Date & Heure", "Plateforme", "Fichier", "Version", "Type d'\u00E9v\u00E9nement",
-      "Emplacement Clic", "Langue Site", "Langue Nav.", "R\u00E9solution", "R\u00E9f\u00E9rent", "Navigateur / OS"
+      "Emplacement Clic", "Langue Site", "Langue Nav.", "R\u00E9solution", "R\u00E9f\u00E9rent", "Navigateur / OS",
+      "Nom DJ / Artiste", "Ville / Pays"
     ];
     realDownloads.appendRow(headers);
     var hRange = realDownloads.getRange(1, 1, 1, headers.length);
@@ -513,11 +520,41 @@ function handleRequest(params) {
   var resolution = params.resolution || "";
   var referrer = params.referrer || "Direct";
   var userAgent = params.ua || "";
+  var djName = params.dj_name || params.djName || params.artist || "";
+  var djCity = params.dj_city || params.djCity || params.location_dj || params.city || "";
 
   if (downloadSheet) {
+    try {
+      if (downloadSheet.getLastColumn() < 13) {
+        downloadSheet.getRange(1, 12, 1, 2).setValues([["Nom DJ / Artiste", "Ville / Pays"]]);
+        downloadSheet.getRange(1, 12, 1, 2).setBackground("#0F172A").setFontColor("#00F0FF").setFontWeight("bold");
+      }
+    } catch(eCol) {}
+
     downloadSheet.appendRow([
-      now, platform, file, version, eventType, location, siteLang, browserLang, resolution, referrer, userAgent
+      now, platform, file, version, eventType, location, siteLang, browserLang, resolution, referrer, userAgent, djName, djCity
     ]);
+  }
+
+  // Notification par e-mail a REVR si un DJ a renseigne son nom ou sa ville
+  if (djName || djCity) {
+    try {
+      var ownerEmail = Session.getEffectiveUser().getEmail();
+      if (ownerEmail && ownerEmail.indexOf("@") !== -1) {
+        MailApp.sendEmail({
+          to: ownerEmail,
+          subject: "\uD83C\uDFA7 Nouveau t\u00E9l\u00E9chargement Recall : " + (djName || "DJ") + (djCity ? " (" + djCity + ")" : ""),
+          body: "Salut REVR,\n\nUn DJ vient de t\u00E9l\u00E9charger Recall (" + platform + ") :\n\n" +
+                "\u2022 Nom DJ / Artiste : " + (djName || "Non pr\u00E9cis\u00E9") + "\n" +
+                "\u2022 Ville / Pays : " + (djCity || "Non pr\u00E9cis\u00E9") + "\n" +
+                "\u2022 Plateforme : " + platform + "\n" +
+                "\u2022 Fichier : " + file + "\n" +
+                "\u2022 Emplacement : " + location + "\n" +
+                "\u2022 Date & Heure : " + Utilities.formatDate(now, Session.getScriptTimeZone() || "GMT", "yyyy-MM-dd HH:mm:ss") + "\n\n" +
+                "---\nConsultez l'onglet 'T\u00E9l\u00E9chargements' dans votre Google Sheet Recall."
+        });
+      }
+    } catch (mailErr) {}
   }
 
   var dlOut = {

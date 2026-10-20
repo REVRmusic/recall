@@ -3436,6 +3436,167 @@ img {
   line-height: 1.5;
 }
 
+/* Transitions de vues modales */
+.modal-section-view {
+  animation: fadeInModalView 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInModalView {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Profil DJ - Badge & Champs */
+.modal-dj-pill-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.dj-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: var(--cyan-primary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.18);
+}
+
+.modal-dj-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+
+.modal-dj-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.modal-dj-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.modal-dj-label-icon {
+  font-size: 0.92rem;
+}
+
+.modal-dj-badge-opt {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.modal-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.modal-dj-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 11px;
+  color: #f8fafc;
+  font-size: 0.92rem;
+  padding: 11px 14px;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.modal-dj-input:focus {
+  border-color: rgba(0, 240, 255, 0.6);
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.18), 0 0 16px rgba(0, 240, 255, 0.12);
+}
+
+.modal-dj-input::placeholder {
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.modal-dj-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.modal-start-dl-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00f0ff 0%, #0072ff 100%);
+  color: #070b14 !important;
+  font-size: 0.98rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.35);
+  text-shadow: none;
+}
+
+.modal-start-dl-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 240, 255, 0.5);
+  filter: brightness(1.08);
+}
+
+.modal-start-dl-btn:active {
+  transform: translateY(0);
+}
+
+.modal-skip-dl-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.15s ease;
+  text-align: center;
+}
+
+.modal-skip-dl-btn:hover {
+  color: #e2e8f0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.modal-dj-privacy-note {
+  font-size: 0.76rem;
+  color: #64748b;
+  text-align: center;
+  margin-top: 4px;
+}
+
 .modal-steps {
   display: flex;
   flex-direction: column;

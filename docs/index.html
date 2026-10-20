@@ -957,7 +957,7 @@
     </div>
   </div>
 
-  <!-- Modal d'instructions après téléchargement direct -->
+  <!-- Modal de téléchargement & Profil DJ -->
   <div class="download-modal-overlay" id="download-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="download-modal-card">
       <button class="modal-close-btn" id="modal-close-btn" aria-label="Fermer la boîte de dialogue">
@@ -967,71 +967,134 @@
         </svg>
       </button>
 
-      <div class="modal-header">
-        <div class="modal-icon-glow">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+      <!-- Étape 1 : Profil DJ & Lancement du téléchargement -->
+      <div class="modal-section-view" id="modal-dj-section">
+        <div class="modal-header">
+          <div class="modal-icon-glow">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+            </svg>
+          </div>
+          <div class="modal-dj-pill-wrap">
+            <span class="dj-pill-badge" data-i18n="modal-dj-pill">🎧 Communauté DJ Recall</span>
+          </div>
+          <h3 class="modal-title" id="modal-title" data-i18n="modal-dj-title">Qui mixe derrière les platines ?</h3>
+          <p class="modal-subtitle" data-i18n="modal-dj-subtitle">Aidez REVR à savoir où résonne Recall dans le monde. C'est 100 % facultatif, votre téléchargement est prêt !</p>
         </div>
-        <h3 class="modal-title" id="modal-title" data-i18n="modal-title">Téléchargement en cours...</h3>
-        <p class="modal-subtitle" data-i18n="modal-subtitle">Merci d'avoir choisi Recall ! Voici la marche à suivre pour commencer à mixer :</p>
+
+        <form id="modal-dj-form" class="modal-dj-form" autocomplete="on">
+          <div class="modal-dj-field">
+            <label for="modal-input-dj-name" class="modal-dj-label">
+              <span class="modal-dj-label-icon">🎧</span>
+              <span data-i18n="modal-dj-name-label">Nom de DJ / Artiste</span>
+              <span class="modal-dj-badge-opt" data-i18n="modal-dj-optional">facultatif</span>
+            </label>
+            <div class="modal-input-wrapper">
+              <input type="text" id="modal-input-dj-name" class="modal-dj-input" placeholder="ex: DJ Shadow, Laurent Garnier..." data-i18n-placeholder="modal-dj-name-placeholder" autocomplete="nickname" maxlength="60">
+            </div>
+          </div>
+
+          <div class="modal-dj-field">
+            <label for="modal-input-dj-city" class="modal-dj-label">
+              <span class="modal-dj-label-icon">📍</span>
+              <span data-i18n="modal-dj-city-label">Votre ville / région / pays</span>
+              <span class="modal-dj-badge-opt" data-i18n="modal-dj-optional">facultatif</span>
+            </label>
+            <div class="modal-input-wrapper">
+              <input type="text" id="modal-input-dj-city" class="modal-dj-input" placeholder="ex: Paris, Montréal, Bruxelles, Lyon..." data-i18n-placeholder="modal-dj-city-placeholder" autocomplete="address-level2" maxlength="80">
+            </div>
+          </div>
+
+          <div class="modal-dj-actions">
+            <button type="submit" class="btn-primary modal-start-dl-btn" id="modal-start-dl-btn">
+              <span data-i18n="modal-dj-submit-btn">Lancer le téléchargement</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </button>
+
+            <button type="button" class="modal-skip-dl-btn" id="modal-skip-dl-btn" data-i18n="modal-dj-skip-btn">
+              Passer et télécharger directement →
+            </button>
+          </div>
+
+          <div class="modal-dj-privacy-note" data-i18n="modal-dj-privacy">
+            🔒 Zéro spam ni publicité • Métrique anonyme pour la communauté DJ
+          </div>
+        </form>
       </div>
 
-      <!-- Instructions macOS -->
-      <div class="modal-steps" id="modal-steps-mac">
-        <div class="modal-step-item">
-          <span class="step-num">1</span>
-          <div class="step-content">
-            <strong data-i18n="step-mac-1-title">1. Ouvrez le fichier téléchargé</strong>
-            <p data-i18n="step-mac-1-desc">Double-cliquez sur le fichier <code>Recall.dmg</code> puis glissez l'icône Recall dans votre dossier <em>Applications</em>.</p>
+      <!-- Étape 2 : Instructions d'installation après lancement -->
+      <div class="modal-section-view" id="modal-instructions-section" style="display: none;">
+        <div class="modal-header">
+          <div class="modal-icon-glow">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
           </div>
+          <h3 class="modal-title" id="modal-inst-title" data-i18n="modal-title">Téléchargement en cours...</h3>
+          <p class="modal-subtitle" data-i18n="modal-subtitle">Merci d'avoir choisi Recall ! Voici la marche à suivre pour commencer à mixer :</p>
         </div>
-        <div class="modal-step-item">
-          <span class="step-num">2</span>
-          <div class="step-content">
-            <strong data-i18n="step-mac-2-title">2. Lancez Serato ou Rekordbox</strong>
-            <p data-i18n="step-mac-2-desc">Ouvrez votre logiciel DJ habituel. Recall détectera automatiquement vos platines et vos historiques de mix.</p>
-          </div>
-        </div>
-        <div class="modal-step-item alert-step">
-          <span class="step-num warning">!</span>
-          <div class="step-content">
-            <strong data-i18n="step-mac-3-title">Sécurité macOS (Gatekeeper)</strong>
-            <p data-i18n="step-mac-3-desc">Au premier lancement, si macOS bloque l'ouverture (développeur non identifié) : faites <em>Clic droit &gt; Ouvrir</em>, ou rendez-vous dans <em>Réglages Système &gt; Confidentialité et sécurité</em> et cliquez sur <em>"Ouvrir quand même"</em>.</p>
-          </div>
-        </div>
-      </div>
 
-      <!-- Instructions Windows -->
-      <div class="modal-steps" id="modal-steps-win" style="display: none;">
-        <div class="modal-step-item">
-          <span class="step-num">1</span>
-          <div class="step-content">
-            <strong data-i18n="step-win-1-title">1. Décompressez l'archive ZIP</strong>
-            <p data-i18n="step-win-1-desc">Faites un clic droit sur <code>Recall-Windows-x64.zip</code> et choisissez <em>"Extraire tout..."</em> dans le dossier de votre choix.</p>
+        <!-- Instructions macOS -->
+        <div class="modal-steps" id="modal-steps-mac">
+          <div class="modal-step-item">
+            <span class="step-num">1</span>
+            <div class="step-content">
+              <strong data-i18n="step-mac-1-title">1. Ouvrez le fichier téléchargé</strong>
+              <p data-i18n="step-mac-1-desc">Double-cliquez sur le fichier <code>Recall.dmg</code> puis glissez l'icône Recall dans votre dossier <em>Applications</em>.</p>
+            </div>
+          </div>
+          <div class="modal-step-item">
+            <span class="step-num">2</span>
+            <div class="step-content">
+              <strong data-i18n="step-mac-2-title">2. Lancez Serato ou Rekordbox</strong>
+              <p data-i18n="step-mac-2-desc">Ouvrez votre logiciel DJ habituel. Recall détectera automatiquement vos platines et vos historiques de mix.</p>
+            </div>
+          </div>
+          <div class="modal-step-item alert-step">
+            <span class="step-num warning">!</span>
+            <div class="step-content">
+              <strong data-i18n="step-mac-3-title">Sécurité macOS (Gatekeeper)</strong>
+              <p data-i18n="step-mac-3-desc">Au premier lancement, si macOS bloque l'ouverture (développeur non identifié) : faites <em>Clic droit &gt; Ouvrir</em>, ou rendez-vous dans <em>Réglages Système &gt; Confidentialité et sécurité</em> et cliquez sur <em>"Ouvrir quand même"</em>.</p>
+            </div>
           </div>
         </div>
-        <div class="modal-step-item">
-          <span class="step-num">2</span>
-          <div class="step-content">
-            <strong data-i18n="step-win-2-title">2. Lancez Recall.exe</strong>
-            <p data-i18n="step-win-2-desc">Double-cliquez sur <code>Recall.exe</code>. L'application est autonome et s'exécute immédiatement sans installation requise.</p>
-          </div>
-        </div>
-        <div class="modal-step-item alert-step">
-          <span class="step-num warning">!</span>
-          <div class="step-content">
-            <strong data-i18n="step-win-3-title">Avertissement Windows SmartScreen</strong>
-            <p data-i18n="step-win-3-desc">Si le filtre SmartScreen bleu s'affiche ("Windows a protégé votre ordinateur") : cliquez sur <em>"Informations complémentaires"</em> puis sur <em>"Exécuter quand même"</em>.</p>
-          </div>
-        </div>
-      </div>
 
-      <div class="modal-footer">
-        <p class="modal-fallback" data-i18n="modal-fallback">Le téléchargement ne s'est pas lancé automatiquement ?</p>
-        <a href="#" class="modal-retry-btn" id="modal-retry-link" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Modale Recommencer" data-i18n="modal-retry">Cliquez ici pour relancer le téléchargement direct</a>
+        <!-- Instructions Windows -->
+        <div class="modal-steps" id="modal-steps-win" style="display: none;">
+          <div class="modal-step-item">
+            <span class="step-num">1</span>
+            <div class="step-content">
+              <strong data-i18n="step-win-1-title">1. Décompressez l'archive ZIP</strong>
+              <p data-i18n="step-win-1-desc">Faites un clic droit sur <code>Recall-Windows-x64.zip</code> et choisissez <em>"Extraire tout..."</em> dans le dossier de votre choix.</p>
+            </div>
+          </div>
+          <div class="modal-step-item">
+            <span class="step-num">2</span>
+            <div class="step-content">
+              <strong data-i18n="step-win-2-title">2. Lancez Recall.exe</strong>
+              <p data-i18n="step-win-2-desc">Double-cliquez sur <code>Recall.exe</code>. L'application est autonome et s'exécute immédiatement sans installation requise.</p>
+            </div>
+          </div>
+          <div class="modal-step-item alert-step">
+            <span class="step-num warning">!</span>
+            <div class="step-content">
+              <strong data-i18n="step-win-3-title">Avertissement Windows SmartScreen</strong>
+              <p data-i18n="step-win-3-desc">Si le filtre SmartScreen bleu s'affiche ("Windows a protégé votre ordinateur") : cliquez sur <em>"Informations complémentaires"</em> puis sur <em>"Exécuter quand même"</em>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <p class="modal-fallback" data-i18n="modal-fallback">Le téléchargement ne s'est pas lancé automatiquement ?</p>
+          <a href="#" class="modal-retry-btn" id="modal-retry-link" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Modale Recommencer" data-i18n="modal-retry">Cliquez ici pour relancer le téléchargement direct</a>
+        </div>
       </div>
     </div>
   </div>

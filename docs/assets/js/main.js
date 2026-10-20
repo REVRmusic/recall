@@ -166,7 +166,18 @@ const translations = {
     "dl-win-exe": "Exécutable autonome prêt à l'emploi",
     "dl-github-note": "Consultez également les releases officielles et le code source sur ",
     
-    // Post-Download Modal
+    // Post-Download Modal & DJ Profile
+    "modal-dj-pill": "🎧 Communauté DJ Recall",
+    "modal-dj-title": "Qui mixe derrière les platines ?",
+    "modal-dj-subtitle": "Aidez REVR à savoir où résonne Recall dans le monde. C'est 100 % facultatif, votre téléchargement est prêt !",
+    "modal-dj-name-label": "Nom de DJ / Artiste",
+    "modal-dj-name-placeholder": "ex: DJ Shadow, Laurent Garnier...",
+    "modal-dj-city-label": "Votre ville / région / pays",
+    "modal-dj-city-placeholder": "ex: Paris, Montréal, Bruxelles, Lyon...",
+    "modal-dj-optional": "facultatif",
+    "modal-dj-submit-btn": "Lancer le téléchargement",
+    "modal-dj-skip-btn": "Passer et télécharger directement →",
+    "modal-dj-privacy": "🔒 Zéro spam ni publicité • Métrique anonyme pour la communauté DJ",
     "modal-title": "Téléchargement en cours...",
     "modal-subtitle": "Merci d'avoir choisi Recall ! Voici la marche à suivre pour commencer à mixer :",
     "modal-fallback": "Le téléchargement ne s'est pas lancé automatiquement ?",
@@ -422,7 +433,18 @@ const translations = {
     "dl-win-exe": "Self-contained executable ready to run",
     "dl-github-note": "Explore official releases and source code on ",
     
-    // Post-Download Modal
+    // Post-Download Modal & DJ Profile
+    "modal-dj-pill": "🎧 Recall DJ Community",
+    "modal-dj-title": "Who's behind the decks?",
+    "modal-dj-subtitle": "Help REVR know where Recall is playing worldwide. 100% optional, your download is ready!",
+    "modal-dj-name-label": "DJ / Artist Name",
+    "modal-dj-name-placeholder": "e.g. DJ Shadow, James Hype...",
+    "modal-dj-city-label": "Your city / region / country",
+    "modal-dj-city-placeholder": "e.g. London, Berlin, New York, Paris...",
+    "modal-dj-optional": "optional",
+    "modal-dj-submit-btn": "Start Download",
+    "modal-dj-skip-btn": "Skip and download directly →",
+    "modal-dj-privacy": "🔒 Zero spam or ads • Anonymous metrics for the DJ community",
     "modal-title": "Download starting...",
     "modal-subtitle": "Thank you for choosing Recall! Here are quick instructions to get you mixing:",
     "modal-fallback": "Didn't the download start automatically?",
@@ -894,7 +916,9 @@ function sendDownloadEvent(eventData) {
     browser_lang: navigator.language || "",
     resolution: `${window.screen.width}x${window.screen.height}`,
     referrer: document.referrer || "Direct",
-    ua: navigator.userAgent
+    ua: navigator.userAgent,
+    dj_name: eventData.dj_name || "",
+    dj_city: eventData.dj_city || ""
   };
 
   // 1. Sauvegarde locale immédiate (utile pour tests / debug)
@@ -1310,18 +1334,39 @@ function showFeedbackSuccess() {
 }
 
 // ==========================================================================
-// Boîte Modale d'Instructions après Téléchargement Direct
+// Boîte Modale de Téléchargement & Profil DJ Communauté
 // ==========================================================================
-function openDownloadModal(platform, downloadUrl) {
-  const modal = document.getElementById("download-modal");
+let pendingDownload = {
+  platform: "macOS",
+  file: "Recall.dmg",
+  url: "https://github.com/REVRmusic/recall/releases/download/v1.0.5/Recall.dmg",
+  location: "Section Téléchargement"
+};
+
+function triggerBrowserDownload(url, filename) {
+  if (!url || url === "#") return;
+  const a = document.createElement("a");
+  a.href = url;
+  if (filename) a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    try { document.body.removeChild(a); } catch(e) {}
+  }, 1000);
+}
+
+function showModalInstructionsStep(platform, downloadUrl) {
+  const djSection = document.getElementById("modal-dj-section");
+  const instSection = document.getElementById("modal-instructions-section");
   const stepsMac = document.getElementById("modal-steps-mac");
   const stepsWin = document.getElementById("modal-steps-win");
   const retryLink = document.getElementById("modal-retry-link");
 
-  if (!modal) return;
+  if (djSection) djSection.style.display = "none";
+  if (instSection) instSection.style.display = "block";
 
   const isWin = (platform === "Windows");
-
   if (stepsMac && stepsWin) {
     if (isWin) {
       stepsMac.style.display = "none";
@@ -1337,10 +1382,90 @@ function openDownloadModal(platform, downloadUrl) {
     retryLink.setAttribute("data-track-download", platform);
     retryLink.setAttribute("data-track-file", isWin ? "Recall-Windows.zip" : "Recall.dmg");
   }
+}
+
+function openDownloadModal(platform, downloadUrl, file, location) {
+  const modal = document.getElementById("download-modal");
+  const djSection = document.getElementById("modal-dj-section");
+  const instSection = document.getElementById("modal-instructions-section");
+  const inputDjName = document.getElementById("modal-input-dj-name");
+  const inputDjCity = document.getElementById("modal-input-dj-city");
+
+  if (!modal) return;
+
+  pendingDownload = {
+    platform: platform || "macOS",
+    file: file || (platform === "Windows" ? "Recall-Windows.zip" : "Recall.dmg"),
+    url: downloadUrl || (platform === "Windows" ? "https://github.com/REVRmusic/recall/releases/download/v1.0.5/Recall-Windows-x64.zip" : "https://github.com/REVRmusic/recall/releases/download/v1.0.5/Recall.dmg"),
+    location: location || "Section Téléchargement"
+  };
+
+  // Réinitialiser sur l'Étape 1 (Profil DJ)
+  if (djSection) djSection.style.display = "block";
+  if (instSection) instSection.style.display = "none";
+
+  // Pré-remplissage depuis le localStorage si le DJ avait déjà saisi son nom ou sa ville
+  try {
+    const savedName = localStorage.getItem("recall_dj_name") || "";
+    const savedCity = localStorage.getItem("recall_dj_city") || "";
+    if (inputDjName) inputDjName.value = savedName;
+    if (inputDjCity) inputDjCity.value = savedCity;
+  } catch(e) {}
 
   modal.classList.add("active");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+
+  // Focus doux sur le premier champ
+  setTimeout(() => {
+    if (inputDjName) {
+      inputDjName.focus();
+      if (inputDjName.value) {
+        inputDjName.select();
+      }
+    }
+  }, 120);
+}
+
+function executeDownloadWithProfile(isSkip = false) {
+  const inputDjName = document.getElementById("modal-input-dj-name");
+  const inputDjCity = document.getElementById("modal-input-dj-city");
+
+  let djName = "";
+  let djCity = "";
+
+  if (!isSkip) {
+    djName = (inputDjName ? inputDjName.value : "").trim();
+    djCity = (inputDjCity ? inputDjCity.value : "").trim();
+
+    if (djName) {
+      try { localStorage.setItem("recall_dj_name", djName); } catch(e) {}
+    }
+    if (djCity) {
+      try { localStorage.setItem("recall_dj_city", djCity); } catch(e) {}
+    }
+  } else {
+    // Si l'utilisateur clique sur Passer, on vérifie s'il y avait déjà des valeurs mémorisées
+    try {
+      djName = (inputDjName ? inputDjName.value.trim() : "") || localStorage.getItem("recall_dj_name") || "";
+      djCity = (inputDjCity ? inputDjCity.value.trim() : "") || localStorage.getItem("recall_dj_city") || "";
+    } catch(e) {}
+  }
+
+  // 1. Enregistrement de l'événement dans le tracker Google Sheets
+  sendDownloadEvent({
+    platform: pendingDownload.platform,
+    file: pendingDownload.file,
+    location: pendingDownload.location,
+    dj_name: djName,
+    dj_city: djCity
+  });
+
+  // 2. Déclenchement automatique du téléchargement de fichier
+  triggerBrowserDownload(pendingDownload.url, pendingDownload.file);
+
+  // 3. Basculement vers l'Étape 2 : Instructions d'installation
+  showModalInstructionsStep(pendingDownload.platform, pendingDownload.url);
 }
 
 function closeDownloadModal() {
@@ -1355,11 +1480,27 @@ function closeDownloadModal() {
 function initDownloadModal() {
   const modal = document.getElementById("download-modal");
   const closeBtn = document.getElementById("modal-close-btn");
+  const djForm = document.getElementById("modal-dj-form");
+  const skipBtn = document.getElementById("modal-skip-dl-btn");
 
   if (!modal) return;
 
   if (closeBtn) {
     closeBtn.addEventListener("click", closeDownloadModal);
+  }
+
+  if (djForm) {
+    djForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      executeDownloadWithProfile(false);
+    });
+  }
+
+  if (skipBtn) {
+    skipBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      executeDownloadWithProfile(true);
+    });
   }
 
   // Fermeture en cliquant sur l'arrière-plan flouté
@@ -1380,22 +1521,25 @@ function initDownloadModal() {
 function initDownloadTracker() {
   // Attache un écouteur UNIQUE exclusivement sur les vrais liens de téléchargement de fichier
   document.querySelectorAll("[data-track-download]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
       const platform = btn.getAttribute("data-track-download") || detectedVisitorOS;
       const file = btn.getAttribute("data-track-file") || (platform === "Windows" ? "Recall-Windows.zip" : "Recall.dmg");
       const location = btn.getAttribute("data-track-location") || "Section Téléchargement";
       const downloadUrl = btn.getAttribute("href");
 
-      sendDownloadEvent({
-        platform: platform,
-        file: file,
-        location: location
-      });
-
-      // Si le clic ne provient pas déjà du lien de réessai interne à la modale, on affiche la modale
-      if (btn.id !== "modal-retry-link") {
-        openDownloadModal(platform, downloadUrl);
+      // Si le clic provient du lien de réessai interne à la modale
+      if (btn.id === "modal-retry-link") {
+        sendDownloadEvent({
+          platform: platform,
+          file: file,
+          location: "Modale Recommencer"
+        });
+        return; // Le navigateur suit le lien normalement
       }
+
+      // Pour tous les autres boutons de téléchargement : intercepter et ouvrir la modale Profil DJ
+      e.preventDefault();
+      openDownloadModal(platform, downloadUrl, file, location);
     });
   });
 

@@ -97,9 +97,13 @@ Un onglet intitulé **`💡 Retours & Suggestions`** est généré automatiqueme
 - **Résolution d'écran**
 - **Site référent** (ex: Google, Réseaux Sociaux, GitHub, ou Direct)
 - **Navigateur / OS** (User-Agent)
+- **Nom DJ / Artiste** (Colonne L, renseigné facultativement par le DJ lors du téléchargement)
+- **Ville / Pays** (Colonne M, renseigné facultativement pour visualiser où résonne Recall)
+
+> 🔔 **Notification par e-mail automatique :** Lorsqu'un DJ renseigne son nom d'artiste ou sa ville, Google Apps Script vous envoie automatiquement un e-mail instantané pour vous prévenir qu'un nouveau membre a rejoint la communauté !
 
 ---
 
 ## 🔒 Confidentialité & RGPD
-Ce tracker ne collecte aucune donnée personnelle non consentie. Pour les suggestions, l'adresse e-mail et le pseudo sont strictement facultatifs et servent uniquement si l'utilisateur souhaite un retour de REVR.
+Ce tracker ne collecte aucune donnée personnelle non consentie. Pour les téléchargements et les suggestions, le nom de DJ, la localisation et l'e-mail sont strictement facultatifs et servent uniquement aux statistiques de la communauté et au suivi de REVR.
 
