@@ -44,6 +44,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         // Recherche de mise à jour automatique au démarrage (uniquement si connecté à Internet)
         AutoUpdateService.shared.checkForUpdatesOnStartup()
         
+        // Compagnon Téléphone : serveur local prêt dès l'ouverture si l'option est active
+        if UserSettings.shared.phoneCompanionAutoStart {
+            PhoneCompanionService.shared.start()
+        }
+        
         AppLogger.info("Recall initialisé avec succès et prêt.", category: .system)
     }
     
@@ -55,6 +60,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     
     public func applicationWillTerminate(_ notification: Notification) {
         AppLogger.info("Fermeture de Recall en cours...", category: .system)
+        PhoneCompanionService.shared.stop()
         SeratoMonitorService.shared.stopMonitoring()
         UserDefaults.standard.synchronize()
         AppLogger.shared.handleApplicationWillTerminate()
@@ -222,6 +228,15 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         sessionTracklistItem.keyEquivalentModifierMask = [.command, .shift]
         sessionTracklistItem.target = self
         sessionMenu.addItem(sessionTracklistItem)
+        
+        let sessionPhoneItem = NSMenuItem(
+            title: "Compagnon Téléphone (QR code)…",
+            action: #selector(openPhoneCompanionAction),
+            keyEquivalent: "P"
+        )
+        sessionPhoneItem.keyEquivalentModifierMask = [.command, .shift]
+        sessionPhoneItem.target = self
+        sessionMenu.addItem(sessionPhoneItem)
         
         let sessionSearchItem = NSMenuItem(
             title: "Rechercher dans la bibliothèque DJ…",
@@ -512,6 +527,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc private func openTracklistGeneratorAction() {
         TracklistGeneratorWindowController.shared.show()
+    }
+    
+    @objc private func openPhoneCompanionAction() {
+        PhoneCompanionWindowController.shared.show()
     }
     
     @objc private func openSetRecapAction() {

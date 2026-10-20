@@ -77,9 +77,18 @@ namespace Recall
             }
         }
 
-        private void BtnDownloadUpdate_Click(object sender, RoutedEventArgs e)
+        private async void BtnDownloadUpdate_Click(object sender, RoutedEventArgs e)
         {
-            _autoUpdate.OpenDownloadInBrowser();
+            BtnDownloadUpdate.IsEnabled = false;
+            BtnCheckUpdate.IsEnabled = false;
+            var progress = new Progress<string>(msg =>
+            {
+                TxtUpdateStatus.Text = msg;
+            });
+            var res = await _autoUpdate.InstallUpdateAndRestartAsync(progress);
+            TxtUpdateStatus.Text = res.message;
+            BtnDownloadUpdate.IsEnabled = true;
+            BtnCheckUpdate.IsEnabled = true;
         }
 
         private void LoadSettings()

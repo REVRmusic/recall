@@ -58,7 +58,68 @@ public struct UpdateModalView: View {
             
             // Corps de la modale
             VStack(spacing: 16) {
-                if autoUpdate.isChecking {
+                if autoUpdate.isInstalling {
+                    // État 0 : Téléchargement et installation automatique en cours
+                    VStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentCyan.opacity(0.18))
+                                .frame(width: 52, height: 52)
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 26, weight: .bold))
+                                .foregroundColor(Color.accentCyan)
+                        }
+                        
+                        VStack(spacing: 4) {
+                            Text("Installation de Recall \(autoUpdate.availableUpdate?.tagName ?? "")…")
+                                .font(.system(size: 13.5, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(autoUpdate.installStatus ?? "Téléchargement en cours…")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Color.accentCyan)
+                        }
+                        
+                        VStack(spacing: 6) {
+                            ProgressView(value: autoUpdate.downloadProgress, total: 1.0)
+                                .progressViewStyle(.linear)
+                                .tint(Color.accentCyan)
+                                .frame(maxWidth: 300)
+                            
+                            Text("\(Int(autoUpdate.downloadProgress * 100)) % • Remplacement dans /Applications et relance automatique")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 150)
+                    
+                } else if let installError = autoUpdate.installError {
+                    // État d'erreur d'installation avec option de secours
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentOrange.opacity(0.18))
+                                .frame(width: 52, height: 52)
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(Color.accentOrange)
+                        }
+                        
+                        VStack(spacing: 4) {
+                            Text("Échec de l'installation automatique")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(installError)
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.65))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 12)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 135)
+                    
+                } else if autoUpdate.isChecking {
                     // État 1 : Recherche en cours
                     VStack(spacing: 14) {
                         ProgressView()
@@ -191,7 +252,45 @@ public struct UpdateModalView: View {
             
             // Barre d'actions inférieure
             HStack(spacing: 10) {
-                if autoUpdate.isUpdateAvailable {
+                if autoUpdate.isInstalling {
+                    Text("Veuillez patienter quelques secondes…")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundColor(.white.opacity(0.55))
+                    Spacer()
+                } else if autoUpdate.installError != nil {
+                    Button {
+                        autoUpdate.openBrowserFallback()
+                        onClose()
+                    } label: {
+                        Text("Télécharger via navigateur")
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.75))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Spacer()
+                    
+                    Button {
+                        autoUpdate.installUpdate()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.clockwise.circle.fill")
+                                .font(.system(size: 11, weight: .bold))
+                            Text("Réessayer")
+                                .font(.system(size: 11, weight: .bold))
+                        }
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(Color.accentCyan)
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                } else if autoUpdate.isUpdateAvailable {
                     Button {
                         onClose()
                     } label: {
@@ -208,13 +307,12 @@ public struct UpdateModalView: View {
                     Spacer()
                     
                     Button {
-                        autoUpdate.openDownload()
-                        onClose()
+                        autoUpdate.installUpdate()
                     } label: {
                         HStack(spacing: 5) {
                             Image(systemName: "arrow.down.circle.fill")
                                 .font(.system(size: 11, weight: .bold))
-                            Text("Télécharger la mise à jour")
+                            Text("Installer et relancer")
                                 .font(.system(size: 11, weight: .bold))
                         }
                         .foregroundColor(.black)

@@ -42,6 +42,7 @@ public struct SettingsSheetView: View {
     @ObservedObject private var sessionService = SessionHistoryService.shared
     @ObservedObject private var rbService = RekordboxService.shared
     @ObservedObject private var autoUpdate = AutoUpdateService.shared
+    @ObservedObject private var phoneCompanion = PhoneCompanionService.shared
     @Environment(\.dismiss) var dismiss
     
     @AppStorage("recall_settings_active_tab") private var selectedTabRaw: String = SettingsTab.djMix.rawValue
@@ -1027,6 +1028,83 @@ public struct SettingsSheetView: View {
             }
         }
         
+        // CARTE 2b : Compagnon Téléphone (suggestions en direct sur mobile, sans Internet)
+        settingCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    sectionHeader(icon: "iphone.radiowaves.left.and.right", title: "Compagnon Téléphone (Wi‑Fi local)")
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(phoneCompanion.isRunning ? Color(hex: "#38EB61") : Color.white.opacity(0.3))
+                            .frame(width: 6, height: 6)
+                        Text(phoneCompanion.isRunning
+                             ? (phoneCompanion.connectedClients > 0 ? "\(phoneCompanion.connectedClients) connecté(s)" : "Actif")
+                             : "Arrêté")
+                            .font(.system(size: 9.5, weight: .bold))
+                            .foregroundColor(phoneCompanion.isRunning ? Color(hex: "#38EB61") : .white.opacity(0.5))
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.06))
+                    .cornerRadius(5)
+                }
+                
+                Text("Affichez la fenêtre principale de Recall (morceau en cours, suggestions, Sélec) en direct sur votre téléphone. Scannez un QR code, c'est tout : aucune application à installer, aucune connexion Internet requise, tout reste sur le réseau local.")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Démarrer le compagnon avec Recall")
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.92))
+                        Text("Le flux en direct est prêt dès l'ouverture : il suffit de rouvrir la page sur le téléphone.")
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.white.opacity(0.55))
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $settings.phoneCompanionAutoStart)
+                        .toggleStyle(.switch)
+                        .tint(settings.accentColor)
+                        .scaleEffect(0.90)
+                        .onChange(of: settings.phoneCompanionAutoStart) { enabled in
+                            if enabled { phoneCompanion.start() }
+                        }
+                }
+                
+                HStack(spacing: 8) {
+                    Button {
+                        PhoneCompanionWindowController.shared.show()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "qrcode")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("Afficher le QR code")
+                                .font(.system(size: 10.5, weight: .bold))
+                        }
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(settings.accentColor)
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Text("Port \(settings.phoneCompanionPort) • PIN \(settings.phoneCompanionPin.isEmpty ? "désactivé" : settings.phoneCompanionPin)")
+                        .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.45))
+                    
+                    Spacer()
+                }
+            }
+        }
+        
         // CARTE 3 : Outils de Session & Récapitulatif
         settingCard {
             VStack(alignment: .leading, spacing: 10) {
@@ -1190,9 +1268,9 @@ public struct SettingsSheetView: View {
                         Spacer()
                         
                         Button {
-                            autoUpdate.openDownload()
+                            UpdateWindowController.shared.showAndInstall()
                         } label: {
-                            Text("Télécharger (DMG)")
+                            Text(autoUpdate.isInstalling ? "Installation…" : "Installer et relancer")
                                 .font(.system(size: 10, weight: .heavy))
                                 .foregroundColor(.black)
                                 .padding(.horizontal, 10)

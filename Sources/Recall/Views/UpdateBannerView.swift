@@ -38,26 +38,39 @@ public struct UpdateBannerView: View {
             
             Spacer(minLength: 4)
             
-            // Bouton Télécharger direct
-            Button {
-                updater.openDownload()
-            } label: {
-                HStack(spacing: 3) {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .font(.system(size: 8.5, weight: .bold))
-                    Text("Télécharger")
-                        .font(.system(size: 9.5, weight: .heavy))
+            // Bouton Installer direct
+            if updater.isInstalling {
+                HStack(spacing: 4) {
+                    ProgressView()
+                        .scaleEffect(0.55)
+                        .frame(width: 12, height: 12)
+                    Text("\(Int(updater.downloadProgress * 100))%")
+                        .font(.system(size: 9.5, weight: .heavy, design: .monospaced))
+                        .foregroundColor(Color.accentCyan)
                 }
-                .foregroundColor(.black)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
-                .background(Color.accentCyan)
-                .cornerRadius(4)
-                .shadow(color: Color.accentCyan.opacity(0.4), radius: 3, x: 0, y: 1)
+            } else {
+                Button {
+                    UpdateWindowController.shared.showAndInstall()
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 8.5, weight: .bold))
+                        Text("Installer")
+                            .font(.system(size: 9.5, weight: .heavy))
+                    }
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.accentCyan)
+                    .cornerRadius(4)
+                    .shadow(color: Color.accentCyan.opacity(0.4), radius: 3, x: 0, y: 1)
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+                .help("Installer automatiquement la mise à jour (\(release.tagName)) et relancer Recall")
             }
-            .buttonStyle(.plain)
-            .focusable(false)
-            .help("Télécharger la dernière version (\(release.tagName))")
             
             // Bouton Fermer / Plus tard
             Button {
