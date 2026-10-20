@@ -77,6 +77,10 @@ public enum TransitionDirection: String, CaseIterable, Identifiable, Codable {
 public class UserSettings: ObservableObject {
     public static let shared = UserSettings()
     
+    /// Sessions Serato / Rekordbox plus courtes (tests, tri de bibliothèque) ignorées
+    /// par les suggestions et par la liste des sessions des statistiques.
+    public static let minimumSessionDurationSeconds = 600
+    
     @Published public var transitionDirection: TransitionDirection {
         didSet { UserDefaults.standard.set(transitionDirection.rawValue, forKey: "transitionDirection") }
     }

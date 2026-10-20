@@ -246,6 +246,12 @@ namespace Recall.Services
                         {joinClause}
                         WHERE curr_e.start_time >= {cutoffTime}
                           AND {matchCondition}
+                          AND curr_e.session_id IN (
+                              SELECT session_id FROM history_entry
+                              WHERE played = 1
+                              GROUP BY session_id
+                              HAVING MAX(MAX(start_time, IFNULL(end_time, 0))) - MIN(start_time) >= {UserSettings.MinimumSessionDurationSeconds}
+                          )
                         GROUP BY LOWER(target_e.name), LOWER(target_e.artist)
                         ORDER BY transition_count DESC
                         LIMIT {maxCount};";

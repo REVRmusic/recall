@@ -34,6 +34,20 @@ public class SeratoDatabaseService {
     private static var cachedPastSessions: [PastSessionItem]? = nil
     private static var lastPastSessionsFingerprint: DatabaseFingerprint? = nil
     
+    /// Durée d'une session = écart entre le premier morceau joué et la fin du dernier
+    /// (fonctionne aussi pour la session en cours, dont end_time n'est pas encore écrit).
+    private static let playedSpanSql = "max(max(start_time, ifnull(end_time, 0))) - min(start_time)"
+    
+    /// Restreint une requête sur history_entry aux sessions d'au moins 10 minutes de lecture.
+    private static let validSessionsFilter = """
+    session_id IN (
+        SELECT session_id FROM history_entry
+        WHERE played = 1
+        GROUP BY session_id
+        HAVING \(playedSpanSql) >= \(UserSettings.minimumSessionDurationSeconds)
+    )
+    """
+    
     /// Renvoie immédiatement la liste des sessions passées en mémoire cache si disponible
     public var cachedPastSessionsImmediate: [PastSessionItem]? {
         return Self.queue.sync { Self.cachedPastSessions }
@@ -642,7 +656,8 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
         SELECT DISTINCT asset_id, file_name, name, artist, bpm, key
         FROM history_entry
         WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
-          AND start_time >= \(minStartTime);
+          AND start_time >= \(minStartTime)
+          AND \(Self.validSessionsFilter);
         """
         
         var stmt: OpaquePointer?
@@ -759,6 +774,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 FROM history_entry
                 WHERE \(whereTarget)
                   AND start_time >= \(minStartTime)
+                  AND \(Self.validSessionsFilter)
             ),
             prev_plays AS (
                 SELECT 
@@ -810,6 +826,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 FROM history_entry
                 WHERE \(whereTarget)
                   AND start_time >= \(minStartTime)
+                  AND \(Self.validSessionsFilter)
             ),
             next_plays AS (
                 SELECT 
@@ -880,6 +897,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
                   AND (asset_id != \(excludeId) OR \(excludeId) <= 0)
                   AND start_time >= \(minStartTime)
+                  AND \(Self.validSessionsFilter)
             ),
             prev_plays AS (
                 SELECT 
@@ -933,6 +951,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 WHERE (name LIKE '%\(safeBase)%' OR file_name LIKE '%\(safeBase)%')
                   AND (asset_id != \(excludeId) OR \(excludeId) <= 0)
                   AND start_time >= \(minStartTime)
+                  AND \(Self.validSessionsFilter)
             ),
             next_plays AS (
                 SELECT 
@@ -1009,6 +1028,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                     OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
                 )
                 AND start_time >= \(minStartTime)
+                AND \(Self.validSessionsFilter)
             ),
             second_prev_plays AS (
                 SELECT 
@@ -1061,6 +1081,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                     OR (name != '' AND (name = '\(safeTitle)' OR name = '\(safeRawTitle)'))
                 )
                 AND start_time >= \(minStartTime)
+                AND \(Self.validSessionsFilter)
             ),
             second_next_plays AS (
                 SELECT 
@@ -1665,7 +1686,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
         }
     }
     
-    /// Récupère la liste des sessions passées réelles dans Serato (filtre les tests < 3 morceaux)
+    /// Récupère la liste des sessions passées réelles dans Serato (filtre les tests < 3 morceaux ou < 10 minutes)
     public func fetchPastSessions(limit: Int = 30, useCache: Bool = true) -> [PastSessionItem] {
         return Self.queue.sync {
             let currentFp = currentDatabaseFingerprint()
@@ -1688,6 +1709,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
             LEFT JOIN asset a ON a.id = h.asset_id
             GROUP BY s.id
             HAVING track_count >= 3
+               AND max(max(h.start_time, ifnull(h.end_time, 0))) - min(h.start_time) >= \(UserSettings.minimumSessionDurationSeconds)
             ORDER BY s.start_time DESC
             LIMIT \(limit);
             """

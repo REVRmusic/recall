@@ -9,6 +9,11 @@ namespace Recall.Models
         private static UserSettings? _shared;
         public static UserSettings Shared => _shared ??= Load();
 
+        /// <summary>
+        /// Sessions Serato / Rekordbox plus courtes (tests, tri de bibliothèque) ignorées par les suggestions.
+        /// </summary>
+        public const int MinimumSessionDurationSeconds = 600;
+
         public string DjSoftwareMode { get; set; } = "auto"; // "auto", "serato", "rekordbox"
         public string TransitionDirection { get; set; } = "next"; // "next", "previous", "all"
         public string RekordboxXmlCustomPath { get; set; } = "";

@@ -1012,6 +1012,9 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
     
     private var isInsidePlaylists: Bool = false
     private var currentPlaylistTracks: [String] = []
+    // Le XML Rekordbox ne contient pas l'heure de lecture : la durée d'une session
+    // est estimée par la somme des durées (TotalTime) de ses morceaux.
+    private var trackDurationsById: [String: Int] = [:]
     
     private func sanitizeEncoding(_ str: String) -> String {
         guard str.contains("Ã") || str.contains("Â") else { return str }
@@ -1061,6 +1064,9 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
                 
                 tracksById[trackId] = track
                 tracksList.append(track)
+                if let totalTime = Int(attributeDict["TotalTime"] ?? ""), totalTime > 0 {
+                    trackDurationsById[trackId] = totalTime
+                }
             }
         } else if elementName == "NODE" {
             if attributeDict["Type"] == "1" {
@@ -1080,7 +1086,8 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
         if elementName == "NODE" && !currentPlaylistTracks.isEmpty {
             playlistCount += 1
             let count = currentPlaylistTracks.count
-            if count >= 2 {
+            let estimatedDuration = currentPlaylistTracks.reduce(0) { $0 + (trackDurationsById[$1] ?? 180) }
+            if count >= 2 && estimatedDuration >= UserSettings.minimumSessionDurationSeconds {
                 for i in 0..<(count - 1) {
                     let fromKey = currentPlaylistTracks[i]
                     let toKey = currentPlaylistTracks[i + 1]

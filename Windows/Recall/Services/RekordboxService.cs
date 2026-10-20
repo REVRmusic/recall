@@ -76,6 +76,9 @@ namespace Recall.Services
                     {
                         bool isInsidePlaylists = false;
                         var currentPlaylist = new List<string>();
+                        // Le XML Rekordbox ne contient pas l'heure de lecture : la durée d'une session
+                        // est estimée par la somme des durées (TotalTime) de ses morceaux.
+                        var trackDurationsById = new Dictionary<string, int>();
 
                         while (reader.Read())
                         {
@@ -133,6 +136,10 @@ namespace Recall.Services
 
                                             newTracksById[trackId] = track;
                                             newTracksList.Add(track);
+                                            if (int.TryParse(reader.GetAttribute("TotalTime"), out int totalTime) && totalTime > 0)
+                                            {
+                                                trackDurationsById[trackId] = totalTime;
+                                            }
                                         }
                                     }
                                 }
@@ -142,6 +149,12 @@ namespace Recall.Services
                                 if (reader.Name == "NODE" && currentPlaylist.Count > 0)
                                 {
                                     playlistCount++;
+                                    int estimatedDuration = currentPlaylist.Sum(k => trackDurationsById.TryGetValue(k, out int d) ? d : 180);
+                                    if (estimatedDuration < UserSettings.MinimumSessionDurationSeconds)
+                                    {
+                                        currentPlaylist.Clear();
+                                        continue;
+                                    }
                                     for (int i = 0; i < currentPlaylist.Count - 1; i++)
                                     {
                                         string fromKey = currentPlaylist[i];
