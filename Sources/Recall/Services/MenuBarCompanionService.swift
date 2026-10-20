@@ -23,6 +23,13 @@ public final class MenuBarCompanionService: NSObject, NSMenuDelegate, Observable
             }
             .store(in: &cancellables)
         
+        UserSettings.shared.$djTheme
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.updateStatusItemIcon()
+            }
+            .store(in: &cancellables)
+        
         if UserSettings.shared.enableMenuBarCompanion {
             createStatusItem()
         }
@@ -39,17 +46,90 @@ public final class MenuBarCompanionService: NSObject, NSMenuDelegate, Observable
         }
     }
     
+    /// Met à jour dynamiquement l'icône dans la barre des menus (ex: lors d'un changement de thème DJ)
+    public func updateStatusItemIcon() {
+        guard let button = statusItem?.button else { return }
+        button.image = createVinylStatusImage(size: 18.0)
+    }
+    
+    /// Dessine une icône de vinyle haute précision qui reproduit fidèlement le disque vinyle officiel de Recall
+    /// avec les micro-sillons, le reflet de lumière et le macaron central aux couleurs du thème DJ actif.
+    private func createVinylStatusImage(size: CGFloat = 18.0) -> NSImage {
+        let theme = UserSettings.shared.djTheme
+        let accent1 = theme.nsAccentColor
+        let accent2 = theme.nsSecondaryColor
+        
+        let img = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+            let center = CGPoint(x: rect.midX, y: rect.midY)
+            let radius = (size - 2.0) / 2.0
+            
+            // 1. Corps principal du vinyle (noir profond avec texture vinyle)
+            let discRect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+            let discPath = NSBezierPath(ovalIn: discRect)
+            NSColor(white: 0.11, alpha: 1.0).setFill()
+            discPath.fill()
+            
+            // 2. Reflet spéculaire des sillons (deux éclats coniques opposés à 40° et 220°)
+            let ctx = NSGraphicsContext.current?.cgContext
+            ctx?.saveGState()
+            discPath.addClip()
+            for angleDeg in [40.0, 220.0] {
+                let sheenPath = NSBezierPath()
+                sheenPath.move(to: center)
+                sheenPath.appendArc(withCenter: center, radius: radius, startAngle: CGFloat(angleDeg - 22.0), endAngle: CGFloat(angleDeg + 22.0), clockwise: false)
+                sheenPath.close()
+                NSColor(white: 0.95, alpha: 0.11).setFill()
+                sheenPath.fill()
+            }
+            ctx?.restoreGState()
+            
+            // 3. Sillons concentriques du disque
+            for gr in [radius * 0.82, radius * 0.67, radius * 0.52] {
+                let gp = NSBezierPath(ovalIn: CGRect(x: center.x - gr, y: center.y - gr, width: gr * 2, height: gr * 2))
+                NSColor(white: 0.75, alpha: 0.30).setStroke()
+                gp.lineWidth = 0.65
+                gp.stroke()
+            }
+            
+            // 4. Filet extérieur de contraste métallique (visibilité parfaite sur fond sombre comme clair)
+            let rimColor = NSColor(white: 0.45, alpha: 0.85)
+            rimColor.setStroke()
+            discPath.lineWidth = 0.8
+            discPath.stroke()
+            
+            // 5. Macaron central aux couleurs du thème DJ de Recall
+            let labelRadius = radius * 0.38
+            let labelRect = CGRect(x: center.x - labelRadius, y: center.y - labelRadius, width: labelRadius * 2, height: labelRadius * 2)
+            let labelPath = NSBezierPath(ovalIn: labelRect)
+            
+            let gradient = NSGradient(colors: [accent1, accent2])
+            gradient?.draw(in: labelPath, angle: 45)
+            
+            // Anneau fin délimitant le macaron
+            NSColor(white: 0.05, alpha: 0.7).setStroke()
+            labelPath.lineWidth = 0.5
+            labelPath.stroke()
+            
+            // 6. Trou central du vinyle (spindle)
+            let holeRadius = radius * 0.13
+            let holeRect = CGRect(x: center.x - holeRadius, y: center.y - holeRadius, width: holeRadius * 2, height: holeRadius * 2)
+            let holePath = NSBezierPath(ovalIn: holeRect)
+            NSColor(white: 0.07, alpha: 1.0).setFill()
+            holePath.fill()
+            
+            return true
+        }
+        
+        img.isTemplate = false
+        return img
+    }
+    
     private func createStatusItem() {
         guard statusItem == nil else { return }
         
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            let config = NSImage.SymbolConfiguration(pointSize: 13.5, weight: .semibold)
-            if let img = NSImage(systemSymbolName: "brain.head.profile", accessibilityDescription: "Recall")?
-                .withSymbolConfiguration(config) {
-                img.isTemplate = true
-                button.image = img
-            }
+            button.image = createVinylStatusImage(size: 18.0)
             button.toolTip = "Recall — Copilote DJ Intelligent"
         }
         

@@ -98,6 +98,34 @@ public enum DJTheme: String, CaseIterable, Identifiable {
 import AppKit
 
 extension DJTheme {
+    /// Couleur native NSColor de l'accent principal
+    public var nsAccentColor: NSColor {
+        switch self {
+        case .cyanNeon:
+            return NSColor(red: 0.0, green: 0.85, blue: 0.90, alpha: 1.0)
+        case .electricPurple:
+            return NSColor(red: 0.72, green: 0.35, blue: 1.0, alpha: 1.0)
+        case .sunsetAmber:
+            return NSColor(red: 1.0, green: 0.62, blue: 0.08, alpha: 1.0)
+        case .acidGreen:
+            return NSColor(red: 0.22, green: 0.92, blue: 0.38, alpha: 1.0)
+        }
+    }
+    
+    /// Couleur native NSColor de l'accent secondaire (pour dégradés)
+    public var nsSecondaryColor: NSColor {
+        switch self {
+        case .cyanNeon:
+            return NSColor(red: 0.20, green: 0.60, blue: 1.0, alpha: 1.0)
+        case .electricPurple:
+            return NSColor(red: 0.92, green: 0.28, blue: 0.80, alpha: 1.0)
+        case .sunsetAmber:
+            return NSColor(red: 1.0, green: 0.35, blue: 0.18, alpha: 1.0)
+        case .acidGreen:
+            return NSColor(red: 0.05, green: 0.85, blue: 0.80, alpha: 1.0)
+        }
+    }
+
     /// Image native de l'icône de l'application adaptée aux couleurs de ce thème
     public var iconImage: NSImage? {
         let resourceName = "AppIcon_\(rawValue)"
