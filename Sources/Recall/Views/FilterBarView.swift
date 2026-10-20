@@ -10,127 +10,96 @@ public struct FilterBarView: View {
     }
     
     public var body: some View {
-        HStack(spacing: 4) {
-            // Mini sélecteur de direction d'enchaînement (Après / Avant / Tout)
-            directionSegmentedPicker
+        GeometryReader { proxy in
+            let isNarrow = proxy.size.width < 345
             
-            // Séparateur vertical discret
-            Rectangle()
-                .fill(Color.white.opacity(0.12))
-                .frame(width: 1, height: 13)
-                .padding(.horizontal, 1)
-            
-            // Filtre BPM ±10%
-            filterTogglePill(
-                title: "BPM ±10%",
-                shortTitle: "BPM",
-                icon: "metronome",
-                isActive: settings.isBpmFilterActive,
-                accentColor: Color.accentCyan
-            ) {
-                settings.isBpmFilterActive.toggle()
-            }
-            
-            // Filtre Harmonique (Camelot compatible)
-            filterTogglePill(
-                title: "Harmonie",
-                shortTitle: "Harm.",
-                icon: "circle.grid.cross.fill",
-                isActive: settings.isHarmonicFilterActive,
-                accentColor: Color(hex: "#C471ED")
-            ) {
-                settings.isHarmonicFilterActive.toggle()
-            }
-            
-            // Filtre Combos Favoris
-            filterTogglePill(
-                title: "Favs",
-                shortTitle: "Fav",
-                icon: "heart.fill",
-                isActive: settings.isFavoritesFilterActive && !settings.isToPlayFilterActive,
-                accentColor: Color(hex: "#FF5252")
-            ) {
-                if settings.isToPlayFilterActive {
-                    settings.isToPlayFilterActive = false
-                }
-                settings.isFavoritesFilterActive.toggle()
-            }
-            
-            // Filtre / Onglet Morceaux Sélec
-            filterTogglePill(
-                title: toPlayService.tracks.isEmpty ? "Sélec" : "Sélec (\(toPlayService.tracks.count))",
-                shortTitle: toPlayService.tracks.isEmpty ? "Sélec" : "\(toPlayService.tracks.count) sélec",
-                icon: "bookmark.fill",
-                isActive: settings.isToPlayFilterActive,
-                accentColor: Color(hex: "#FFB300")
-            ) {
-                settings.isToPlayFilterActive.toggle()
-            }
-            
-            Spacer(minLength: 4)
-            
-            // Compteur de résultats
-            let countLabel = settings.isToPlayFilterActive ?
-                "sélec" :
-                (suggestionsCount > 1 ? "matchs" : "match")
-            
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 3) {
-                    Text("\(suggestionsCount)")
-                        .font(.system(size: 9.5, weight: .bold, design: .rounded))
-                        .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : .white.opacity(0.65))
-                    Text(countLabel)
-                        .font(.system(size: 8.5, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.40))
-                }
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2.5)
-                .background(Color.white.opacity(0.05))
-                .cornerRadius(5)
+            HStack(spacing: isNarrow ? 3 : 4) {
+                // Mini sélecteur de direction d'enchaînement (Après / Avant / Tout)
+                directionSegmentedPicker
                 
-                Text("\(suggestionsCount)")
-                    .font(.system(size: 9.5, weight: .bold, design: .rounded))
-                    .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : .white.opacity(0.55))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2.5)
-                    .background(Color.white.opacity(0.05))
-                    .cornerRadius(5)
+                // Séparateur vertical discret
+                Rectangle()
+                    .fill(Color.white.opacity(0.12))
+                    .frame(width: 1, height: 13)
+                    .padding(.horizontal, 1)
+                
+                // Filtre BPM ±10%
+                filterButton(
+                    icon: "metronome",
+                    title: "BPM",
+                    isNarrow: isNarrow,
+                    isActive: settings.isBpmFilterActive,
+                    accentColor: Color.accentCyan
+                ) {
+                    settings.isBpmFilterActive.toggle()
+                }
+                .help("Filtrer par BPM compatible (±\(Int(settings.bpmTolerancePercent))%)")
+                
+                // Filtre Harmonique (Camelot compatible)
+                filterButton(
+                    icon: "circle.grid.cross.fill",
+                    title: "Harm.",
+                    isNarrow: isNarrow,
+                    isActive: settings.isHarmonicFilterActive,
+                    accentColor: Color(hex: "#C471ED")
+                ) {
+                    settings.isHarmonicFilterActive.toggle()
+                }
+                .help("Filtrer par clé harmonique Camelot compatible")
+                
+                // Filtre Combos Favoris
+                filterButton(
+                    icon: "heart.fill",
+                    title: "Favs",
+                    isNarrow: isNarrow,
+                    isActive: settings.isFavoritesFilterActive && !settings.isToPlayFilterActive,
+                    accentColor: Color(hex: "#FF5252")
+                ) {
+                    if settings.isToPlayFilterActive {
+                        settings.isToPlayFilterActive = false
+                    }
+                    settings.isFavoritesFilterActive.toggle()
+                }
+                .help("Afficher uniquement vos transitions favorites mémorisées")
+                
+                // Filtre / Onglet Morceaux Sélec
+                toPlayFilterButton(isNarrow: isNarrow)
+                
+                Spacer(minLength: 2)
+                
+                // Compteur de résultats
+                matchCountBadge(isNarrow: isNarrow)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
+        .frame(height: 22)
         .padding(.horizontal, 8)
         .padding(.bottom, 5)
     }
     
-    private func filterTogglePill(
-        title: String,
-        shortTitle: String? = nil,
+    // MARK: - Bouton Filtre Standard
+    
+    private func filterButton(
         icon: String,
+        title: String,
+        isNarrow: Bool,
         isActive: Bool,
-        accentColor: Color = Color.accentCyan,
+        accentColor: Color,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 2.5) {
-                    Image(systemName: icon)
-                        .font(.system(size: 7.5, weight: .bold))
+            HStack(spacing: 2.5) {
+                Image(systemName: icon)
+                    .font(.system(size: isNarrow ? 8 : 7.5, weight: .bold))
+                
+                if !isNarrow {
                     Text(title)
                         .font(.system(size: 8.5, weight: .semibold))
+                        .lineLimit(1)
                 }
-                .padding(.horizontal, 5)
-                .padding(.vertical, 3)
-                
-                HStack(spacing: 2) {
-                    Image(systemName: icon)
-                        .font(.system(size: 7))
-                    if let short = shortTitle {
-                        Text(short)
-                            .font(.system(size: 8, weight: .semibold))
-                    }
-                }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 3)
             }
+            .padding(.horizontal, isNarrow ? 5 : 5.5)
+            .frame(height: 20)
             .background(isActive ? accentColor.opacity(0.25) : Color.white.opacity(0.06))
             .foregroundColor(isActive ? accentColor : Color.white.opacity(0.7))
             .cornerRadius(5)
@@ -140,6 +109,77 @@ public struct FilterBarView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+    
+    // MARK: - Bouton Filtre Sélec (Spécial : affiche le nombre seul quand l'espace manque)
+    
+    private func toPlayFilterButton(isNarrow: Bool) -> some View {
+        let count = toPlayService.tracks.count
+        let isActive = settings.isToPlayFilterActive
+        let accentColor = Color(hex: "#FFB300")
+        
+        return Button {
+            settings.isToPlayFilterActive.toggle()
+        } label: {
+            HStack(spacing: 2.5) {
+                Image(systemName: "bookmark.fill")
+                    .font(.system(size: isNarrow ? 8 : 7.5, weight: .bold))
+                
+                if isNarrow {
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(.system(size: 8.5, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
+                    }
+                } else {
+                    if count > 0 {
+                        Text("\(count) sélec")
+                            .font(.system(size: 8.5, weight: .semibold))
+                            .lineLimit(1)
+                    } else {
+                        Text("Sélec")
+                            .font(.system(size: 8.5, weight: .semibold))
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .padding(.horizontal, isNarrow ? 5 : 5.5)
+            .frame(height: 20)
+            .background(isActive ? accentColor.opacity(0.25) : Color.white.opacity(0.06))
+            .foregroundColor(isActive ? accentColor : Color.white.opacity(0.7))
+            .cornerRadius(5)
+            .overlay(
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(isActive ? accentColor.opacity(0.65) : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .help(count > 0 ? "Afficher les \(count) morceaux préparés dans votre Sélec" : "Afficher votre liste de morceaux préparés (« À jouer »)")
+    }
+    
+    // MARK: - Badge Compteur de matchs
+    
+    private func matchCountBadge(isNarrow: Bool) -> some View {
+        let countLabel = settings.isToPlayFilterActive ?
+            "sélec" :
+            (suggestionsCount > 1 ? "matchs" : "match")
+        
+        return HStack(spacing: 2.5) {
+            Text("\(suggestionsCount)")
+                .font(.system(size: 9.5, weight: .bold, design: .rounded))
+                .foregroundColor(settings.isToPlayFilterActive ? Color(hex: "#FFB300") : .white.opacity(0.65))
+            
+            if !isNarrow {
+                Text(countLabel)
+                    .font(.system(size: 8.5, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.40))
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, isNarrow ? 4 : 5)
+        .frame(height: 20)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(5)
     }
     
     private var directionSegmentedPicker: some View {
