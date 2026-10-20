@@ -98,16 +98,7 @@ echo "✅ Recall.app créé avec succès dans :"
 echo "   $APP_BUNDLE"
 
 if [ "$1" == "--dmg" ] || [ "$BUILD_DMG" == "1" ]; then
-    echo "💿 Création de l'image disque Recall.dmg..."
-    DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
-    DMG_TEMP=$(mktemp -d)
-    cp -R "$APP_BUNDLE" "$DMG_TEMP/"
-    ln -s /Applications "$DMG_TEMP/Applications"
-    rm -f "$DMG_PATH"
-    hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_TEMP" -ov -format UDZO "$DMG_PATH" > /dev/null
-    rm -rf "$DMG_TEMP"
-    echo "✅ Image disque prête :"
-    echo "   $DMG_PATH"
+    bash "$DIR/scripts/create_dmg.sh"
     
     echo "📦 Création de l'archive Recall-macOS.zip..."
     (cd "$BUILD_DIR" && rm -f "Recall-macOS.zip" && ditto -c -k --keepParent "$APP_NAME.app" "Recall-macOS.zip")
