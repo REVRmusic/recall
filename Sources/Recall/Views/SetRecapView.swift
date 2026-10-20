@@ -326,6 +326,8 @@ public struct SetRecapView: View {
     @State private var isLoadingPastSessionsList: Bool = false
     @State private var pastSessionLoadTask: Task<Void, Never>? = nil
     @State private var pastSessionsListTask: Task<Void, Never>? = nil
+    @State private var isSessionPickerOpen: Bool = false
+    @State private var sessionSearchText: String = ""
     
     private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     
@@ -481,12 +483,30 @@ public struct SetRecapView: View {
                     .zIndex(200)
             }
         }
-        .coordinateSpace(name: "SetRecapWindowSpace")
-        .onPreferenceChange(SessionPickerFrameKey.self) { frame in
-            SetRecapWindowController.shared.sessionPickerHorizontalRange = (frame.minX - 5)...(frame.maxX + 5)
+        .overlayPreferenceValue(SessionPickerAnchorKey.self) { anchor in
+            GeometryReader { proxy in
+                if isSessionPickerOpen, let anchor {
+                    let pickerFrame = proxy[anchor]
+                    ZStack(alignment: .topLeading) {
+                        Color.black.opacity(0.001)
+                            .onTapGesture { closeSessionPicker() }
+                        
+                        sessionPickerDropdown
+                            .offset(
+                                x: max(12, min(pickerFrame.minX, proxy.size.width - Self.sessionPickerDropdownWidth - 12)),
+                                y: pickerFrame.maxY + 6
+                            )
+                            .transition(.opacity.combined(with: .offset(y: -6)))
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+                }
+            }
         }
-        .onChange(of: isShowingExportCustomization) { isShowing in
-            SetRecapWindowController.shared.isExportModalPresented = isShowing
+        .onChange(of: isSessionPickerOpen) { isOpen in
+            SetRecapWindowController.shared.isSessionPickerOpen = isOpen
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .recallDismissSessionPicker)) { _ in
+            closeSessionPicker()
         }
         .frame(minWidth: 500, minHeight: 520)
         .background(
@@ -536,6 +556,7 @@ public struct SetRecapView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Color.accentCyan)
             }
+            .allowsHitTesting(false)
             
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
@@ -569,13 +590,15 @@ public struct SetRecapView: View {
                         Text(selectedPastSession != nil ? (selectedPastSession!.venue != nil ? "📍 \(selectedPastSession!.venue!) • \(selectedPastSession!.trackCount) morceaux" : "Session archivée (\(selectedPastSession!.trackCount) morceaux)") : (stats.totalTracksCount == 0 ? "Mix non démarré (en attente du 1er morceau)" : (stats.isLiveSession ? "Session en direct" : "En pause")))
                             .font(.system(size: 10))
                             .foregroundColor(.white.opacity(0.55))
+                            .lineLimit(1)
                     }
                 }
             }
+            .allowsHitTesting(false)
             
-            sessionPickerMenu
+            sessionPickerButton
             
-            Spacer()
+            Spacer(minLength: 8)
             
             HStack(spacing: 6) {
                 // Bouton Partager rapide
@@ -651,98 +674,278 @@ public struct SetRecapView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .background(WindowDragArea())
     }
     
     // MARK: - 1.1 Sélecteur de session (Direct / Passé)
     
-    private var sessionPickerMenu: some View {
-        Menu {
-            Button {
-                returnToLive()
-            } label: {
-                if selectedPastSession == nil {
-                    Label("Session en direct (Actuelle)", systemImage: "checkmark")
-                } else {
-                    Text("🟢 Session en direct (Actuelle)")
-                }
-            }
-            
-            if !pastSessions.isEmpty {
-                Divider()
-                
-                ForEach(pastSessions) { session in
-                    Button {
-                        selectPastSession(session)
-                    } label: {
-                        if selectedPastSession?.id == session.id {
-                            Label(session.formattedTitle, systemImage: "checkmark")
-                        } else {
-                            Text(session.formattedTitle)
-                        }
-                    }
-                }
-            } else if isLoadingPastSessionsList {
-                Divider()
-                Text("Chargement des sessions Serato...")
+    private static let sessionPickerDropdownWidth: CGFloat = 340
+    
+    private var sessionPickerButtonTitle: String {
+        guard let past = selectedPastSession else { return "En direct" }
+        let date = SessionPickerFormat.shortDate.string(from: past.startTime)
+        if let venue = past.venue {
+            return "\(venue) · \(date)"
+        }
+        return date
+    }
+    
+    private var sessionPickerButton: some View {
+        let isActive = isPickerHovered || isSessionPickerOpen
+        let isPast = selectedPastSession != nil
+        
+        return Button {
+            if isSessionPickerOpen {
+                closeSessionPicker()
             } else {
-                Divider()
-                Button {
-                    loadPastSessions(force: true)
-                } label: {
-                    Label("Actualiser les sessions Serato", systemImage: "arrow.clockwise")
+                loadPastSessions()
+                withAnimation(.easeOut(duration: 0.15)) {
+                    isSessionPickerOpen = true
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                if isLoadingPastSession || (pastSessions.isEmpty && isLoadingPastSessionsList) {
+            HStack(spacing: 7) {
+                if isLoadingPastSession {
                     ProgressView()
-                        .scaleEffect(0.6)
-                        .frame(width: 11, height: 11)
-                } else {
-                    Image(systemName: selectedPastSession == nil ? "record.circle" : "clock.arrow.circlepath")
+                        .scaleEffect(0.5)
+                        .frame(width: 12, height: 12)
+                } else if isPast {
+                    Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(selectedPastSession == nil ? .green : Color.accentCyan)
+                        .foregroundColor(Color.accentCyan)
+                } else {
+                    Circle()
+                        .fill(Color.accentGreen)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: Color.accentGreen.opacity(0.8), radius: 3)
                 }
                 
-                Text(selectedPastSession == nil ? "Session en cours" : selectedPastSession!.shortTitle)
+                Text(sessionPickerButtonTitle)
                     .font(.system(size: 11.5, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 150, alignment: .leading)
+                    .fixedSize(horizontal: true, vertical: false)
                 
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundColor(isPickerHovered ? Color.accentCyan : .white.opacity(0.6))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8.5, weight: .bold))
+                    .foregroundColor(isActive ? Color.accentCyan : .white.opacity(0.55))
+                    .rotationEffect(.degrees(isSessionPickerOpen ? 180 : 0))
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 7)
-                    .fill(isPickerHovered ? Color.white.opacity(0.14) : (selectedPastSession == nil ? Color.white.opacity(0.08) : Color.accentCyan.opacity(0.18)))
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isActive ? Color.white.opacity(0.13) : (isPast ? Color.accentCyan.opacity(0.16) : Color.white.opacity(0.07)))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 7)
-                    .stroke(isPickerHovered ? Color.accentCyan : (selectedPastSession == nil ? Color.white.opacity(0.18) : Color.accentCyan.opacity(0.45)), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isActive ? Color.accentCyan.opacity(0.9) : (isPast ? Color.accentCyan.opacity(0.45) : Color.white.opacity(0.16)), lineWidth: 1)
             )
             .contentShape(Rectangle())
         }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
-        .background(
-            GeometryReader { geo in
-                Color.clear
-                    .preference(
-                        key: SessionPickerFrameKey.self,
-                        value: geo.frame(in: .named("SetRecapWindowSpace"))
-                    )
-            }
-        )
-        .onHover { isHovered in
-            isPickerHovered = isHovered
-            if isHovered && (pastSessions.isEmpty || !isLoadingPastSessionsList) {
-                loadPastSessions()
+        .buttonStyle(.plain)
+        .focusable(false)
+        .onHover { isPickerHovered = $0 }
+        .anchorPreference(key: SessionPickerAnchorKey.self, value: .bounds) { $0 }
+        .help("Choisir la session à analyser (en direct ou une soirée Serato passée)")
+    }
+    
+    private var filteredPastSessions: [SeratoDatabaseService.PastSessionItem] {
+        let query = SessionPickerFormat.searchKey(sessionSearchText)
+        guard !query.isEmpty else { return pastSessions }
+        return pastSessions.filter { session in
+            let haystack = "\(session.venue ?? "") \(SessionPickerFormat.longDate.string(from: session.startTime)) \(SessionPickerFormat.shortDate.string(from: session.startTime))"
+            return SessionPickerFormat.searchKey(haystack).contains(query)
+        }
+    }
+    
+    private var pastSessionsByMonth: [(month: String, sessions: [SeratoDatabaseService.PastSessionItem])] {
+        var groups: [(month: String, sessions: [SeratoDatabaseService.PastSessionItem])] = []
+        for session in filteredPastSessions {
+            let month = SessionPickerFormat.month.string(from: session.startTime).capitalized
+            if groups.last?.month == month {
+                groups[groups.count - 1].sessions.append(session)
+            } else {
+                groups.append((month: month, sessions: [session]))
             }
         }
-        .help("Choisir la session à analyser (session en direct ou sessions Serato passées)")
+        return groups
+    }
+    
+    private var liveSessionSubtitle: String {
+        let count = sessionService.playedTracks.count
+        if count == 0 { return "En attente du 1er morceau" }
+        return "Depuis \(SessionPickerFormat.time.string(from: sessionService.sessionStartTime)) · \(count) morceau\(count > 1 ? "x" : "") joué\(count > 1 ? "s" : "")"
+    }
+    
+    private func pastSessionSubtitle(_ session: SeratoDatabaseService.PastSessionItem) -> String {
+        var parts: [String] = []
+        let start = SessionPickerFormat.time.string(from: session.startTime)
+        if let end = session.endTime {
+            parts.append("\(start) → \(SessionPickerFormat.time.string(from: end))")
+            parts.append(SessionPickerFormat.duration(end.timeIntervalSince(session.startTime)))
+        } else {
+            parts.append(start)
+        }
+        parts.append("\(session.trackCount) morceau\(session.trackCount > 1 ? "x" : "")")
+        return parts.joined(separator: " · ")
+    }
+    
+    private var sessionPickerDropdown: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 7) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.45))
+                
+                TextField("Rechercher un lieu ou une date…", text: $sessionSearchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 11.5))
+                    .foregroundColor(.white)
+                
+                if !sessionSearchText.isEmpty {
+                    Button {
+                        sessionSearchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 7).fill(Color.white.opacity(0.06)))
+            .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.white.opacity(0.08), lineWidth: 1))
+            .padding(8)
+            
+            Divider().background(Color.white.opacity(0.08))
+            
+            ScrollView(.vertical, showsIndicators: true) {
+                LazyVStack(alignment: .leading, spacing: 2, pinnedViews: [.sectionHeaders]) {
+                    if sessionSearchText.isEmpty {
+                        SessionPickerRow(
+                            date: nil,
+                            title: "Session en direct",
+                            subtitle: liveSessionSubtitle,
+                            isSelected: selectedPastSession == nil
+                        ) {
+                            closeSessionPicker()
+                            if selectedPastSession != nil { returnToLive() }
+                        }
+                    }
+                    
+                    ForEach(pastSessionsByMonth, id: \.month) { group in
+                        Section {
+                            ForEach(group.sessions) { session in
+                                SessionPickerRow(
+                                    date: session.startTime,
+                                    title: session.venue ?? SessionPickerFormat.longDate.string(from: session.startTime).capitalized,
+                                    subtitle: pastSessionSubtitle(session),
+                                    isSelected: selectedPastSession?.id == session.id
+                                ) {
+                                    closeSessionPicker()
+                                    if selectedPastSession?.id != session.id { selectPastSession(session) }
+                                }
+                            }
+                        } header: {
+                            Text(group.month.uppercased())
+                                .font(.system(size: 9, weight: .heavy))
+                                .tracking(0.6)
+                                .foregroundColor(.white.opacity(0.4))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 8)
+                                .padding(.top, 8)
+                                .padding(.bottom, 4)
+                                .background(Color(red: 0.11, green: 0.12, blue: 0.16))
+                        }
+                    }
+                    
+                    if pastSessions.isEmpty {
+                        sessionPickerEmptyState(
+                            icon: isLoadingPastSessionsList ? nil : "music.note.list",
+                            text: isLoadingPastSessionsList ? "Chargement des sessions Serato…" : "Aucune session Serato de plus de 10 minutes"
+                        )
+                    } else if filteredPastSessions.isEmpty {
+                        sessionPickerEmptyState(icon: "magnifyingglass", text: "Aucune soirée ne correspond à « \(sessionSearchText) »")
+                    }
+                }
+                .padding(6)
+            }
+            .frame(height: 330)
+            
+            Divider().background(Color.white.opacity(0.08))
+            
+            HStack(spacing: 6) {
+                Text(pastSessions.isEmpty ? "Sessions de 10 min et plus" : "\(pastSessions.count) soirées · 10 min et plus")
+                    .font(.system(size: 9.5, weight: .medium))
+                    .foregroundColor(.white.opacity(0.4))
+                
+                Spacer()
+                
+                Button {
+                    loadPastSessions(force: true)
+                } label: {
+                    HStack(spacing: 4) {
+                        if isLoadingPastSessionsList {
+                            ProgressView().scaleEffect(0.4).frame(width: 10, height: 10)
+                        } else {
+                            Image(systemName: "arrow.clockwise").font(.system(size: 9, weight: .bold))
+                        }
+                        Text("Actualiser").font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundColor(Color.accentCyan)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+                .disabled(isLoadingPastSessionsList)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+        .frame(width: Self.sessionPickerDropdownWidth)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(red: 0.11, green: 0.12, blue: 0.16).opacity(0.98))
+                .shadow(color: Color.black.opacity(0.55), radius: 18, x: 0, y: 8)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    private func sessionPickerEmptyState(icon: String?, text: String) -> some View {
+        VStack(spacing: 8) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.25))
+            } else {
+                ProgressView().scaleEffect(0.7)
+            }
+            Text(text)
+                .font(.system(size: 11))
+                .foregroundColor(.white.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .padding(.horizontal, 16)
+    }
+    
+    private func closeSessionPicker() {
+        guard isSessionPickerOpen else { return }
+        withAnimation(.easeOut(duration: 0.12)) {
+            isSessionPickerOpen = false
+        }
+        sessionSearchText = ""
     }
     
     private func loadPastSessions(force: Bool = false) {
@@ -2146,10 +2349,128 @@ public struct SetRecapView: View {
     }
 }
 
-// MARK: - Clé de préférence pour la mesure géométrique du sélecteur de session
-private struct SessionPickerFrameKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        value = nextValue()
+// MARK: - Sélecteur de session : position, formats et lignes
+
+private struct SessionPickerAnchorKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = value ?? nextValue()
     }
+}
+
+private enum SessionPickerFormat {
+    static let time = makeFormatter("HH'h'mm")
+    static let shortDate = makeFormatter("d MMM yyyy")
+    static let longDate = makeFormatter("EEEE d MMMM")
+    static let month = makeFormatter("LLLL yyyy")
+    static let weekday = makeFormatter("EEE")
+    static let day = makeFormatter("d")
+    
+    private static func makeFormatter(_ format: String) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.dateFormat = format
+        return formatter
+    }
+    
+    static func duration(_ seconds: TimeInterval) -> String {
+        let totalMinutes = max(0, Int(seconds / 60))
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        if hours == 0 { return "\(minutes) min" }
+        return String(format: "%dh%02d", hours, minutes)
+    }
+    
+    static func searchKey(_ text: String) -> String {
+        text.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "fr_FR"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+private struct SessionPickerRow: View {
+    /// `nil` = session en direct
+    let date: Date?
+    let title: String
+    let subtitle: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                dateTile
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    
+                    Text(subtitle)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.5))
+                        .lineLimit(1)
+                }
+                
+                Spacer(minLength: 4)
+                
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(Color.accentCyan)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.accentCyan.opacity(0.14) : (isHovered ? Color.white.opacity(0.07) : Color.clear))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .onHover { isHovered = $0 }
+    }
+    
+    private var dateTile: some View {
+        let isLive = date == nil
+        return ZStack {
+            RoundedRectangle(cornerRadius: 7)
+                .fill(isLive ? Color.accentGreen.opacity(0.15) : Color.white.opacity(0.06))
+            RoundedRectangle(cornerRadius: 7)
+                .stroke(isLive ? Color.accentGreen.opacity(0.35) : Color.white.opacity(0.08), lineWidth: 1)
+            
+            if let date {
+                VStack(spacing: 0) {
+                    Text(SessionPickerFormat.weekday.string(from: date).replacingOccurrences(of: ".", with: "").uppercased())
+                        .font(.system(size: 7.5, weight: .heavy))
+                        .foregroundColor(Color.accentCyan.opacity(0.85))
+                    Text(SessionPickerFormat.day.string(from: date))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+            } else {
+                Image(systemName: "dot.radiowaves.left.and.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Color.accentGreen)
+            }
+        }
+        .frame(width: 34, height: 34)
+    }
+}
+
+/// Zone vide de l'en-tête : déplace la fenêtre comme une barre de titre macOS,
+/// sans voler les clics des boutons posés par-dessus.
+private struct WindowDragArea: NSViewRepresentable {
+    final class DragView: NSView {
+        override func mouseDown(with event: NSEvent) {
+            window?.performDrag(with: event)
+        }
+    }
+    
+    func makeNSView(context: Context) -> NSView { DragView() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
