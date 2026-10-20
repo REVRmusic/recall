@@ -6,48 +6,48 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 def create_dmg_background(output_dir="Resources"):
     os.makedirs(output_dir, exist_ok=True)
     
-    # Dimensions Retina : 1320 x 840 px (correspond à une fenêtre Finder de 660 x 420 pt de zone de contenu)
-    W, H = 1320, 840
+    # Dimensions Retina : 1320 x 880 px (correspond à une fenêtre Finder de 660 x 440 pt)
+    W, H = 1320, 880
     
-    # 1. Base gradient de fond
+    # 1. Base gradient de fond (élégant, profond, studio DJ haut de gamme)
     img = Image.new("RGBA", (W, H), (11, 14, 20, 255))
     draw = ImageDraw.Draw(img)
     
     for y in range(H):
         ratio = y / float(H)
-        # Dégradé subtil du bleu nuit profond (#0A0D14) vers un ardoise élégant (#121726)
-        r = int(10 + ratio * 12)
-        g = int(13 + ratio * 15)
-        b = int(20 + ratio * 24)
+        # Dégradé fluide : du noir nuit (#090C12) vers un ardoise bleuté subtil (#131826)
+        r = int(9 + ratio * 12)
+        g = int(12 + ratio * 14)
+        b = int(18 + ratio * 24)
         draw.line([(0, y), (W, y)], fill=(r, g, b, 255))
         
     # 2. Halo lumineux radial sous les deux icônes et le centre
-    # Centre Y légèrement rehaussé pour laisser respirer le bas (cy = 380 px / 190 pt)
-    cx, cy = 350, 380
-    ax, ay = 970, 380
+    # Centre Y des icônes : cy = 400 px (soit 200 pt dans Finder)
+    cx, cy = 360, 400
+    ax, ay = 960, 400
     
     glow_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow_layer)
     
-    # Anneaux subtils de disque vinyle en arrière-plan centré sur l'icône de Recall
-    for radius in range(85, 260, 25):
+    # Anneaux subtils de disque vinyle en arrière-plan centré sur Recall
+    for radius in range(85, 270, 26):
         glow_draw.ellipse(
             [(cx - radius, cy - radius), (cx + radius, cy + radius)],
-            outline=(0, 240, 255, 14),
+            outline=(0, 240, 255, 13),
             width=2
         )
         
     # Halo néon cyan sous Recall
-    for rad in range(160, 20, -10):
-        alpha = int((1.0 - rad / 160.0) * 35)
+    for rad in range(170, 20, -10):
+        alpha = int((1.0 - rad / 170.0) * 36)
         glow_draw.ellipse(
             [(cx - rad, cy - rad), (cx + rad, cy + rad)],
             fill=(0, 240, 255, alpha)
         )
         
     # Halo sous Applications
-    for rad in range(160, 20, -10):
-        alpha = int((1.0 - rad / 160.0) * 30)
+    for rad in range(170, 20, -10):
+        alpha = int((1.0 - rad / 170.0) * 30)
         glow_draw.ellipse(
             [(ax - rad, cy - rad), (ax + rad, cy + rad)],
             fill=(99, 102, 241, alpha)
@@ -60,8 +60,8 @@ def create_dmg_background(output_dir="Resources"):
     arrow_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     arrow_draw = ImageDraw.Draw(arrow_layer)
     
-    arrow_start = (485, 385)
-    arrow_end = (825, 385)
+    arrow_start = (490, 405)
+    arrow_end = (830, 405)
     
     points = []
     steps = 80
@@ -73,7 +73,7 @@ def create_dmg_background(output_dir="Resources"):
         
     # Halo flou de la flèche
     for i in range(len(points) - 1):
-        arrow_draw.line([points[i], points[i+1]], fill=(0, 240, 255, 80), width=14)
+        arrow_draw.line([points[i], points[i+1]], fill=(0, 240, 255, 85), width=14)
     arrow_layer = arrow_layer.filter(ImageFilter.GaussianBlur(radius=6))
     arrow_draw = ImageDraw.Draw(arrow_layer)
     
@@ -83,7 +83,7 @@ def create_dmg_background(output_dir="Resources"):
         cr = int(0 + t * 160)
         cg = int(240 - t * 100)
         cb = int(255)
-        arrow_draw.line([points[i], points[i+1]], fill=(cr, cg, cb, 230), width=6)
+        arrow_draw.line([points[i], points[i+1]], fill=(cr, cg, cb, 235), width=6)
         
     # Pointe de flèche
     tip_x, tip_y = arrow_end
@@ -97,7 +97,7 @@ def create_dmg_background(output_dir="Resources"):
     img = Image.alpha_composite(img, arrow_layer)
     draw = ImageDraw.Draw(img)
     
-    # 4. Typographie & Titres
+    # 4. Typographie & Titres (Polices système Apple)
     font_title = None
     font_sub = None
     font_badge = None
@@ -109,8 +109,8 @@ def create_dmg_background(output_dir="Resources"):
     ]
     for fp in font_paths:
         try:
-            font_title = ImageFont.truetype(fp, 54)
-            font_sub = ImageFont.truetype(fp, 25)
+            font_title = ImageFont.truetype(fp, 60)
+            font_sub = ImageFont.truetype(fp, 26)
             font_badge = ImageFont.truetype(fp, 23)
             break
         except Exception:
@@ -121,35 +121,32 @@ def create_dmg_background(output_dir="Resources"):
         font_sub = ImageFont.load_default()
         font_badge = ImageFont.load_default()
         
-    # Titre "Recall" centré avec point cyan néon
+    # Titre "Recall" strictement centré (sans point ni icône parasite)
     title_text = "Recall"
     title_bbox = draw.textbbox((0, 0), title_text, font=font_title)
     tw = title_bbox[2] - title_bbox[0]
-    tx = (W - tw) // 2 - 12
-    ty = 60
+    tx = (W - tw) // 2
+    ty = 65
     
+    # Ombre portée subtile
     draw.text((tx + 2, ty + 2), title_text, font=font_title, fill=(0, 0, 0, 180))
+    # Titre blanc pur éclatant
     draw.text((tx, ty), title_text, font=font_title, fill=(255, 255, 255, 255))
     
-    dot_x = tx + tw + 10
-    dot_y = ty + 36
-    draw.ellipse([(dot_x - 6, dot_y - 6), (dot_x + 6, dot_y + 6)], fill=(0, 240, 255, 255))
-    draw.ellipse([(dot_x - 12, dot_y - 12), (dot_x + 12, dot_y + 12)], outline=(0, 240, 255, 120), width=2)
-    
-    # Sous-titre
-    sub_text = "Pour Serato DJ Pro & Pioneer Rekordbox"
+    # Nouveau sous-titre demandé : "Compagnon DJ Indépendant & 100 % Hors-Ligne"
+    sub_text = "Compagnon DJ Indépendant & 100 % Hors-Ligne"
     sub_bbox = draw.textbbox((0, 0), sub_text, font=font_sub)
     sw = sub_bbox[2] - sub_bbox[0]
     sx = (W - sw) // 2
-    sy = 130
-    draw.text((sx, sy), sub_text, font=font_sub, fill=(160, 175, 200, 210))
+    sy = 142
+    draw.text((sx, sy), sub_text, font=font_sub, fill=(160, 185, 215, 230))
     
-    # 5. Badge d'instruction (centré, relevé à y = 600 px pour être visible au-dessus de la barre d'état)
+    # 5. Badge d'instruction (centré, positionné pour ne jamais déborder ni générer d'ascenseur)
     badge_text = "Glissez l'icône Recall dans le dossier Applications"
     badge_bbox = draw.textbbox((0, 0), badge_text, font=font_badge)
     bw = badge_bbox[2] - badge_bbox[0]
     bx = (W - bw) // 2
-    by = 610
+    by = 675
     
     pad_x = 28
     pad_y = 12
@@ -163,18 +160,18 @@ def create_dmg_background(output_dir="Resources"):
     
     draw.text((bx, by), badge_text, font=font_badge, fill=(235, 242, 255, 255))
     
-    # Sauvegarde Retina 2x
+    # Sauvegarde Retina 2x (1320 x 880)
     retina_path = os.path.join(output_dir, "dmg_background@2x.png")
     img.save(retina_path, "PNG")
     
-    # Sauvegarde Standard 1x (660 x 420)
+    # Sauvegarde Standard 1x (660 x 440)
     std_path = os.path.join(output_dir, "dmg_background.png")
-    img_std = img.resize((660, 420), Image.Resampling.LANCZOS)
+    img_std = img.resize((660, 440), Image.Resampling.LANCZOS)
     img_std.save(std_path, "PNG")
     
-    print(f"✅ Images d'arrière-plan DMG générées avec succès :")
-    print(f"   • Retina : {retina_path} (1320x840)")
-    print(f"   • Standard : {std_path} (660x420)")
+    print(f"✅ Images d'arrière-plan DMG régénérées avec succès :")
+    print(f"   • Retina : {retina_path} (1320x880)")
+    print(f"   • Standard : {std_path} (660x440)")
 
 if __name__ == "__main__":
     create_dmg_background()
