@@ -104,6 +104,18 @@ Un onglet intitulé **`💡 Retours & Suggestions`** est généré automatiqueme
 
 ---
 
+## 🎛️ NOUVEAU : Console Admin & Dashboard en ligne
+Une page d'administration dédiée et sécurisée est intégrée à votre site web :
+- **URL de la console :** `https://revrmusic.github.io/recall/admin/` (ou en local `docs/admin/index.html`).
+- **Endpoint API Google Apps Script :** `?action=admin_data`
+- **Fonctionnalités de la console :**
+  - **Métriques en direct :** Total des téléchargements, répartition macOS vs Windows, clics d'intention.
+  - **Communauté DJs :** Liste complète des DJs avec leurs pseudonymes, villes et pays.
+  - **Boîte à idées & Suggestions :** Consultation, filtrage par catégorie (Améliorations, Bugs, Compatibilité DJ), avec boutons pour copier l'email ou répondre directement.
+  - **Protection par mot de passe :** Écran de verrouillage avec mot de passe administrateur sécurisé.
+
+---
+
 ## 🔒 Confidentialité & RGPD
 Ce tracker ne collecte aucune donnée personnelle non consentie. Pour les téléchargements et les suggestions, le nom de DJ, la localisation et l'e-mail sont strictement facultatifs et servent uniquement aux statistiques de la communauté et au suivi de REVR.
 

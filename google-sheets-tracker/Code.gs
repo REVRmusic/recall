@@ -377,6 +377,138 @@ function handleRequest(params) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // Mode console administration complete (?action=admin_data ou ?action=admin)
+  if (params.action === "admin_data" || params.action === "admin") {
+    var dlSheet = getDownloadsSheet(ss);
+    var fbSheet = getFeedbackSheet(ss);
+
+    var dlData = dlSheet ? dlSheet.getDataRange().getValues() : [];
+    var fbData = fbSheet ? fbSheet.getDataRange().getValues() : [];
+
+    var totalDownloads = 0;
+    var macDownloads = 0;
+    var winDownloads = 0;
+    var intentClicks = 0;
+    var djsCount = 0;
+
+    var downloadsList = [];
+    var djsList = [];
+
+    var formatDateSafe = function(dt) {
+      if (!dt) return "";
+      if (dt instanceof Date) {
+        try {
+          return Utilities.formatDate(dt, Session.getScriptTimeZone() || "GMT", "yyyy-MM-dd HH:mm:ss");
+        } catch(e) {
+          return String(dt);
+        }
+      }
+      return String(dt);
+    };
+
+    // Parcours des telechargements (du plus recent au plus ancien)
+    for (var i = dlData.length - 1; i >= 1; i--) {
+      var row = dlData[i];
+      if (!row || row.length === 0 || !row[0]) continue;
+
+      var dtStr = formatDateSafe(row[0]);
+      var pl = String(row[1] || "macOS");
+      var fi = String(row[2] || "");
+      var ver = String(row[3] || "1.0.5");
+      var ev = String(row[4] || "T\u00E9l\u00E9chargement direct");
+      var loc = String(row[5] || "");
+      var sLang = String(row[6] || "FR");
+      var bLang = String(row[7] || "");
+      var res = String(row[8] || "");
+      var ref = String(row[9] || "");
+      var ua = String(row[10] || "");
+      var dj = String(row[11] || "").trim();
+      var city = String(row[12] || "").trim();
+
+      var evLower = ev.toLowerCase();
+      var plLower = pl.toLowerCase();
+
+      var isReal = evLower.indexOf("direct") !== -1 || (evLower.indexOf("chargement") !== -1 && evLower.indexOf("intention") === -1);
+      if (isReal) {
+        totalDownloads++;
+        if (plLower.indexOf("mac") !== -1) macDownloads++;
+        if (plLower.indexOf("win") !== -1) winDownloads++;
+      } else if (evLower.indexOf("intention") !== -1 || evLower.indexOf("intent") !== -1) {
+        intentClicks++;
+      }
+
+      if (dj || city) {
+        djsCount++;
+        djsList.push({
+          djName: dj || "Anonyme",
+          djCity: city || "Non pr\u00E9cis\u00E9",
+          platform: pl,
+          date: dtStr,
+          version: ver
+        });
+      }
+
+      downloadsList.push({
+        date: dtStr,
+        platform: pl,
+        file: fi,
+        version: ver,
+        eventType: ev,
+        location: loc,
+        siteLang: sLang,
+        browserLang: bLang,
+        resolution: res,
+        referrer: ref,
+        userAgent: ua,
+        djName: dj,
+        djCity: city
+      });
+    }
+
+    // Parcours des retours & suggestions (du plus recent au plus ancien)
+    var feedbacksList = [];
+    for (var j = fbData.length - 1; j >= 1; j--) {
+      var fbRow = fbData[j];
+      if (!fbRow || fbRow.length === 0 || !fbRow[0]) continue;
+
+      feedbacksList.push({
+        date: formatDateSafe(fbRow[0]),
+        category: String(fbRow[1] || "Suggestion"),
+        message: String(fbRow[2] || ""),
+        author: String(fbRow[3] || "Anonyme"),
+        email: String(fbRow[4] || ""),
+        software: String(fbRow[5] || "Non pr\u00E9cis\u00E9"),
+        source: String(fbRow[6] || "Site web"),
+        version: String(fbRow[7] || "1.0.5"),
+        userAgent: String(fbRow[8] || "")
+      });
+    }
+
+    var adminOut = {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      stats: {
+        totalDownloads: totalDownloads,
+        macOS: macDownloads,
+        windows: winDownloads,
+        intents: intentClicks,
+        totalEvents: Math.max(0, dlData.length - 1),
+        djsCount: djsCount,
+        feedbacksCount: feedbacksList.length
+      },
+      downloads: downloadsList,
+      djs: djsList,
+      feedbacks: feedbacksList
+    };
+
+    if (params.callback) {
+      return ContentService.createTextOutput(params.callback + "(" + JSON.stringify(adminOut) + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(JSON.stringify(adminOut))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   // Mode enregistrement d'un recapitulatif de mix (?action=save_recap)
   if (params.action === "save_recap" || params.action === "recap") {
     var recapSheet = getRecapSheet(ss);
