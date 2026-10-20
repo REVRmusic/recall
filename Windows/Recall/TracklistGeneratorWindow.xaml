@@ -1,0 +1,128 @@
+<Window x:Class="Recall.TracklistGeneratorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Recall - Générateur de Tracklist"
+        Width="580" Height="680"
+        MinWidth="480" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        Loaded="Window_Loaded">
+
+    <Border CornerRadius="12" Background="#161A22" BorderBrush="#33FFFFFF" BorderThickness="1" ClipToBounds="True">
+        <Grid Margin="18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- En-tête -->
+                <RowDefinition Height="Auto"/> <!-- Sélecteurs Source & Format -->
+                <RowDefinition Height="Auto"/> <!-- Options de mise en page -->
+                <RowDefinition Height="*"/>    <!-- Zone de texte éditable -->
+                <RowDefinition Height="Auto"/> <!-- Pied de page & Actions -->
+            </Grid.RowDefinitions>
+
+            <!-- 1. En-tête -->
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="26" Height="26" CornerRadius="13" Background="#2614C8B0" Margin="0,0,10,0">
+                        <TextBlock Text="📋" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="Générateur de Tracklist" FontWeight="Bold" FontSize="14" Foreground="White"/>
+                        <TextBlock Text="Exportez et formatez votre set pour YouTube, 1001Tracklists et réseaux" FontSize="9.5" Foreground="#9CA3AF"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="✕" Width="26" Height="26" HorizontalAlignment="Right" Background="Transparent" Foreground="#9CA3AF" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
+            </Grid>
+
+            <!-- 2. Barre Source & Format -->
+            <Border Grid.Row="1" Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Source -->
+                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="Source des morceaux" FontSize="9.5" FontWeight="SemiBold" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="CmbSource" SelectionChanged="Options_Changed">
+                            <ComboBoxItem Content="Session en cours (morceaux joués)" Tag="session" IsSelected="True"/>
+                            <ComboBoxItem Content="Ma Sélec (morceaux à jouer)" Tag="toplay"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Format prédéfini -->
+                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                        <TextBlock Text="Format de publication" FontSize="9.5" FontWeight="SemiBold" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="CmbFormat" SelectionChanged="Format_Changed">
+                            <ComboBoxItem Content="YouTube / Sommaire (00:00 Artiste - Titre)" Tag="youtube" IsSelected="True"/>
+                            <ComboBoxItem Content="1001Tracklists (01. [00:00] Artiste - Titre)" Tag="tracklist1001"/>
+                            <ComboBoxItem Content="Réseaux sociaux (01. Artiste - Titre)" Tag="social"/>
+                            <ComboBoxItem Content="Horodaté Réel ([22:15] Artiste - Titre)" Tag="liveTimestamp"/>
+                            <ComboBoxItem Content="Détaillé DJ (BPM &amp; Clé Camelot)" Tag="detailedDJ"/>
+                            <ComboBoxItem Content="Playlist M3U8 (#EXTM3U)" Tag="m3u8"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 3. Options modulables -->
+            <Border Grid.Row="2" Background="#181D26" BorderBrush="#262D3B" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,12">
+                <WrapPanel Orientation="Horizontal">
+                    <CheckBox x:Name="ChkTimestamps" Content="Horodatage" IsChecked="True" Margin="0,0,14,0" Foreground="#D1D5DB" FontSize="10" Checked="Options_Changed" Unchecked="Options_Changed"/>
+                    <CheckBox x:Name="ChkNumbering" Content="Numérotation (01.)" IsChecked="False" Margin="0,0,14,0" Foreground="#D1D5DB" FontSize="10" Checked="Options_Changed" Unchecked="Options_Changed"/>
+                    <CheckBox x:Name="ChkBpmKey" Content="BPM &amp; Clé" IsChecked="False" Margin="0,0,14,0" Foreground="#D1D5DB" FontSize="10" Checked="Options_Changed" Unchecked="Options_Changed"/>
+                    <CheckBox x:Name="ChkArtistFirst" Content="Artiste en premier" IsChecked="True" Margin="0,0,14,0" Foreground="#D1D5DB" FontSize="10" Checked="Options_Changed" Unchecked="Options_Changed"/>
+                    <CheckBox x:Name="ChkChronological" Content="Ordre chronologique" IsChecked="True" Foreground="#D1D5DB" FontSize="10" Checked="Options_Changed" Unchecked="Options_Changed"/>
+                </WrapPanel>
+            </Border>
+
+            <!-- 4. Zone d'édition de la tracklist -->
+            <Grid Grid.Row="3" Margin="0,0,0,14">
+                <Border Background="#12151C" BorderBrush="#262D3B" BorderThickness="1" CornerRadius="8">
+                    <TextBox x:Name="TxtTracklist"
+                             Background="Transparent"
+                             Foreground="#E5E7EB"
+                             BorderThickness="0"
+                             Padding="12"
+                             FontSize="11"
+                             FontFamily="Consolas, Cascadia Code, Courier New"
+                             AcceptsReturn="True"
+                             AcceptsTab="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled"/>
+                </Border>
+
+                <!-- Feedback Toast Copié -->
+                <Border x:Name="ToastCopied"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Background="#14C8B0"
+                        CornerRadius="20"
+                        Padding="14,6"
+                        Margin="0,0,0,20"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✓" FontWeight="Bold" FontSize="11" Foreground="#12151A" Margin="0,0,6,0"/>
+                        <TextBlock Text="Tracklist copiée dans le presse-papiers !" FontWeight="Bold" FontSize="11" Foreground="#12151A"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 5. Pied de page & Actions -->
+            <Grid Grid.Row="4">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtTrackCount" Text="0 morceaux" FontSize="10" FontWeight="SemiBold" Foreground="#9CA3AF"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Exporter .txt" Padding="12,6" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnExportTxt_Click" Margin="0,0,8,0"/>
+                    <Button Content="Exporter .m3u8" Padding="12,6" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnExportM3u8_Click" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnCopy" Content="Copier la tracklist 📋" Padding="16,6" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCopy_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

@@ -40,6 +40,11 @@ namespace Recall
             ApplySettingsToUI();
             PositionAtBottomRight();
             UpdateUI();
+
+            if (UserSettings.Shared.EnableTrayCompanion)
+            {
+                TrayCompanionService.Shared.Initialize(this);
+            }
         }
 
         public void PositionAtBottomRight()
@@ -90,14 +95,20 @@ namespace Recall
         private const uint VK_C = 0x43;
         private const uint VK_F = 0x46;
         private const uint VK_R = 0x52;
+        private const uint VK_S = 0x53;
+        private const uint VK_T = 0x54;
 
         private const int HOTKEY_ID_TOGGLE_SHIFT = 9001;
         private const int HOTKEY_ID_COMPACT_SHIFT = 9002;
         private const int HOTKEY_ID_SEARCH_SHIFT = 9003;
+        private const int HOTKEY_ID_RECAP_SHIFT = 9004;
+        private const int HOTKEY_ID_TRACKLIST_SHIFT = 9005;
 
         private const int HOTKEY_ID_TOGGLE_ALT = 9011;
         private const int HOTKEY_ID_COMPACT_ALT = 9012;
         private const int HOTKEY_ID_SEARCH_ALT = 9013;
+        private const int HOTKEY_ID_RECAP_ALT = 9014;
+        private const int HOTKEY_ID_TRACKLIST_ALT = 9015;
 
         private HwndSource? _hwndSource;
 
@@ -109,6 +120,7 @@ namespace Recall
 
         protected override void OnClosed(EventArgs e)
         {
+            TrayCompanionService.Shared.RemoveTrayIcon();
             UnregisterGlobalHotKeys();
             base.OnClosed(e);
         }
@@ -128,11 +140,15 @@ namespace Recall
                 RegisterHotKey(handle, HOTKEY_ID_TOGGLE_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_R);
                 RegisterHotKey(handle, HOTKEY_ID_COMPACT_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_C);
                 RegisterHotKey(handle, HOTKEY_ID_SEARCH_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_F);
+                RegisterHotKey(handle, HOTKEY_ID_RECAP_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_S);
+                RegisterHotKey(handle, HOTKEY_ID_TRACKLIST_SHIFT, MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, VK_T);
 
                 // 2. Combinaisons Ctrl + Alt (Protection Anti-Conflit Serato & Rekordbox)
                 RegisterHotKey(handle, HOTKEY_ID_TOGGLE_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_R);
                 RegisterHotKey(handle, HOTKEY_ID_COMPACT_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_C);
                 RegisterHotKey(handle, HOTKEY_ID_SEARCH_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_F);
+                RegisterHotKey(handle, HOTKEY_ID_RECAP_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_S);
+                RegisterHotKey(handle, HOTKEY_ID_TRACKLIST_ALT, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_T);
             }
             catch (Exception)
             {
@@ -151,10 +167,14 @@ namespace Recall
                     UnregisterHotKey(handle, HOTKEY_ID_TOGGLE_SHIFT);
                     UnregisterHotKey(handle, HOTKEY_ID_COMPACT_SHIFT);
                     UnregisterHotKey(handle, HOTKEY_ID_SEARCH_SHIFT);
+                    UnregisterHotKey(handle, HOTKEY_ID_RECAP_SHIFT);
+                    UnregisterHotKey(handle, HOTKEY_ID_TRACKLIST_SHIFT);
 
                     UnregisterHotKey(handle, HOTKEY_ID_TOGGLE_ALT);
                     UnregisterHotKey(handle, HOTKEY_ID_COMPACT_ALT);
                     UnregisterHotKey(handle, HOTKEY_ID_SEARCH_ALT);
+                    UnregisterHotKey(handle, HOTKEY_ID_RECAP_ALT);
+                    UnregisterHotKey(handle, HOTKEY_ID_TRACKLIST_ALT);
                 }
                 _hwndSource?.RemoveHook(HwndHook);
             }
@@ -185,6 +205,18 @@ namespace Recall
                     case HOTKEY_ID_SEARCH_SHIFT:
                     case HOTKEY_ID_SEARCH_ALT:
                         TriggerSearchGlobal();
+                        handled = true;
+                        break;
+
+                    case HOTKEY_ID_RECAP_SHIFT:
+                    case HOTKEY_ID_RECAP_ALT:
+                        OpenSetRecap();
+                        handled = true;
+                        break;
+
+                    case HOTKEY_ID_TRACKLIST_SHIFT:
+                    case HOTKEY_ID_TRACKLIST_ALT:
+                        OpenTracklistGenerator();
                         handled = true;
                         break;
                 }
@@ -491,7 +523,23 @@ namespace Recall
             UpdateUI();
         }
 
+        private void BtnTracklist_Click(object sender, RoutedEventArgs e)
+        {
+            OpenTracklistGenerator();
+        }
+
+        public void OpenTracklistGenerator()
+        {
+            var tracklistWnd = new TracklistGeneratorWindow { Owner = this };
+            tracklistWnd.ShowDialog();
+        }
+
         private void BtnStats_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSetRecap();
+        }
+
+        public void OpenSetRecap()
         {
             var statsWnd = new SetRecapWindow { Owner = this };
             statsWnd.ShowDialog();
@@ -504,9 +552,12 @@ namespace Recall
             guideWnd.ShowDialog();
         }
 
-
-
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSettings();
+        }
+
+        public void OpenSettings()
         {
             var settingsWnd = new SettingsWindow { Owner = this };
             settingsWnd.ShowDialog();

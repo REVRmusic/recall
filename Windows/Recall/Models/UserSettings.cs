@@ -29,6 +29,9 @@ namespace Recall.Models
         public int PlayedMinDurationSeconds { get; set; } = 25;
         public int KeyDisplayMode { get; set; } = 0; // 0: Camelot (9A), 1: Musicale (Em), 2: Combiné
         public bool CumulateVariantSuggestions { get; set; } = true;
+        public string DjTheme { get; set; } = "cyanNeon"; // "cyanNeon", "electricPurple", "sunsetAmber", "acidGreen"
+        public bool EnableTrayCompanion { get; set; } = true;
+        public bool LaunchAtStartup { get; set; } = false;
 
         private static string SettingsFilePath
         {

@@ -403,6 +403,7 @@
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="BtnCollapse" Content="↓ Réduire" Style="{StaticResource CollapsePillBtnStyle}" Click="BtnCollapse_Click" ToolTip="Passer en mode bandeau compact (Ctrl+Shift+C)" Margin="0,0,4,0"/>
                         <Button x:Name="BtnSearch" Content="🔍" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSearch_Click" ToolTip="Rechercher un morceau dans la bibliothèque (Ctrl+Shift+F)" Margin="0,0,3,0"/>
+                        <Button x:Name="BtnTracklist" Content="📋" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnTracklist_Click" ToolTip="Générateur de Tracklist (Ctrl+Shift+T)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnStats" Content="📊" FontSize="9.5" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnStats_Click" ToolTip="Statistiques du mix - Set Recap (Ctrl+Shift+S)" Margin="0,0,3,0"/>
                         <Button x:Name="BtnGuide" Content="?" FontSize="10" FontWeight="Bold" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnGuide_Click" ToolTip="Guide et légende des symboles" Margin="0,0,3,0"/>
                         <Button x:Name="BtnSettings" Content="⚙" FontSize="10" Style="{StaticResource HeaderCircleBtnStyle}" Click="BtnSettings_Click" ToolTip="Paramètres et conformité" Margin="0,0,3,0"/>

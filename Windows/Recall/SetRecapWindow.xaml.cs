@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -338,6 +339,29 @@ namespace Recall
                 MessageBox.Show(this, "Résumé du mix copié dans le presse-papiers !", "Copié", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch { }
+        }
+
+        private void BtnExportImage_Click(object sender, RoutedEventArgs e)
+        {
+            var stats = _history.ComputeCurrentStats();
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Image PNG (*.png)|*.png|Tous les fichiers (*.*)|*.*",
+                FileName = $"Recall_Set_Recap_{DateTime.Now:yyyyMMdd_HHmm}.png"
+            };
+
+            if (sfd.ShowDialog(this) == true)
+            {
+                bool ok = SetRecapExportService.SaveToPng(stats, sfd.FileName);
+                if (ok)
+                {
+                    MessageBox.Show(this, "Carte récapitulative haute définition enregistrée avec succès !", "Image Enregistrée", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this, "Impossible d'exporter l'image du set.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
     }
 }

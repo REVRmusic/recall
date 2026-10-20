@@ -165,6 +165,7 @@
             <Grid Grid.Row="2" Margin="0,12,0,0">
                 <Button Content="↺ Démarrer un nouveau set" Padding="10,5" Background="Transparent" Foreground="#FF7675" BorderThickness="1" BorderBrush="#FF5252" Cursor="Hand" Click="BtnResetSession_Click"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Exporter Image 📸" Padding="12,5" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnExportImage_Click" Margin="0,0,8,0" ToolTip="Exporter la carte récapitulative haute définition en PNG pour vos réseaux"/>
                     <Button Content="Copier le résumé" Padding="12,5" Background="#242B38" Foreground="White" BorderThickness="1" BorderBrush="#374151" Cursor="Hand" Click="BtnCopySummary_Click" Margin="0,0,8,0"/>
                     <Button Content="Fermer" Padding="16,5" Background="#14C8B0" Foreground="#12151A" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click"/>
                 </StackPanel>

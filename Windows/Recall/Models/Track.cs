@@ -64,21 +64,8 @@ namespace Recall.Models
         {
             get
             {
-                string trimmedArtist = Artist.Trim();
-                if (!string.IsNullOrEmpty(trimmedArtist) &&
-                    !trimmedArtist.Equals("artiste inconnu", StringComparison.OrdinalIgnoreCase) &&
-                    !trimmedArtist.Equals("unknown artist", StringComparison.OrdinalIgnoreCase) &&
-                    !trimmedArtist.Equals("unknown", StringComparison.OrdinalIgnoreCase))
-                {
-                    string directTitle = !string.IsNullOrEmpty(Title.Trim()) ? Title.Trim() :
-                        (!string.IsNullOrEmpty(FileName.Trim()) ? Path.GetFileNameWithoutExtension(FileName) : "Morceau inconnu");
-                    return (trimmedArtist, directTitle);
-                }
-
-                string sourceString = !string.IsNullOrEmpty(Title.Trim()) ? Title :
-                    (!string.IsNullOrEmpty(FileName.Trim()) ? Path.GetFileNameWithoutExtension(FileName) : "");
-
-                return ParseSmartArtistAndTitle(sourceString);
+                var cleaned = TrackMetadataCleaner.Clean(Title, Artist, FileName, null);
+                return (cleaned.Artist, cleaned.Title);
             }
         }
 

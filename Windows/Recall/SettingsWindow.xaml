@@ -120,12 +120,42 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- SECTION 5 : Options d'affichage -->
+                    <!-- SECTION 5 : Thèmes Visuels & Ambiance DJ -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="Affichage &amp; Comportement" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
+                            <TextBlock Text="Thème Visuel &amp; Ambiance DJ" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,4"/>
+                            <TextBlock Text="Personnalisez la couleur d'accentuation selon l'ambiance de votre setup :" FontSize="9.5" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+                            <Grid>
+                                <TextBlock Text="Ambiance active" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbTheme" HorizontalAlignment="Right" Width="220" SelectionChanged="CmbTheme_SelectionChanged">
+                                    <ComboBoxItem Content="Cyan Neon (Signature Recall • Cyber)" Tag="cyanNeon" IsSelected="True"/>
+                                    <ComboBoxItem Content="Electric Purple (Vibe Nocturne • Laser)" Tag="electricPurple"/>
+                                    <ComboBoxItem Content="Sunset Amber (Chaleur Analogique • Or)" Tag="sunsetAmber"/>
+                                    <ComboBoxItem Content="Acid Green (Énergie Club • Rave)" Tag="acidGreen"/>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SECTION 6 : Options d'affichage & Arrière-Plan -->
+                    <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Affichage &amp; Comportement Système" FontWeight="SemiBold" FontSize="11" Foreground="#E5E7EB" Margin="0,0,0,8"/>
                             <CheckBox x:Name="ChkAlwaysOnTop" Content="Fenêtre toujours au premier plan (Always on top)" Margin="0,0,0,8"/>
-                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Margin="0,0,0,10"/>
+                            <CheckBox x:Name="ChkHidePlayed" Content="Masquer les morceaux déjà joués dans la session" Margin="0,0,0,8"/>
+                            
+                            <!-- Toggle Compagnon Résident (System Tray) -->
+                            <StackPanel Margin="0,0,0,8">
+                                <CheckBox x:Name="ChkEnableTray" Content="Compagnon résident dans la zone de notification (System Tray)" IsChecked="True"/>
+                                <TextBlock Text="Maintient Recall actif en arrière-plan à l'instar de Pulse DJ. Surveille Serato / Rekordbox en continu et permet la réouverture en 1 clic." FontSize="8.5" Foreground="#6B7280" Margin="20,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <!-- Toggle Lancer au démarrage -->
+                            <StackPanel Margin="0,0,0,10">
+                                <CheckBox x:Name="ChkLaunchAtStartup" Content="Lancer Recall au démarrage de Windows"/>
+                                <TextBlock Text="Démarre Recall automatiquement en arrière-plan à l'ouverture de votre session Windows." FontSize="8.5" Foreground="#6B7280" Margin="20,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+
                             <Grid Margin="0,2,0,0">
                                 <TextBlock Text="Format des clés musicales" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="CmbKeyDisplayMode" HorizontalAlignment="Right" Width="140">
@@ -137,7 +167,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- SECTION 6 : Mise à jour de l'application (v1.0.5) -->
+                    <!-- SECTION 7 : Mise à jour de l'application (v1.0.5) -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <Grid Margin="0,0,0,6">
@@ -154,7 +184,7 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- SECTION 7 : Raccourcis Clavier Windows -->
+                    <!-- SECTION 8 : Raccourcis Clavier Windows -->
                     <Border Background="#1C212C" BorderBrush="#2A3140" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Raccourcis Clavier Système (Hotkeys)" FontWeight="SemiBold" FontSize="11" Foreground="#00F0FF" Margin="0,0,0,4"/>
@@ -178,6 +208,20 @@
                                 <TextBlock Text="Ouvrir la recherche Recall par-dessus votre logiciel DJ" FontSize="9.5" Foreground="#D1D5DB"/>
                                 <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
                                     <TextBlock Text="Ctrl + Shift + F  (ou Ctrl + Alt + F)" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </Grid>
+
+                            <Grid Margin="0,2">
+                                <TextBlock Text="Ouvrir les Statistiques du Mix (Set Recap)" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
+                                    <TextBlock Text="Ctrl + Shift + S  (ou Ctrl + Alt + S)" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </Grid>
+
+                            <Grid Margin="0,2">
+                                <TextBlock Text="Ouvrir le Générateur de Tracklist" FontSize="9.5" Foreground="#D1D5DB"/>
+                                <Border HorizontalAlignment="Right" Background="#2A3140" CornerRadius="3" Padding="4,1">
+                                    <TextBlock Text="Ctrl + Shift + T  (ou Ctrl + Alt + T)" FontSize="9" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                             </Grid>
 

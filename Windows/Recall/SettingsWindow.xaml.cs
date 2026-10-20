@@ -138,6 +138,29 @@ namespace Recall
                     break;
                 }
             }
+
+            // DJ Theme
+            string currentTheme = _settings.DjTheme;
+            foreach (ComboBoxItem item in CmbTheme.Items)
+            {
+                if (item.Tag?.ToString() == currentTheme)
+                {
+                    CmbTheme.SelectedItem = item;
+                    break;
+                }
+            }
+
+            // System Tray & Startup
+            ChkEnableTray.IsChecked = _settings.EnableTrayCompanion;
+            ChkLaunchAtStartup.IsChecked = LaunchAtStartupService.IsLaunchAtStartupEnabled();
+        }
+
+        private void CmbTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CmbTheme?.SelectedItem is ComboBoxItem item && item.Tag != null)
+            {
+                DJThemeManager.ApplyTheme(item.Tag.ToString()!);
+            }
         }
 
         private void BtnBrowseRbXml_Click(object sender, RoutedEventArgs e)
@@ -212,6 +235,30 @@ namespace Recall
                 _settings.KeyDisplayMode = kdm;
             }
 
+            if (CmbTheme.SelectedItem is ComboBoxItem itemTheme && itemTheme.Tag != null)
+            {
+                _settings.DjTheme = itemTheme.Tag.ToString()!;
+                DJThemeManager.ApplyTheme(_settings.DjTheme);
+            }
+
+            bool enableTray = ChkEnableTray.IsChecked == true;
+            _settings.EnableTrayCompanion = enableTray;
+            if (enableTray)
+            {
+                if (Application.Current.MainWindow is MainWindow mw)
+                {
+                    TrayCompanionService.Shared.Initialize(mw);
+                }
+            }
+            else
+            {
+                TrayCompanionService.Shared.RemoveTrayIcon();
+            }
+
+            bool wantStartup = ChkLaunchAtStartup.IsChecked == true;
+            _settings.LaunchAtStartup = wantStartup;
+            LaunchAtStartupService.SetLaunchAtStartup(wantStartup);
+
             _settings.Save();
             DialogResult = true;
             Close();
@@ -228,6 +275,11 @@ namespace Recall
             _settings.AlwaysOnTop = true;
             _settings.HidePlayedTracks = false;
             _settings.KeyDisplayMode = 0;
+            _settings.DjTheme = "cyanNeon";
+            DJThemeManager.ApplyTheme("cyanNeon");
+            _settings.EnableTrayCompanion = true;
+            _settings.LaunchAtStartup = false;
+            LaunchAtStartupService.SetLaunchAtStartup(false);
             LoadSettings();
         }
 
