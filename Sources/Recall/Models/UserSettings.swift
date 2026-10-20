@@ -199,6 +199,19 @@ public class UserSettings: ObservableObject {
         }
     }
     
+    /// Compagnon Téléphone : démarrage automatique du serveur local à l'ouverture de Recall
+    @Published public var phoneCompanionAutoStart: Bool {
+        didSet { UserDefaults.standard.set(phoneCompanionAutoStart, forKey: "phoneCompanionAutoStart") }
+    }
+    /// Port TCP du serveur local du Compagnon Téléphone
+    @Published public var phoneCompanionPort: Int {
+        didSet { UserDefaults.standard.set(phoneCompanionPort, forKey: "phoneCompanionPort") }
+    }
+    /// Code PIN protégeant l'accès au flux en direct (vide = accès libre sur le réseau local)
+    @Published public var phoneCompanionPin: String {
+        didSet { UserDefaults.standard.set(phoneCompanionPin, forKey: "phoneCompanionPin") }
+    }
+    
     public var accentColor: Color {
         djTheme.accentColor
     }
@@ -258,6 +271,17 @@ public class UserSettings: ObservableObject {
             self.enableMenuBarCompanion = true
         } else {
             self.enableMenuBarCompanion = def.bool(forKey: "enableMenuBarCompanion")
+        }
+        
+        self.phoneCompanionAutoStart = def.bool(forKey: "phoneCompanionAutoStart")
+        self.phoneCompanionPort = def.object(forKey: "phoneCompanionPort") != nil ? def.integer(forKey: "phoneCompanionPort") : 8765
+        if let savedPin = def.string(forKey: "phoneCompanionPin") {
+            self.phoneCompanionPin = savedPin
+        } else {
+            // PIN aléatoire par défaut : indispensable sur un Wi‑Fi de club partagé
+            let generated = String(format: "%04d", Int.random(in: 0...9999))
+            self.phoneCompanionPin = generated
+            def.set(generated, forKey: "phoneCompanionPin")
         }
         
         #if os(macOS)
