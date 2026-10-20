@@ -89,21 +89,33 @@ namespace Recall
             GenerateTracklist();
         }
 
-        private void GenerateTracklist()
+        private List<Track> GetSelectedTracks()
         {
             string sourceTag = (CmbSource.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "session";
-            string formatTag = (CmbFormat.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "youtube";
-
-            var tracks = new List<Track>();
-
             if (sourceTag == "session")
             {
-                tracks.AddRange(_history.PlayedTracks);
+                return _history.PlayedTracks.Select(spt => new Track
+                {
+                    Title = spt.Title,
+                    Artist = spt.Artist,
+                    FileName = spt.FileName,
+                    Bpm = spt.Bpm,
+                    RawKey = spt.RawKey,
+                    CamelotKey = spt.CamelotKey,
+                    PlayedAt = spt.PlayedAt
+                }).ToList();
             }
             else
             {
-                tracks.AddRange(_toPlay.ToTrackList());
+                return _toPlay.ToTrackList();
             }
+        }
+
+        private void GenerateTracklist()
+        {
+            string formatTag = (CmbFormat.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "youtube";
+
+            var tracks = GetSelectedTracks();
 
             if (tracks.Count == 0)
             {
@@ -182,7 +194,7 @@ namespace Recall
                 {
                     var extra = new List<string>();
                     if (track.Bpm > 0) extra.Add($"{(int)Math.Round(track.Bpm)} BPM");
-                    if (track.CamelotKey != null) extra.Add(track.CamelotKey.ToString());
+                    if (track.CamelotKey != null) extra.Add(track.CamelotKey.ToString() ?? "");
                     else if (!string.IsNullOrEmpty(track.RawKey)) extra.Add(track.RawKey);
 
                     if (extra.Count > 0)
@@ -264,7 +276,7 @@ namespace Recall
 
         private void BtnExportM3u8_Click(object sender, RoutedEventArgs e)
         {
-            var tracks = (CmbSource.SelectedIndex == 0) ? _history.PlayedTracks : _toPlay.ToTrackList();
+            var tracks = GetSelectedTracks();
             string m3u8Content = GenerateM3U8(tracks);
 
             var sfd = new SaveFileDialog

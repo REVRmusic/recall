@@ -1,4 +1,5 @@
 using System.Windows;
+using Recall.Models;
 using Recall.Services;
 
 namespace Recall
