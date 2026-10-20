@@ -212,6 +212,20 @@ public class UserSettings: ObservableObject {
         didSet { UserDefaults.standard.set(phoneCompanionPin, forKey: "phoneCompanionPin") }
     }
     
+    // MARK: - Personnalisation de la barre d'en-tête (Affichage / Masquage des éléments)
+    @Published public var showHeaderStats: Bool {
+        didSet { UserDefaults.standard.set(showHeaderStats, forKey: "showHeaderStats") }
+    }
+    @Published public var showHeaderPhoneCompanion: Bool {
+        didSet { UserDefaults.standard.set(showHeaderPhoneCompanion, forKey: "showHeaderPhoneCompanion") }
+    }
+    @Published public var showHeaderSearch: Bool {
+        didSet { UserDefaults.standard.set(showHeaderSearch, forKey: "showHeaderSearch") }
+    }
+    @Published public var showHeaderGuide: Bool {
+        didSet { UserDefaults.standard.set(showHeaderGuide, forKey: "showHeaderGuide") }
+    }
+    
     public var accentColor: Color {
         djTheme.accentColor
     }
@@ -283,6 +297,11 @@ public class UserSettings: ObservableObject {
             self.phoneCompanionPin = generated
             def.set(generated, forKey: "phoneCompanionPin")
         }
+        
+        self.showHeaderStats = def.object(forKey: "showHeaderStats") != nil ? def.bool(forKey: "showHeaderStats") : true
+        self.showHeaderPhoneCompanion = def.object(forKey: "showHeaderPhoneCompanion") != nil ? def.bool(forKey: "showHeaderPhoneCompanion") : true
+        self.showHeaderSearch = def.object(forKey: "showHeaderSearch") != nil ? def.bool(forKey: "showHeaderSearch") : true
+        self.showHeaderGuide = def.object(forKey: "showHeaderGuide") != nil ? def.bool(forKey: "showHeaderGuide") : true
         
         #if os(macOS)
         updateAppDockIcon()

@@ -205,7 +205,62 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(editMenuItem)
         
         // -------------------------------------------------------------
-        // 4. Menu "Outils" (Impératif, hub central de l'activité DJ)
+        // 4. Menu "Présentation" (Standard macOS)
+        // -------------------------------------------------------------
+        let viewMenuItem = NSMenuItem()
+        let viewMenu = NSMenu(title: "Présentation")
+        
+        let headerElementsTitleItem = NSMenuItem(title: "ÉLÉMENTS DE LA BARRE D'EN-TÊTE", action: nil, keyEquivalent: "")
+        headerElementsTitleItem.isEnabled = false
+        viewMenu.addItem(headerElementsTitleItem)
+        
+        let toggleStatsItem = NSMenuItem(
+            title: "Statistiques du Mix (Set Recap)",
+            action: #selector(toggleHeaderStatsAction),
+            keyEquivalent: ""
+        )
+        toggleStatsItem.target = self
+        viewMenu.addItem(toggleStatsItem)
+        
+        let togglePhoneItem = NSMenuItem(
+            title: "Compagnon Téléphone",
+            action: #selector(toggleHeaderPhoneCompanionAction),
+            keyEquivalent: ""
+        )
+        togglePhoneItem.target = self
+        viewMenu.addItem(togglePhoneItem)
+        
+        let toggleSearchItem = NSMenuItem(
+            title: "Barre de recherche",
+            action: #selector(toggleHeaderSearchAction),
+            keyEquivalent: ""
+        )
+        toggleSearchItem.target = self
+        viewMenu.addItem(toggleSearchItem)
+        
+        let toggleGuideItem = NSMenuItem(
+            title: "Guide & Légende",
+            action: #selector(toggleHeaderGuideAction),
+            keyEquivalent: ""
+        )
+        toggleGuideItem.target = self
+        viewMenu.addItem(toggleGuideItem)
+        
+        viewMenu.addItem(NSMenuItem.separator())
+        
+        let showAllHeaderItemsItem = NSMenuItem(
+            title: "Afficher tous les éléments",
+            action: #selector(showAllHeaderItemsAction),
+            keyEquivalent: ""
+        )
+        showAllHeaderItemsItem.target = self
+        viewMenu.addItem(showAllHeaderItemsItem)
+        
+        viewMenuItem.submenu = viewMenu
+        mainMenu.addItem(viewMenuItem)
+        
+        // -------------------------------------------------------------
+        // 5. Menu "Outils" (Impératif, hub central de l'activité DJ)
         // -------------------------------------------------------------
         let sessionMenuItem = NSMenuItem()
         let sessionMenu = NSMenu(title: "Outils")
@@ -569,6 +624,31 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         GlobalHotKeyService.shared.performOpenSearch()
     }
     
+    // MARK: - Actions Présentation (Personnalisation de la barre d'en-tête)
+    
+    @objc private func toggleHeaderStatsAction() {
+        UserSettings.shared.showHeaderStats.toggle()
+    }
+    
+    @objc private func toggleHeaderPhoneCompanionAction() {
+        UserSettings.shared.showHeaderPhoneCompanion.toggle()
+    }
+    
+    @objc private func toggleHeaderSearchAction() {
+        UserSettings.shared.showHeaderSearch.toggle()
+    }
+    
+    @objc private func toggleHeaderGuideAction() {
+        UserSettings.shared.showHeaderGuide.toggle()
+    }
+    
+    @objc private func showAllHeaderItemsAction() {
+        UserSettings.shared.showHeaderStats = true
+        UserSettings.shared.showHeaderPhoneCompanion = true
+        UserSettings.shared.showHeaderSearch = true
+        UserSettings.shared.showHeaderGuide = true
+    }
+    
     @objc private func triggerSessionResyncAction() {
         SeratoMonitorService.shared.triggerSessionResync()
     }
@@ -836,6 +916,14 @@ extension AppDelegate: NSMenuItemValidation {
             return count > 0
         } else if menuItem.action == #selector(clearManualOverrideAction) {
             return SeratoMonitorService.shared.manualTrackOverride != nil
+        } else if menuItem.action == #selector(toggleHeaderStatsAction) {
+            menuItem.state = UserSettings.shared.showHeaderStats ? .on : .off
+        } else if menuItem.action == #selector(toggleHeaderPhoneCompanionAction) {
+            menuItem.state = UserSettings.shared.showHeaderPhoneCompanion ? .on : .off
+        } else if menuItem.action == #selector(toggleHeaderSearchAction) {
+            menuItem.state = UserSettings.shared.showHeaderSearch ? .on : .off
+        } else if menuItem.action == #selector(toggleHeaderGuideAction) {
+            menuItem.state = UserSettings.shared.showHeaderGuide ? .on : .off
         }
         return true
     }

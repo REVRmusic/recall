@@ -30,10 +30,14 @@ public struct HeaderView: View {
                 SessionResetHeaderButton()
                 
                 // Bouton Statistiques du mix (Set Recap)
-                SetRecapHeaderButton()
+                if settings.showHeaderStats {
+                    SetRecapHeaderButton()
+                }
                 
                 // Bouton Compagnon Téléphone (suggestions en direct sur mobile)
-                PhoneCompanionHeaderButton()
+                if settings.showHeaderPhoneCompanion {
+                    PhoneCompanionHeaderButton()
+                }
             }
             .fixedSize(horizontal: true, vertical: false)
             .padding(.leading, 1)
@@ -82,34 +86,38 @@ public struct HeaderView: View {
                 .help("Réduire Recall en mode bandeau compact")
                 
                 // Bouton Recherche dans la bibliothèque
-                Button {
-                    showSearch.toggle()
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(monitor.manualTrackOverride != nil ? Color.accentCyan : .white.opacity(0.75))
-                        .frame(width: 21, height: 21)
-                        .background(monitor.manualTrackOverride != nil ? Color.accentCyan.opacity(0.2) : Color.white.opacity(0.06))
-                        .clipShape(Circle())
+                if settings.showHeaderSearch {
+                    Button {
+                        showSearch.toggle()
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(monitor.manualTrackOverride != nil ? Color.accentCyan : .white.opacity(0.75))
+                            .frame(width: 21, height: 21)
+                            .background(monitor.manualTrackOverride != nil ? Color.accentCyan.opacity(0.2) : Color.white.opacity(0.06))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
+                    .help("Rechercher un morceau manuellement dans Serato")
                 }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .help("Rechercher un morceau manuellement dans Serato")
                 
                 // Bouton Guide & Légende explicative (?)
-                Button {
-                    showGuide.toggle()
-                } label: {
-                    Image(systemName: "questionmark")
-                        .font(.system(size: 9, weight: .heavy))
-                        .foregroundColor(.white.opacity(0.75))
-                        .frame(width: 21, height: 21)
-                        .background(Color.white.opacity(0.06))
-                        .clipShape(Circle())
+                if settings.showHeaderGuide {
+                    Button {
+                        showGuide.toggle()
+                    } label: {
+                        Image(systemName: "questionmark")
+                            .font(.system(size: 9, weight: .heavy))
+                            .foregroundColor(.white.opacity(0.75))
+                            .frame(width: 21, height: 21)
+                            .background(Color.white.opacity(0.06))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
+                    .help("Guide et légende des symboles (enchaînements, clés Camelot, BPM)")
                 }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .help("Guide et légende des symboles (enchaînements, clés Camelot, BPM)")
                 
                 // Bouton Paramètres (s'ouvre au centre de l'écran pour garder Recall visible)
                 Button {
@@ -137,7 +145,40 @@ public struct HeaderView: View {
         .padding(.horizontal, 7)
         .padding(.top, 8)
         .padding(.bottom, 5)
+        .frame(maxWidth: .infinity)
         .frame(height: 38)
+        .background(Color.white.opacity(0.001))
+        .contentShape(Rectangle())
+        .contextMenu {
+            HeaderContextMenuContent(settings: settings)
+        }
+    }
+}
+
+/// Menu contextuel (clic droit) pour personnaliser les éléments visibles dans la barre d'en-tête
+struct HeaderContextMenuContent: View {
+    @ObservedObject var settings: UserSettings
+    
+    var body: some View {
+        Text("Éléments de la barre")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        
+        Divider()
+        
+        Toggle("Statistiques du Mix (Set Recap)", isOn: $settings.showHeaderStats)
+        Toggle("Compagnon Téléphone", isOn: $settings.showHeaderPhoneCompanion)
+        Toggle("Barre de recherche", isOn: $settings.showHeaderSearch)
+        Toggle("Guide & Légende", isOn: $settings.showHeaderGuide)
+        
+        Divider()
+        
+        Button("Tout afficher") {
+            settings.showHeaderStats = true
+            settings.showHeaderPhoneCompanion = true
+            settings.showHeaderSearch = true
+            settings.showHeaderGuide = true
+        }
     }
 }
 
