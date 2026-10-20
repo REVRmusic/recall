@@ -83,16 +83,31 @@ EOF
 # PkgInfo
 echo "APPL????" > "$CONTENTS_DIR/PkgInfo"
 
-# Nettoyage des attributs étendus et signature ad-hoc propre du bundle complet pour TCC et Accessibilité macOS
-echo "🔏 Signature de $APP_NAME.app avec designated requirement stable..."
-xattr -cr "$APP_BUNDLE" 2>/dev/null || true
-codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' "$APP_BUNDLE"
+# Détection automatique du certificat Apple Developer ID dans le trousseau
+DEV_ID=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Application:" | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
 
-# Installation optionnelle dans /Applications
-rm -rf /Applications/Recall.app 2>/dev/null || true
-cp -R "$APP_BUNDLE" /Applications/Recall.app 2>/dev/null || true
-xattr -cr /Applications/Recall.app 2>/dev/null || true
-codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' /Applications/Recall.app
+if [ -n "$DEV_ID" ]; then
+    echo "🔏 Signature officielle avec certificat Apple Developer ID :"
+    echo "   $DEV_ID"
+    xattr -cr "$APP_BUNDLE" 2>/dev/null || true
+    codesign --force --deep --options runtime --entitlements "$DIR/Resources/Recall.entitlements" --sign "$DEV_ID" --timestamp "$APP_BUNDLE"
+    
+    # Installation optionnelle dans /Applications
+    rm -rf /Applications/Recall.app 2>/dev/null || true
+    cp -R "$APP_BUNDLE" /Applications/Recall.app 2>/dev/null || true
+    xattr -cr /Applications/Recall.app 2>/dev/null || true
+    codesign --force --deep --options runtime --entitlements "$DIR/Resources/Recall.entitlements" --sign "$DEV_ID" --timestamp /Applications/Recall.app
+else
+    echo "⚠️ Aucun certificat Developer ID trouvé, signature ad-hoc avec designated requirement..."
+    xattr -cr "$APP_BUNDLE" 2>/dev/null || true
+    codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' "$APP_BUNDLE"
+    
+    # Installation optionnelle dans /Applications
+    rm -rf /Applications/Recall.app 2>/dev/null || true
+    cp -R "$APP_BUNDLE" /Applications/Recall.app 2>/dev/null || true
+    xattr -cr /Applications/Recall.app 2>/dev/null || true
+    codesign --force --deep --sign - --identifier "fr.revr.recall" -r='designated => identifier "fr.revr.recall"' /Applications/Recall.app
+fi
 
 echo "✅ Recall.app créé avec succès dans :"
 echo "   $APP_BUNDLE"

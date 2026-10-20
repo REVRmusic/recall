@@ -109,6 +109,29 @@ sleep 1
 hdiutil convert "$RW_DMG" -format UDZO -imagekey zlib-level=9 -o "$FINAL_DMG" -ov > /dev/null
 rm -f "$RW_DMG"
 
+# Signature du DMG avec le certificat Apple Developer ID si disponible
+DEV_ID=$(security find-identity -v -p codesigning 2>/dev/null | grep "Developer ID Application:" | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -n "$DEV_ID" ]; then
+    echo "🔏 Signature officielle du DMG avec $DEV_ID..."
+    codesign --force --sign "$DEV_ID" --timestamp "$FINAL_DMG"
+fi
+
+# Notarisation Apple automatisée si le profil est configuré dans le trousseau
+if xcrun notarytool history --keychain-profile "RECALL_NOTARY" >/dev/null 2>&1; then
+    echo "🛡️ Envoi du DMG pour notarisation officielle auprès d'Apple (Gatekeeper)..."
+    xcrun notarytool submit "$FINAL_DMG" --keychain-profile "RECALL_NOTARY" --wait
+    echo "📎 Agrafage du ticket de notarisation Apple sur le DMG..."
+    xcrun stapler staple "$FINAL_DMG" 2>/dev/null || true
+    xcrun stapler staple "$APP_BUNDLE" 2>/dev/null || true
+    echo "✅ Notarisation Apple validée et ticket agrafé avec succès !"
+else
+    echo "💡 Notarisation Apple Gatekeeper :"
+    echo "   Le DMG est signé avec votre certificat officiel Developer ID."
+    echo "   Pour activer la validation automatique sans aucun avertissement Gatekeeper chez vos utilisateurs,"
+    echo "   enregistrez votre profil de notarisation une seule fois avec :"
+    echo "   xcrun notarytool store-credentials \"RECALL_NOTARY\" --apple-id \"VOTRE_EMAIL\" --team-id \"H2WHSZB7M6\" --password \"MOT_DE_PASSE_APPLICATION\""
+fi
+
 echo "=========================================================="
 echo "✨ Image disque professionnelle prête avec succès :"
 echo "   $FINAL_DMG ($(du -h "$FINAL_DMG" | awk '{print $1}'))"
