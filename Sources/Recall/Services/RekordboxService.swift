@@ -1087,7 +1087,7 @@ private final class RekordboxXmlParserDelegate: NSObject, XMLParserDelegate {
             playlistCount += 1
             let count = currentPlaylistTracks.count
             let estimatedDuration = currentPlaylistTracks.reduce(0) { $0 + (trackDurationsById[$1] ?? 180) }
-            if count >= 2 && estimatedDuration >= UserSettings.minimumSessionDurationSeconds {
+            if count >= UserSettings.minimumSessionTracksCount && estimatedDuration >= UserSettings.minimumSessionDurationSeconds {
                 for i in 0..<(count - 1) {
                     let fromKey = currentPlaylistTracks[i]
                     let toKey = currentPlaylistTracks[i + 1]

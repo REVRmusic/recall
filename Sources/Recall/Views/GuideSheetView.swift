@@ -332,7 +332,7 @@ public struct GuideSheetView: View {
                                     .foregroundColor(Color.accentBlue)
                             }
                             
-                            Text("Recall ne se fie **jamais** au nombre d'écoutes globales de votre bibliothèque musicale. L'application examine uniquement les **enchaînements chronologiques réels** effectués pendant vos sessions (durée de jeu valide entre 25s et 12min). Les sessions de moins de **10 minutes** (tests, tri de bibliothèque) sont ignorées.")
+                            Text("Recall ne se fie **jamais** au nombre d'écoutes globales de votre bibliothèque musicale. L'application examine uniquement les **enchaînements chronologiques réels** effectués pendant vos sessions (durée de jeu valide entre 25s et 12min). Les sessions de moins de **10 minutes** ou de moins de **10 titres** (tests, tri de bibliothèque) sont ignorées.")
                                 .font(.system(size: 10.5))
                                 .foregroundColor(.white.opacity(0.7))
                                 .fixedSize(horizontal: false, vertical: true)

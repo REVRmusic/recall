@@ -873,7 +873,7 @@ public struct SetRecapView: View {
                     if pastSessions.isEmpty {
                         sessionPickerEmptyState(
                             icon: isLoadingPastSessionsList ? nil : "music.note.list",
-                            text: isLoadingPastSessionsList ? "Chargement des sessions Serato…" : "Aucune session Serato de plus de 10 minutes"
+                            text: isLoadingPastSessionsList ? "Chargement des sessions Serato…" : "Aucune session Serato éligible (min. 10 min & 10 titres)"
                         )
                     } else if filteredPastSessions.isEmpty {
                         sessionPickerEmptyState(icon: "magnifyingglass", text: "Aucune soirée ne correspond à « \(sessionSearchText) »")
@@ -886,7 +886,7 @@ public struct SetRecapView: View {
             Divider().background(Color.white.opacity(0.08))
             
             HStack(spacing: 6) {
-                Text(pastSessions.isEmpty ? "Sessions de 10 min et plus" : "\(pastSessions.count) soirées · 10 min et plus")
+                Text(pastSessions.isEmpty ? "Sessions de 10 min & 10 titres min." : "\(pastSessions.count) soirées · 10 min & 10 titres min.")
                     .font(.system(size: 9.5, weight: .medium))
                     .foregroundColor(.white.opacity(0.4))
                 
@@ -965,7 +965,7 @@ public struct SetRecapView: View {
         let dbPath = settings.effectiveDatabasePath
         pastSessionsListTask = Task { @MainActor in
             let sessions = await Task.detached(priority: .userInitiated) {
-                SeratoDatabaseService(databasePath: dbPath).fetchPastSessions(limit: 30, useCache: !force)
+                SeratoDatabaseService(databasePath: dbPath).fetchPastSessions(limit: 500, useCache: !force)
             }.value
             guard !Task.isCancelled else { return }
             self.pastSessions = sessions

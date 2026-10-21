@@ -150,7 +150,7 @@ namespace Recall.Services
                                 {
                                     playlistCount++;
                                     int estimatedDuration = currentPlaylist.Sum(k => trackDurationsById.TryGetValue(k, out int d) ? d : 180);
-                                    if (estimatedDuration < UserSettings.MinimumSessionDurationSeconds)
+                                    if (currentPlaylist.Count < UserSettings.MinimumSessionTracksCount || estimatedDuration < UserSettings.MinimumSessionDurationSeconds)
                                     {
                                         currentPlaylist.Clear();
                                         continue;

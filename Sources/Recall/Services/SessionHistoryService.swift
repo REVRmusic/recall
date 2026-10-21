@@ -234,7 +234,7 @@ public class SessionHistoryService: ObservableObject {
         
         // Pré-chargement asynchrone ultra-rapide des sessions passées en tâche de fond pour affichage instantané (0 ms)
         Task.detached(priority: .utility) { [dbService] in
-            _ = dbService.fetchPastSessions(limit: 30)
+            _ = dbService.fetchPastSessions(limit: 500)
         }
     }
     

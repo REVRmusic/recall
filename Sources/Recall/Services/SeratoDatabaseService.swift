@@ -38,13 +38,15 @@ public class SeratoDatabaseService {
     /// (fonctionne aussi pour la session en cours, dont end_time n'est pas encore écrit).
     private static let playedSpanSql = "max(max(start_time, ifnull(end_time, 0))) - min(start_time)"
     
-    /// Restreint une requête sur history_entry aux sessions d'au moins 10 minutes de lecture.
+    /// Restreint une requête sur history_entry aux sessions d'au moins 10 minutes de lecture
+    /// et d'au moins 10 morceaux joués (pour ignorer les sessions de tri ou tests rapides à la maison).
     private static let validSessionsFilter = """
     session_id IN (
         SELECT session_id FROM history_entry
         WHERE played = 1
         GROUP BY session_id
         HAVING \(playedSpanSql) >= \(UserSettings.minimumSessionDurationSeconds)
+           AND count(DISTINCT lower(trim(ifnull(nullif(name, ''), ifnull(nullif(file_name, ''), ''))))) >= \(UserSettings.minimumSessionTracksCount)
     )
     """
     
@@ -516,8 +518,13 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
                 seenTitles.insert(refRawKey)
             }
             
-            let secondsLookback = Int64(daysLookback) * 86400
-            let minStartTimeUnix = Int64(Date().timeIntervalSince1970) - secondsLookback
+            let minStartTimeUnix: Int64
+            if daysLookback <= 0 {
+                minStartTimeUnix = 0
+            } else {
+                let secondsLookback = Int64(daysLookback) * 86400
+                minStartTimeUnix = Int64(Date().timeIntervalSince1970) - secondsLookback
+            }
             
             // --- DÉTECTION DES VARIANTES (Si l'option de cumul est cochée dans les Paramètres) ---
             let cumulateVariants = UserSettings.shared.cumulateVariantSuggestions
@@ -1686,8 +1693,8 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
         }
     }
     
-    /// Récupère la liste des sessions passées réelles dans Serato (filtre les tests < 3 morceaux ou < 10 minutes)
-    public func fetchPastSessions(limit: Int = 30, useCache: Bool = true) -> [PastSessionItem] {
+    /// Récupère la liste des sessions passées réelles dans Serato (filtre les tests < 10 morceaux ou < 10 minutes)
+    public func fetchPastSessions(limit: Int = 500, useCache: Bool = true) -> [PastSessionItem] {
         return Self.queue.sync {
             let currentFp = currentDatabaseFingerprint()
             if useCache, let cached = Self.cachedPastSessions, let lastFp = Self.lastPastSessionsFingerprint, lastFp == currentFp {
@@ -1697,6 +1704,7 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
             guard let db = openDatabase() else { return Self.cachedPastSessions ?? [] }
             defer { sqlite3_close_v2(db) }
             
+            let limitClause = limit > 0 ? "LIMIT \(limit)" : ""
             let sql = """
             SELECT 
                 s.id,
@@ -1708,10 +1716,10 @@ public func fetchActiveDecks(force: Bool = false) -> ActiveDecksState {
             JOIN history_entry h ON h.session_id = s.id AND h.played = 1
             LEFT JOIN asset a ON a.id = h.asset_id
             GROUP BY s.id
-            HAVING track_count >= 3
+            HAVING track_count >= \(UserSettings.minimumSessionTracksCount)
                AND max(max(h.start_time, ifnull(h.end_time, 0))) - min(h.start_time) >= \(UserSettings.minimumSessionDurationSeconds)
             ORDER BY s.start_time DESC
-            LIMIT \(limit);
+            \(limitClause);
             """
             
             var stmt: OpaquePointer?

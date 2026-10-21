@@ -1,40 +1,34 @@
-# 🎧 Recall v1.0.11 — Graphique d'Évolution Temporelle des Styles & Améliorations DJ
+# 🎧 Recall v1.0.12 — Performance Frise des Styles, Historique Complet & Nouveautés DJ
 
-Cette version **v1.0.11** apporte un **graphique chronologique haute définition des styles musicaux** au bas de la fenêtre des Statistiques (Set Recap), avec codes couleurs officiels et repères horaires bien visibles, ainsi que plusieurs optimisations d'ergonomie majeures.
+Cette version **v1.0.12** apporte une **accélération matérielle majeure du graphique chronologique des styles**, le **déblocage de l'intégralité de l'historique des soirées** dans les statistiques, et l'intégration du **compagnon mobile** sur la plateforme officielle.
 
 ---
 
-### 🌟 Nouveautés v1.0.11
+### 🌟 Nouveautés v1.0.12
 
-#### 📊 Graphique d'Évolution Temporelle des Styles Musicaux (Set Recap)
-- **Frise chronologique des genres** : visualise l'évolution musicale de votre mix de la première à la dernière minute.
-- **Codes couleurs dédiés et vibrants** :
-  - 🔵 **Bleu** pour l'Électro / House / Techno / EDM
-  - 🟡 **Jaune** pour le Latino / Reggaeton / Dembow
-  - 🟠 **Orange** pour le Shatta / Bouyon
-  - 🔴 **Rouge** pour le Hip-Hop / Rap / Trap / Drill
-  - 🟢 **Vert** pour l'Afro / Amapiano
-  - 🩵 **Turquoise** pour le Dancehall / Reggae / Zouk
-  - 🟣 **Violet** pour le R&B / Soul / Funk
-  - 🌸 **Rose** pour la Pop / Commercial
-  - 🔘 **Gris ardoise** pour les autres genres
-- **Heures et repères temporels bien visibles** : graduation précise des heures tout au long du mix (ex: 23h00, 00h00, 01h00, 02h00) avec affichage du début et de la fin de session sans chevauchement.
-- **Légende interactive & filtrage en 1 clic** : cliquez sur un style pour mettre en surbrillance ses passages sur la frise chronologique.
-- **Phases de la soirée (découpage par heure)** : cartes récapitulatives heure par heure indiquant le style dominant et la mini-barre de répartition.
-- **Intégration Export HD** : le graphique temporel est également exporté dans vos bilans visuels haute définition (enregistrement Photos Mac, partage réseaux, fichier PNG).
+#### ⚡ Performance & Fluidité de la Frise des Styles (Set Recap)
+- **Rendu Metal GPU ultra-fluide (120 FPS)** : la frise d'évolution des styles musicaux bénéficie désormais d'un pipeline graphique accéléré par Metal (`drawingGroup`), éliminant tout ralentissement même sur les sets de plus de 200 morceaux.
+- **Suppression des infobulles intrusives** : élimination complète des popovers de survol de chaque morceau pour une consultation nette, rapide et sans saccade.
+- **Repères horaires nets & codes couleurs officiels** : heures de début, de fin et graduations intermédiaires (toutes les 30 min ou 1h) bien visibles avec palette néon dédiée (Bleu Électro, Jaune Latino, Orange Shatta, Rouge Hip-Hop, Vert Afro, Turquoise Dancehall, Violet R&B, Rose Pop).
+- **Export HD complet** : intégration synchronisée dans les images exportées vers Photos Mac et fichiers PNG.
 
-#### 📱 Compagnon Téléphone — Réglage du Zoom d'affichage
-- Boutons **−** / **100%** / **+** situés tout en haut à droite de l'écran du smartphone pour adapter instantanément la densité d'affichage à votre vue et à la distance du DJ booth.
-- Mémorisation locale automatique de la taille choisie.
+#### 🗄️ Déblocage Complet de l'Historique dans les Statistiques
+- **Plafond étendu à 500 soirées** : levée de l'ancienne limite de 30 sessions. Retrouvez désormais l'intégralité de vos sets passés classés par mois avec recherche instantanée.
+- **Filtrage intelligent des vrais sets** : conservation stricte des sessions d'au moins 10 morceaux et 10 minutes pour exclure automatiquement les tests rapides ou le tri de bibliothèque.
+- **Analyse historique jusqu'à 2 ans (720 jours)** pour les prédictions d'enchaînements en cabine DJ.
 
-#### 🖥️ Interface & Ergonomie macOS
-- **Personnalisation de la barre d'outils** : clic droit sur l'en-tête de Recall ou menu macOS **Présentation** pour afficher/masquer à la carte les Statistiques, le Compagnon Téléphone, la Recherche manuelle ou le Guide.
-- **Icône barre des menus monochrome** : intégration parfaite avec le thème clair et sombre de macOS.
-- **Responsivité optimisée des filtres** : réduction dynamique des badges en mode compact avec préservation des libellés prioritaires et compteur numérique autonome pour la Sélec.
-- **Image disque (DMG) Retina signée & notarisée Apple** : installation par glisser-déposer sans avertissement de sécurité.
+#### 📱 Compagnon Mobile & Landing Page
+- Vitrine complète du compagnon mobile 100% hors-ligne sur la landing page avec mockup haute fidélité.
+- Contrôles de zoom tactile (− / 100% / +) en haut à droite de l'écran du smartphone pour adapter la lisibilité à distance.
+
+#### 🖥️ Ergonomie & Responsivité macOS
+- Personnalisation de l'en-tête via clic droit et menu macOS **Présentation** (Statistiques, Compagnon, Recherche, Guide).
+- Réduction adaptative des filtres en mode compact avec préservation des libellés prioritaires (BPM, Harm, Favs) et badge numérique autonome pour la Sélec.
 
 ---
 
 ### 📥 Téléchargement direct
-- **macOS** : [Recall.dmg](https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall.dmg) (Image disque signée et notarisée Apple)
-- **Windows** : [Recall-Windows-x64.zip](https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall-Windows-x64.zip)
+
+- **macOS** : [Recall.dmg](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg) (Image disque officielle signée et notarisée Apple)
+- **macOS (Archive)** : [Recall-macOS.zip](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-macOS.zip)
+- **Windows** : [Recall-Windows-x64.zip](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip)

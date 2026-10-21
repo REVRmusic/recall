@@ -70,11 +70,12 @@
           <img src="assets/images/app-icon.png" alt="Recall Logo" class="brand-icon">
         </div>
         <span class="brand-text">Recall <span class="brand-dot"></span></span>
-        <a href="admin/" class="brand-badge" style="text-decoration: none;" title="Console Admin (Accès réservé REVR)">v1.0.11</a>
+        <a href="admin/" class="brand-badge" style="text-decoration: none;" title="Console Admin (Accès réservé REVR)">v1.0.12</a>
       </a>
 
       <ul class="nav-links">
         <li><a href="#mockups" class="nav-link" data-i18n="nav-demo">Démonstration</a></li>
+        <li><a href="#phone-companion" class="nav-link" data-i18n="nav-companion"><span class="nav-companion-badge">📱</span> Compagnon Mobile</a></li>
         <li><a href="#features" class="nav-link" data-i18n="nav-features">Fonctionnalités</a></li>
         <li><a href="#compatibility" class="nav-link" data-i18n="nav-compatibility">Compatibilité</a></li>
         <li><a href="#faq" class="nav-link" data-i18n="nav-faq">FAQ</a></li>
@@ -98,7 +99,7 @@
 
         <!-- Download CTA -->
         <a href="#download" class="btn-nav-download" data-i18n="nav-cta-download">
-          Télécharger v1.0.11
+          Télécharger v1.0.12
         </a>
 
         <!-- Mobile Menu Toggle -->
@@ -132,7 +133,7 @@
 
       <div class="hero-actions-wrapper">
         <div class="hero-actions">
-          <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall.dmg" class="btn-primary smart-download-btn" id="hero-smart-btn" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Hero Principal Auto-Detect">
+          <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg" class="btn-primary smart-download-btn" id="hero-smart-btn" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Hero Principal Auto-Detect">
             <span id="hero-smart-icon-wrap">
               <img src="assets/images/apple-logo.png" alt="Apple" class="btn-apple-logo" id="hero-smart-icon">
             </span>
@@ -150,6 +151,11 @@
         <div class="hero-other-os" id="hero-other-os">
           <span data-i18n="hero-other-os-text">Également disponible pour </span>
           <a href="#download" class="hero-other-os-link" id="hero-other-os-link" data-i18n="hero-other-os-link">Windows (PC)</a>
+        </div>
+
+        <div class="hero-opt-note">
+          <span class="hero-opt-dot"></span>
+          <span data-i18n="hero-opt-note">Recall est actuellement optimisé pour <strong>Mac & Serato</strong> · Travail actif en cours pour rendre <strong>Windows & Rekordbox</strong> aussi complets</span>
         </div>
       </div>
 
@@ -281,188 +287,183 @@
   </section>
 
   <!-- ========================================================================
-       Section: Compagnon Téléphone (iPhone mockup — ratio 393×852)
+       Section: Compagnon Téléphone (Mobile Companion)
        ======================================================================== -->
   <section id="phone-companion" class="section phone-companion-section">
-    <div class="container phone-companion-layout">
-      <div class="phone-companion-copy">
-        <span class="section-tag" data-i18n="phone-tag">NOUVEAU · COMPAGNON TÉLÉPHONE</span>
-        <h2 class="section-title phone-companion-title" data-i18n="phone-title">Vos suggestions de mix en direct sur votre smartphone.</h2>
+    <div class="container">
+      <div class="phone-companion-grid">
+        <!-- Left: Text & Features -->
+        <div class="phone-companion-content">
+          <div class="section-tag-pill cyan">
+            <span class="pulse-dot"></span>
+            <span data-i18n="companion-tag">NOUVEAU · COMPAGNON TÉLÉPHONE</span>
+          </div>
 
-        <ul class="phone-feature-list">
-          <li class="phone-feature-item">
-            <span class="phone-feature-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v6M14 20h3"/></svg>
-            </span>
-            <div>
-              <strong data-i18n="phone-f1-title">Connexion instantanée par QR Code</strong>
-              <p data-i18n="phone-f1-desc">Scannez le QR affiché sur votre Mac — aucune installation d'app.</p>
-            </div>
-          </li>
-          <li class="phone-feature-item">
-            <span class="phone-feature-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
-            </span>
-            <div>
-              <strong data-i18n="phone-f2-title">100 % Hors-ligne en Wi-Fi ou Partage de Connexion</strong>
-              <p data-i18n="phone-f2-desc">Restez local : club, festival, cave — zéro Internet requis.</p>
-            </div>
-          </li>
-          <li class="phone-feature-item">
-            <span class="phone-feature-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            </span>
-            <div>
-              <strong data-i18n="phone-f3-title">Flux temps réel (&lt; 50 ms)</strong>
-              <p data-i18n="phone-f3-desc">Le titre en cours et les suggestions suivent votre deck instantanément.</p>
-            </div>
-          </li>
-          <li class="phone-feature-item">
-            <span class="phone-feature-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6M11 8v6"/></svg>
-            </span>
-            <div>
-              <strong data-i18n="phone-f4-title">Niveau de zoom tactile ajustable</strong>
-              <p data-i18n="phone-f4-desc">Agrandissez l'UI depuis le booth selon la distance et la luminosité.</p>
-            </div>
-          </li>
-        </ul>
+          <h2 class="section-title companion-title" data-i18n="companion-title">
+            Vos suggestions de mix en direct sur votre smartphone.
+          </h2>
 
-        <div class="phone-companion-badges">
-          <span class="phone-badge" data-i18n="phone-badge-browsers">iOS Safari &amp; Android Chrome</span>
-          <span class="phone-badge" data-i18n="phone-badge-pin">Réseau Local Sécurisé (PIN)</span>
-        </div>
-      </div>
+          <p class="section-subtitle companion-subtitle" data-i18n="companion-desc">
+            Posez votre téléphone sur votre régie DJ ou fixez-le sur votre stand. Recall diffuse vos suggestions d'enchaînements, vos clés Camelot et le morceau en cours en temps réel sur votre mobile via votre réseau local, 100% hors-ligne.
+          </p>
 
-      <div class="phone-companion-visual" aria-hidden="false">
-        <!-- Cadre iPhone : ratio 393×852 — UI fidèle à Recall Live (sans versions remix) -->
-        <div class="iphone-frame" role="img" aria-label="Aperçu Recall Live sur iPhone">
-          <div class="iphone-bezel">
-            <div class="iphone-dynamic-island"></div>
-            <div class="iphone-screen">
-              <!-- Dessiné en 393 px (largeur réelle iPhone), puis réduit d'un bloc : rien ne se chevauche -->
-              <div class="iphone-canvas">
-                <div class="iphone-status-bar">
-                  <span>04:40</span>
-                  <span class="iphone-status-icons">
-                    <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="0.6"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="0.6"/><rect x="9" y="2" width="3" height="10" rx="0.6"/><rect x="13.5" y="0" width="3" height="12" rx="0.6"/></svg>
-                    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><path d="M8 2.2c2.2 0 4.2.9 5.6 2.3l-1.3 1.3A6 6 0 0 0 8 4.2a6 6 0 0 0-4.3 1.6L2.4 4.5A8 8 0 0 1 8 2.2Zm0 3.2c1.2 0 2.3.5 3.1 1.3L9.8 8A2.4 2.4 0 0 0 8 7.2c-.7 0-1.3.3-1.8.8L4.9 6.7A4.4 4.4 0 0 1 8 5.4ZM8 9.2a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z"/></svg>
-                    <span class="iphone-battery" aria-hidden="true"><span></span></span>
-                    <span class="iphone-battery-pct">62</span>
-                  </span>
-                </div>
-
-                <header class="iphone-app-header">
-                  <div class="iphone-app-brand">
-                    <span class="iphone-app-logo"></span>
-                    <div>
-                      <div class="iphone-app-name">Recall</div>
-                      <div class="iphone-app-sub">Live Companion</div>
-                    </div>
-                  </div>
-                  <div class="iphone-header-actions">
-                    <div class="iphone-zoom" title="Zoom"><span>−</span><span>100%</span><span>+</span></div>
-                    <div class="iphone-conn"><span class="iphone-conn-dot"></span><span data-i18n="phone-mock-live">En direct</span></div>
-                  </div>
-                </header>
-
-                <section class="iphone-now">
-                  <div class="iphone-now-top">
-                    <div class="iphone-now-label"><span class="iphone-pulse"></span><span data-i18n="phone-mock-now">En cours</span></div>
-                    <div class="iphone-deck">Serato</div>
-                  </div>
-                  <div class="iphone-now-title">I Follow Rivers</div>
-                  <div class="iphone-now-artist">Lykke Li</div>
-                  <div class="iphone-now-meta">
-                    <span class="iphone-key" style="background:#F8B5CD">7A</span>
-                    <span class="iphone-pill">122 <small>BPM</small></span>
-                    <span class="iphone-pill">A Definir</span>
-                    <span class="iphone-pill">18 <small data-i18n="phone-mock-played">JOUÉS</small></span>
-                  </div>
-                </section>
-
-                <div class="iphone-list-bar">
-                  <span data-i18n="phone-mock-list">Suggestions</span>
-                  <span class="iphone-count">50</span>
-                </div>
-
-                <div class="iphone-tracks">
-                  <article class="iphone-track iphone-track-top">
-                    <span class="iphone-track-idx">1</span>
-                    <div class="iphone-track-info">
-                      <div class="iphone-track-title">Uptown funk</div>
-                      <div class="iphone-track-artist">Bruno Mars</div>
-                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 3×</span><span class="iphone-b iphone-b-rel">=</span></div>
-                    </div>
-                    <div class="iphone-track-right">
-                      <span class="iphone-key" style="background:#F8B5CD">7A</span>
-                      <div class="iphone-bpm">130 <small>BPM</small> <span class="up">+8</span></div>
-                    </div>
-                  </article>
-                  <article class="iphone-track">
-                    <span class="iphone-track-idx">2</span>
-                    <div class="iphone-track-info">
-                      <div class="iphone-track-title">La Bamba</div>
-                      <div class="iphone-track-artist">Los Lobos</div>
-                      <div class="iphone-badges"><span class="iphone-b iphone-b-routine">🔁 Routine 2×</span><span class="iphone-b iphone-b-rel">Rel</span></div>
-                    </div>
-                    <div class="iphone-track-right">
-                      <span class="iphone-key" style="background:#F580B4">7B</span>
-                      <div class="iphone-bpm">150 <small>BPM</small> <span class="up">+28</span></div>
-                    </div>
-                  </article>
-                  <article class="iphone-track">
-                    <span class="iphone-track-idx">3</span>
-                    <div class="iphone-track-info">
-                      <div class="iphone-track-title">One More Time</div>
-                      <div class="iphone-track-artist">Daft Punk</div>
-                      <div class="iphone-badges"><span class="iphone-b iphone-b-routine">🔁 Routine 2×</span></div>
-                    </div>
-                    <div class="iphone-track-right">
-                      <span class="iphone-key" style="background:#CD8DFF">9B</span>
-                      <div class="iphone-bpm">122.9 <small>BPM</small> <span class="up">+0.9</span></div>
-                    </div>
-                  </article>
-                  <article class="iphone-track">
-                    <span class="iphone-track-idx">4</span>
-                    <div class="iphone-track-info">
-                      <div class="iphone-track-title">This Girl</div>
-                      <div class="iphone-track-artist">Kungs vs Cookin' on 3 Burners</div>
-                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 2×</span></div>
-                    </div>
-                    <div class="iphone-track-right">
-                      <span class="iphone-key" style="background:#F9C7AD">5A</span>
-                      <div class="iphone-bpm">122 <small>BPM</small></div>
-                    </div>
-                  </article>
-                  <article class="iphone-track">
-                    <span class="iphone-track-idx">5</span>
-                    <div class="iphone-track-info">
-                      <div class="iphone-track-title">Meet the Halfway</div>
-                      <div class="iphone-track-artist">The Black Eyed Peas</div>
-                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 1×</span></div>
-                    </div>
-                    <div class="iphone-track-right">
-                      <span class="iphone-key" style="background:#9BE7FB">11A</span>
-                      <div class="iphone-bpm">130 <small>BPM</small> <span class="up">+8</span></div>
-                    </div>
-                  </article>
-                  <article class="iphone-track">
-                    <span class="iphone-track-idx">6</span>
-                    <div class="iphone-track-info">
-                      <div class="iphone-track-title">We Found Love</div>
-                      <div class="iphone-track-artist">Rihanna</div>
-                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 1×</span></div>
-                    </div>
-                    <div class="iphone-track-right">
-                      <span class="iphone-key" style="background:#8BF3B3">2A</span>
-                      <div class="iphone-bpm">128 <small>BPM</small> <span class="up">+6</span></div>
-                    </div>
-                  </article>
-                </div>
+          <div class="companion-feature-list">
+            <div class="companion-feature-item">
+              <div class="companion-feature-icon">📷</div>
+              <div class="companion-feature-body">
+                <h4 data-i18n="companion-feat-1-title">Connexion instantanée par QR Code</h4>
+                <p data-i18n="companion-feat-1-desc">Scannez le QR Code affiché dans Recall avec l'appareil photo de votre iPhone ou Android : la web app s'ouvre immédiatement, sans rien installer sur votre smartphone.</p>
               </div>
             </div>
-            <div class="iphone-home-indicator"></div>
+
+            <div class="companion-feature-item">
+              <div class="companion-feature-icon">📡</div>
+              <div class="companion-feature-body">
+                <h4 data-i18n="companion-feat-2-title">100 % Hors-ligne en Wi-Fi ou Partage de Connexion</h4>
+                <p data-i18n="companion-feat-2-desc">Fonctionne en club, festival ou sous-sol sans aucun accès à Internet. Un simple réseau Wi-Fi local ou le partage de connexion de votre smartphone suffit.</p>
+              </div>
+            </div>
+
+            <div class="companion-feature-item">
+              <div class="companion-feature-icon">⚡</div>
+              <div class="companion-feature-body">
+                <h4 data-i18n="companion-feat-3-title">Flux WebSocket temps réel (&lt; 50 ms)</h4>
+                <p data-i18n="companion-feat-3-desc">Dès qu'une platine Serato ou Rekordbox change de morceau, votre smartphone s'actualise instantanément avec la clé Camelot, le BPM et vos meilleures transitions.</p>
+              </div>
+            </div>
+
+            <div class="companion-feature-item">
+              <div class="companion-feature-icon">🔍</div>
+              <div class="companion-feature-body">
+                <h4 data-i18n="companion-feat-4-title">Niveau de zoom tactile ajustable</h4>
+                <p data-i18n="companion-feat-4-desc">Ajustez la taille d'affichage d'un geste grâce aux boutons de zoom (+ / -) pour une lisibilité parfaite quelle que soit la distance de votre téléphone en cabine.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="companion-badges">
+            <span class="companion-badge-pill" data-i18n="companion-badge-pwa">📱 iOS Safari &amp; Android Chrome</span>
+            <span class="companion-badge-pill" data-i18n="companion-badge-pin">🔒 Réseau Local Sécurisé (PIN)</span>
+            <span class="companion-badge-pill" data-i18n="companion-badge-oled">🔋 Thème Sombre OLED Éco-Batterie</span>
+          </div>
+        </div>
+
+        <!-- Right: Smartphone Mockup -->
+        <div class="phone-companion-visual">
+          <div class="phone-mockup-wrapper">
+            <div class="phone-ambient-glow"></div>
+            
+            <!-- Smartphone Device Frame -->
+            <div class="phone-device-frame">
+              <div class="phone-notch">
+                <span class="dynamic-island-lens"></span>
+              </div>
+              
+              <div class="phone-screen">
+                <!-- Status Bar -->
+                <div class="phone-status-bar">
+                  <span class="status-time">23:42</span>
+                  <div class="status-icons">
+                    <svg width="13" height="10" viewBox="0 0 14 11" fill="currentColor"><path d="M7 3a9.96 9.96 0 0 0-6.13 2.12.75.75 0 0 0 .96 1.15A8.47 8.47 0 0 1 7 4.5c1.9 0 3.65.63 5.07 1.72a.75.75 0 1 0 .96-1.15A9.96 9.96 0 0 0 7 3zm0 3a6.97 6.97 0 0 0-4.24 1.45.75.75 0 1 0 .96 1.15A5.48 5.48 0 0 1 7 7.5c1.29 0 2.47.44 3.4 1.18a.75.75 0 0 0 .96-1.15A6.97 6.97 0 0 0 7 6zm0 3c-.93 0-1.78.36-2.42.95a.75.75 0 1 0 1.02 1.1A1.98 1.98 0 0 1 7 10.5c.53 0 1.01.2 1.38.54a.75.75 0 1 0 1.04-1.09A3.48 3.48 0 0 0 7 9z"/></svg>
+                    <div class="battery-icon"><div class="battery-level"></div></div>
+                  </div>
+                </div>
+
+                <!-- Web App Header -->
+                <div class="p-header">
+                  <div class="p-logo"></div>
+                  <div class="p-brand">
+                    Recall Live
+                    <small>Compagnon DJ</small>
+                  </div>
+                  <div class="p-header-actions">
+                    <div class="p-zoom-ctrl">
+                      <span class="p-zoom-btn">−</span>
+                      <span class="p-zoom-lvl">100%</span>
+                      <span class="p-zoom-btn">+</span>
+                    </div>
+                    <div class="p-conn">
+                      <span class="p-dot on"></span>
+                      <span data-i18n="mockup-phone-live">En direct</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Active Track Card -->
+                <div class="p-now">
+                  <div class="p-now-top">
+                    <span class="p-now-label"><span class="p-pulse"></span> <span data-i18n="mockup-phone-now-label">Sur le deck</span></span>
+                    <span class="p-deck" data-i18n="mockup-phone-deck">Deck 1</span>
+                  </div>
+                  <div class="p-now-title">L'Évadé du Nevada</div>
+                  <div class="p-now-artist">Gazo, Tiakola</div>
+                  <div class="p-now-meta">
+                    <span class="p-pill p-pill-bpm">128.0 <span class="u">BPM</span></span>
+                    <span class="p-pill p-pill-key key-8a">8A <span class="u">Am</span></span>
+                    <span class="p-pill p-pill-genre">Shatta / Trap</span>
+                  </div>
+                </div>
+
+                <!-- Suggestions Section -->
+                <div class="p-suggestions-header">
+                  <span class="p-sug-title" data-i18n="mockup-phone-sug-title">Suggestions d'enchaînements</span>
+                  <span class="p-sug-count" data-i18n="mockup-phone-sug-count">3 disponibles</span>
+                </div>
+
+                <div class="p-suggestions-list">
+                  <!-- Suggestion 1 -->
+                  <div class="p-sug-card">
+                    <div class="p-sug-left">
+                      <span class="p-key-pill key-8a">8A</span>
+                      <div class="p-track-info">
+                        <div class="p-track-title">Fade Up</div>
+                        <div class="p-track-artist">Zeg P, Hamza, SCH</div>
+                        <div class="p-track-meta">
+                          <span class="p-bpm-val">128.0 BPM</span>
+                          <span class="p-bpm-diff diff-match">0.0%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-sug-badge flame">🔥 5×</div>
+                  </div>
+
+                  <!-- Suggestion 2 -->
+                  <div class="p-sug-card">
+                    <div class="p-sug-left">
+                      <span class="p-key-pill key-9a">9A</span>
+                      <div class="p-track-info">
+                        <div class="p-track-title">DIE</div>
+                        <div class="p-track-artist">Gazo</div>
+                        <div class="p-track-meta">
+                          <span class="p-bpm-val">127.0 BPM</span>
+                          <span class="p-bpm-diff diff-close">-0.8%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-sug-badge match">✨ Combo</div>
+                  </div>
+
+                  <!-- Suggestion 3 -->
+                  <div class="p-sug-card">
+                    <div class="p-sug-left">
+                      <span class="p-key-pill key-7a">7A</span>
+                      <div class="p-track-info">
+                        <div class="p-track-title">Si j'savais</div>
+                        <div class="p-track-artist">Tiakola</div>
+                        <div class="p-track-meta">
+                          <span class="p-bpm-val">128.0 BPM</span>
+                          <span class="p-bpm-diff diff-match">0.0%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-sug-badge harmonic">🎡 Harmonique</div>
+                  </div>
+                </div>
+
+                <!-- Bottom Home Bar -->
+                <div class="phone-home-bar"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -519,6 +520,9 @@
       <div class="section-header-center">
         <span class="section-tag" data-i18n="features-tag">Fonctionnalités Clés</span>
         <h2 class="section-title" data-i18n="features-title">Conçu par et pour les DJs exigeants</h2>
+        <p class="section-subtitle" data-i18n="features-subtitle">
+          Chaque détail de Recall a été pensé pour s'intégrer discrètement dans votre workflow sans jamais accaparer votre écran.
+        </p>
       </div>
 
       <div class="bento-grid">
@@ -547,7 +551,7 @@
         </div>
 
         <!-- Feature NEW: Sélec Scratchpad (Col 8) -->
-        <div class="bento-card col-8">
+        <div class="bento-card col-8" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(20, 25, 35, 0.9)); border-color: rgba(245, 158, 11, 0.25);">
           <div>
             <span class="bento-icon">🔖</span>
             <h3 class="bento-title" data-i18n="f-selec-title">Sélec : Votre Scratchpad DJ & Match Dynamique</h3>
@@ -555,7 +559,7 @@
               Préparez vos sets sans stress : glissez vos pépites depuis Serato directement dans votre Sélec. Vos morceaux restent mémorisés d'une session à l'autre et se réordonnent automatiquement en direct selon leur compatibilité (BPM et clé Camelot) avec le morceau en cours de lecture.
             </p>
           </div>
-          <span class="bento-highlight" data-i18n="f-selec-badge">Tri automatique par BPM & Camelot</span>
+          <span class="bento-highlight" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);" data-i18n="f-selec-badge">Tri automatique par BPM & Camelot</span>
         </div>
 
         <!-- Feature 3: Drag & Drop (Col 4) -->
@@ -595,7 +599,7 @@
         </div>
 
         <!-- Feature NEW: Statistiques de Mix & Récapitulatif de Set (Col 6) -->
-        <div class="bento-card col-6">
+        <div class="bento-card col-6" style="background: linear-gradient(135deg, rgba(20, 200, 176, 0.08), rgba(20, 25, 35, 0.9)); border-color: rgba(20, 200, 176, 0.25);">
           <div>
             <span class="bento-icon">📊</span>
             <h3 class="bento-title" data-i18n="f-recap-title">Statistiques de Mix &amp; Récapitulatif de Set</h3>
@@ -618,8 +622,20 @@
           <span class="bento-highlight" data-i18n="f-tracklist-badge">Compatible 1001Tracklists &amp; Mixcloud</span>
         </div>
 
+        <!-- Feature NEW: Compagnon Mobile (Col 6) -->
+        <div class="bento-card col-6" style="background: linear-gradient(135deg, rgba(0, 210, 255, 0.08), rgba(20, 25, 35, 0.9)); border-color: rgba(0, 210, 255, 0.25);">
+          <div>
+            <span class="bento-icon">📱</span>
+            <h3 class="bento-title" data-i18n="f-companion-title">Compagnon Téléphone 100% Hors-Ligne</h3>
+            <p class="bento-desc" data-i18n="f-companion-desc">
+              Scannez un QR code depuis Recall pour ouvrir l'application sur votre smartphone. Suivez en temps réel le morceau en cours, le BPM, la clé Camelot et vos suggestions sans toucher à votre ordinateur.
+            </p>
+          </div>
+          <span class="bento-highlight" data-i18n="f-companion-badge">iOS, Android &amp; Zéro installation</span>
+        </div>
+
         <!-- Feature NEW: Recherche Bibliothèque & Guide Interactif (Col 12) -->
-        <div class="bento-card col-12">
+        <div class="bento-card col-12" style="background: linear-gradient(135deg, rgba(255, 179, 0, 0.08), rgba(20, 25, 35, 0.9)); border-color: rgba(255, 179, 0, 0.25);">
           <div>
             <span class="bento-icon">🔍</span>
             <h3 class="bento-title" data-i18n="f-searchguide-title">Recherche Bibliothèque &amp; Guide Interactif</h3>
@@ -631,7 +647,7 @@
         </div>
 
         <!-- Feature 6: 100% Offline (Col 12) -->
-        <div class="bento-card col-12">
+        <div class="bento-card col-12" style="background: linear-gradient(135deg, rgba(20, 25, 35, 0.9), rgba(10, 14, 22, 0.9));">
           <div>
             <span class="bento-icon">🛡️</span>
             <h3 class="bento-title" data-i18n="f6-title">100 % Hors-Ligne & Respect Absolu de la Vie Privée</h3>
@@ -724,6 +740,11 @@
         </div>
       </div>
 
+      <!-- Compatibility Optimization Note -->
+      <div class="compat-opt-note" data-i18n="compat-opt-note">
+        💡 <strong>Écosystème & Roadmap :</strong> Recall est actuellement <strong>pleinement optimisé pour Mac et avec Serato DJ Pro</strong>. Le développement sur <strong>Windows et Rekordbox</strong> avance activement pour offrir une parité fonctionnelle et une fluidité identiques.
+      </div>
+
       <!-- Comparison Table -->
       <div class="table-wrap">
         <table class="comp-table">
@@ -787,7 +808,7 @@
         <span class="section-tag" data-i18n="dl-tag">Téléchargement Gratuit</span>
         <h2 class="section-title" data-i18n="dl-title">Installez Recall sur votre machine de mix</h2>
         <p class="section-subtitle" data-i18n="dl-subtitle">
-          Téléchargez la version officielle 1.0.11 pour macOS ou Windows. Aucun compte requis, installez et mixez.
+          Téléchargez la version officielle 1.0.12 pour macOS ou Windows. Aucun compte requis, installez et mixez.
         </p>
 
         <!-- Badge Compteur de téléchargements en direct (alimenté par Google Sheets) -->
@@ -833,14 +854,14 @@
           </div>
 
           <div>
-            <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall.dmg" class="download-btn primary" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Carte macOS (.dmg)">
+            <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg" class="download-btn primary" data-track-download="macOS" data-track-file="Recall.dmg" data-track-location="Carte macOS (.dmg)">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
               <span data-i18n="dl-mac-btn">Télécharger Recall.dmg (Recommandé)</span>
             </a>
             <div class="download-subtext">
-              <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall-macOS.zip" class="download-subtext-link" data-track-download="macOS" data-track-file="Recall-macOS.zip" data-track-location="Lien Zip macOS"><span data-i18n="dl-mac-zip">Format .zip (Option alternative)</span></a> &bull; 64-bit Universal Binary
+              <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-macOS.zip" class="download-subtext-link" data-track-download="macOS" data-track-file="Recall-macOS.zip" data-track-location="Lien Zip macOS"><span data-i18n="dl-mac-zip">Format .zip (Option alternative)</span></a> &bull; 64-bit Universal Binary
             </div>
           </div>
         </div>
@@ -863,7 +884,7 @@
           </div>
 
           <div>
-            <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall-Windows-x64.zip" class="download-btn secondary" data-track-download="Windows" data-track-file="Recall-Windows.zip" data-track-location="Carte Windows (.zip)">
+            <a href="https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip" class="download-btn secondary" data-track-download="Windows" data-track-file="Recall-Windows.zip" data-track-location="Carte Windows (.zip)">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
@@ -1112,7 +1133,7 @@
           <button id="lang-en-mobile" class="lang-btn" title="English">EN</button>
         </div>
       </div>
-      <a href="#download" class="btn-nav-download mobile-cta" data-i18n="nav-cta-download">Télécharger v1.0.11</a>
+      <a href="#download" class="btn-nav-download mobile-cta" data-i18n="nav-cta-download">Télécharger v1.0.12</a>
       <a href="https://github.com/REVRmusic/recall" target="_blank" rel="noopener noreferrer" class="btn-github mobile-github">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>

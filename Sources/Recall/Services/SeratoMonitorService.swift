@@ -431,7 +431,8 @@ public class SeratoMonitorService: ObservableObject {
             // Secours intelligent : si la collection XML Rekordbox n'a pas encore de routines enregistrées,
             // proposer les transitions historiques connues depuis la base locale Serato
             if self.suggestions.isEmpty {
-                let seratoTransitions = self.dbService.fetchTransitions(for: ref, direction: direction, daysLookback: 365, maxResults: maxResults)
+                let days = UserSettings.shared.historyDaysLookback
+                let seratoTransitions = self.dbService.fetchTransitions(for: ref, direction: direction, daysLookback: days, maxResults: maxResults)
                 if !seratoTransitions.isEmpty {
                     self.suggestions = seratoTransitions
                 }

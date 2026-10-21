@@ -14,6 +14,7 @@ const translations = {
   fr: {
     // Nav
     "nav-features": "Fonctionnalités",
+    "nav-companion": "Compagnon Mobile",
     "nav-demo": "Démonstration",
     "nav-mockups": "Aperçu Réel",
     "nav-compatibility": "Compatibilité",
@@ -21,11 +22,11 @@ const translations = {
     "nav-download": "Télécharger",
     "nav-faq": "FAQ",
     "nav-legal": "Mentions Légales",
-    "nav-cta-download": "Télécharger v1.0.11",
+    "nav-cta-download": "Télécharger v1.0.12",
     
     // Hero
     "hero-pill-badge": "NOUVEAU",
-    "hero-pill-text": "Compagnon DJ indépendant",
+    "hero-pill-text": "Compagnon DJ Indépendant & 100 % Hors-Ligne",
     "hero-title-part1": "Ne perdez plus jamais le fil",
     "hero-title-part2": "de vos meilleurs mixes.",
     "hero-subtitle": "Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées, vos sélections préparées et vos enchaînements harmoniques Camelot en plein set.",
@@ -59,23 +60,29 @@ const translations = {
     "mockup-caption-rekordbox": "Compatibilité totale avec Pioneer Rekordbox en mode Performance : suggestions instantanées à chaque sélection de track.",
     "mockup-caption-settings": "Panneau de configuration avec estompage doux : ajustez la tolérance BPM, choisissez entre Camelot et Musicale, et activez le mode Always on Top.",
 
-    // Phone Companion Section
-    "phone-tag": "NOUVEAU · COMPAGNON TÉLÉPHONE",
-    "phone-title": "Vos suggestions de mix en direct sur votre smartphone.",
-    "phone-f1-title": "Connexion instantanée par QR Code",
-    "phone-f1-desc": "Scannez le QR affiché sur votre Mac — aucune installation d'app.",
-    "phone-f2-title": "100 % Hors-ligne en Wi-Fi ou Partage de Connexion",
-    "phone-f2-desc": "Restez local : club, festival, cave — zéro Internet requis.",
-    "phone-f3-title": "Flux temps réel (< 50 ms)",
-    "phone-f3-desc": "Le titre en cours et les suggestions suivent votre deck instantanément.",
-    "phone-f4-title": "Niveau de zoom tactile ajustable",
-    "phone-f4-desc": "Agrandissez l'UI depuis le booth selon la distance et la luminosité.",
-    "phone-badge-browsers": "iOS Safari & Android Chrome",
-    "phone-badge-pin": "Réseau Local Sécurisé (PIN)",
-    "phone-mock-list": "Suggestions",
-    "phone-mock-live": "En direct",
-    "phone-mock-now": "En cours",
-    "phone-mock-played": "JOUÉS",
+    // Compagnon Téléphone (Mobile Companion)
+    "companion-tag": "NOUVEAU · COMPAGNON TÉLÉPHONE",
+    "companion-title": "Vos suggestions de mix en direct sur votre smartphone.",
+    "companion-desc": "Posez votre téléphone sur votre régie DJ ou fixez-le sur votre stand. Recall diffuse vos suggestions d'enchaînements, vos clés Camelot et le morceau en cours en temps réel sur votre mobile via votre réseau local, 100% hors-ligne.",
+    "companion-feat-1-title": "Connexion instantanée par QR Code",
+    "companion-feat-1-desc": "Scannez le QR Code affiché dans Recall avec l'appareil photo de votre iPhone ou Android : la web app s'ouvre immédiatement, sans rien installer sur votre smartphone.",
+    "companion-feat-2-title": "100 % Hors-ligne en Wi-Fi ou Partage de Connexion",
+    "companion-feat-2-desc": "Fonctionne en club, festival ou sous-sol sans aucun accès à Internet. Un simple réseau Wi-Fi local ou le partage de connexion de votre smartphone suffit.",
+    "companion-feat-3-title": "Flux WebSocket temps réel (&lt; 50 ms)",
+    "companion-feat-3-desc": "Dès qu'une platine Serato ou Rekordbox change de morceau, votre smartphone s'actualise instantanément avec la clé Camelot, le BPM et vos meilleures transitions.",
+    "companion-feat-4-title": "Niveau de zoom tactile ajustable",
+    "companion-feat-4-desc": "Ajustez la taille d'affichage d'un geste grâce aux boutons de zoom (+ / -) pour une lisibilité parfaite quelle que soit la distance de votre téléphone en cabine.",
+    "companion-badge-pwa": "📱 iOS Safari &amp; Android Chrome",
+    "companion-badge-pin": "🔒 Réseau Local Sécurisé (PIN)",
+    "companion-badge-oled": "🔋 Thème Sombre OLED Éco-Batterie",
+    "f-companion-title": "Compagnon Téléphone 100% Hors-Ligne",
+    "f-companion-desc": "Scannez un QR code depuis Recall pour ouvrir l'application sur votre smartphone. Suivez en temps réel le morceau en cours, le BPM, la clé Camelot et vos suggestions sans toucher à votre ordinateur.",
+    "f-companion-badge": "iOS, Android &amp; Zéro installation",
+    "mockup-phone-now-label": "Sur le deck",
+    "mockup-phone-deck": "Deck 1",
+    "mockup-phone-sug-title": "Suggestions d'enchaînements",
+    "mockup-phone-sug-count": "3 disponibles",
+    "mockup-phone-live": "En direct",
 
     // Problem Section
     "problem-tag": "Le Dilemme du DJ en Club",
@@ -177,7 +184,7 @@ const translations = {
     // Downloads
     "dl-tag": "Téléchargement Gratuit",
     "dl-title": "Installez Recall sur votre machine de mix",
-    "dl-subtitle": "Téléchargez la version officielle 1.0.11 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
+    "dl-subtitle": "Téléchargez la version officielle 1.0.12 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
     "opt-banner-mac-badge": "🍏 Mac + Serato · Pleinement Optimisé",
     "opt-banner-win-badge": "Windows + Rekordbox · En Développement Actif",
     "opt-banner-desc": "<strong>Note importante de transparence :</strong> Recall est actuellement <strong>pleinement optimisé pour être utilisé sur Mac et avec le logiciel Serato</strong>. Je travaille activement pour rendre la version <strong>Windows / Rekordbox</strong> tout aussi complète et fluide que la version Mac / Serato. Vos retours et suggestions me sont précieux pour m'aider à y parvenir !",
@@ -311,6 +318,7 @@ const translations = {
   en: {
     // Nav
     "nav-features": "Features",
+    "nav-companion": "Mobile Companion",
     "nav-demo": "Live Demo",
     "nav-mockups": "Live Mockups",
     "nav-compatibility": "Compatibility",
@@ -318,11 +326,11 @@ const translations = {
     "nav-download": "Download",
     "nav-faq": "FAQ",
     "nav-legal": "Legal Notice",
-    "nav-cta-download": "Download v1.0.11",
+    "nav-cta-download": "Download v1.0.12",
     
     // Hero
     "hero-pill-badge": "NEW",
-    "hero-pill-text": "Independent DJ companion",
+    "hero-pill-text": "Independent & 100% Offline DJ Companion",
     "hero-title-part1": "Never lose track",
     "hero-title-part2": "of your best mixes.",
     "hero-subtitle": "The smart DJ copilot that mines your Serato & Rekordbox history to instantly recommend proven routines, prepped selections, and Camelot harmonic transitions in live sets.",
@@ -356,23 +364,29 @@ const translations = {
     "mockup-caption-rekordbox": "Full compatibility with Pioneer Rekordbox in Performance mode: instant harmonic suggestions on every track transition.",
     "mockup-caption-settings": "Clean settings sheet with soft dimming backdrop: customize BPM tolerance, harmonic key formats, and Always on Top mode.",
 
-    // Phone Companion Section
-    "phone-tag": "NEW · PHONE COMPANION",
-    "phone-title": "Your mix suggestions live on your smartphone.",
-    "phone-f1-title": "Instant QR Code connection",
-    "phone-f1-desc": "Scan the QR shown on your Mac — no app install needed.",
-    "phone-f2-title": "100% Offline over Wi-Fi or Hotspot",
-    "phone-f2-desc": "Stay local: club, festival, basement — zero Internet required.",
-    "phone-f3-title": "Real-time stream (< 50 ms)",
-    "phone-f3-desc": "Now-playing and suggestions follow your deck instantly.",
-    "phone-f4-title": "Adjustable touch zoom",
-    "phone-f4-desc": "Scale the UI from the booth for distance and lighting.",
-    "phone-badge-browsers": "iOS Safari & Android Chrome",
-    "phone-badge-pin": "Secure Local Network (PIN)",
-    "phone-mock-list": "Suggestions",
-    "phone-mock-live": "Live",
-    "phone-mock-now": "Now playing",
-    "phone-mock-played": "PLAYED",
+    // Mobile Companion
+    "companion-tag": "NEW · 100% OFFLINE",
+    "companion-title": "Your live mix suggestions directly on your smartphone.",
+    "companion-desc": "Place your phone on your DJ booth or mount it on your stand. Recall streams your transition suggestions, Camelot keys, and active playing track in real time to your mobile device over your local network, 100% offline.",
+    "companion-feat-1-title": "Instant QR Code Pairing",
+    "companion-feat-1-desc": "Scan the QR code displayed in Recall with your iPhone or Android camera: the web app opens instantly, with zero app installation needed.",
+    "companion-feat-2-title": "100% Offline via Wi-Fi or Mobile Hotspot",
+    "companion-feat-2-desc": "Performs flawlessly in underground club booths or festival stages without any Internet connection. A simple local Wi-Fi or phone hotspot is all you need.",
+    "companion-feat-3-title": "Ultra-Low Latency WebSocket (&lt; 50 ms)",
+    "companion-feat-3-desc": "As soon as a Serato or Rekordbox deck loads a new track, your phone updates in real time with the harmonic Camelot key, BPM, and transition routines.",
+    "companion-feat-4-title": "Adjustable Touch Zoom Controls",
+    "companion-feat-4-desc": "Easily scale the interface with quick zoom buttons (+ / -) for crystal-clear readability from any viewing distance in the booth.",
+    "companion-badge-pwa": "📱 iOS Safari &amp; Android Chrome",
+    "companion-badge-pin": "🔒 Secure Local Network (PIN)",
+    "companion-badge-oled": "🔋 Battery-Saver OLED Dark Theme",
+    "f-companion-title": "100% Offline Phone Companion",
+    "f-companion-desc": "Scan a QR code from Recall to open the app on your smartphone. Monitor the currently playing track, BPM, Camelot keys, and suggestions in real time without touching your laptop.",
+    "f-companion-badge": "iOS, Android &amp; Zero install",
+    "mockup-phone-now-label": "Now Playing",
+    "mockup-phone-deck": "Deck 1",
+    "mockup-phone-sug-title": "Transition Suggestions",
+    "mockup-phone-sug-count": "3 available",
+    "mockup-phone-live": "Live",
 
     // Problem Section
     "problem-tag": "The Club DJ Dilemma",
@@ -474,7 +488,7 @@ const translations = {
     // Downloads
     "dl-tag": "Free Download",
     "dl-title": "Get Recall for your DJ machine",
-    "dl-subtitle": "Download the official v1.0.11 release for macOS or Windows. No sign-up required, install and mix.",
+    "dl-subtitle": "Download the official v1.0.12 release for macOS or Windows. No sign-up required, install and mix.",
     "opt-banner-mac-badge": "🍏 Mac + Serato · Fully Optimized",
     "opt-banner-win-badge": "Windows + Rekordbox · In Active Development",
     "opt-banner-desc": "<strong>Important Transparency Note:</strong> Recall is currently <strong>fully optimized for use on Mac and with the Serato software</strong>. I am actively working to make the <strong>Windows / Rekordbox</strong> version just as complete and seamless as the Mac / Serato version. Your feedback and suggestions are invaluable in helping me achieve this!",
@@ -677,7 +691,7 @@ function updateSmartHeroButton(os, lang) {
   const currentDict = translations[lang] || translations.fr;
 
   if (isWin) {
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall-Windows-x64.zip";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip";
     smartBtn.setAttribute("data-track-download", "Windows");
     smartBtn.setAttribute("data-track-file", "Recall-Windows.zip");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (Windows)");
@@ -698,7 +712,7 @@ function updateSmartHeroButton(os, lang) {
     }
   } else {
     // macOS default
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall.dmg";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg";
     smartBtn.setAttribute("data-track-download", "macOS");
     smartBtn.setAttribute("data-track-file", "Recall.dmg");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (macOS)");
@@ -904,19 +918,19 @@ function initFAQ() {
 function getMockupTitles(lang) {
   if (lang === "en") {
     return {
-      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.11 (Floating Mode)",
-      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.11 (Sélec Scratchpad)",
-      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.11 (78px Compact Dock Mode)",
-      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.11 (Performance Mode)",
-      "mockup-settings": "Recall v1.0.11 — Settings Sheet & Soft Dimming"
+      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.12 (Floating Mode)",
+      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.12 (Sélec Scratchpad)",
+      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.12 (78px Compact Dock Mode)",
+      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.12 (Performance Mode)",
+      "mockup-settings": "Recall v1.0.12 — Settings Sheet & Soft Dimming"
     };
   }
   return {
-    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.11 (Mode Flottant)",
-    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.11 (Onglet Sélec & Scratchpad)",
-    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.11 (Mode Bandeau Compact 78 px)",
-    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.11 (Mode Performance)",
-    "mockup-settings": "Recall v1.0.11 — Panneau des Paramètres & Estompage"
+    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.12 (Mode Flottant)",
+    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.12 (Onglet Sélec & Scratchpad)",
+    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.12 (Mode Bandeau Compact 78 px)",
+    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.12 (Mode Performance)",
+    "mockup-settings": "Recall v1.0.12 — Panneau des Paramètres & Estompage"
   };
 }
 
@@ -1077,7 +1091,7 @@ function sendDownloadEvent(eventData) {
   const payload = {
     platform: eventData.platform || "macOS",
     file: file,
-    version: "1.0.11",
+    version: "1.0.12",
     event: eventLabel,
     location: eventData.location || "Section Téléchargement",
     site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
@@ -1460,7 +1474,7 @@ function submitFeedbackForm(e) {
     email: email,
     software: software,
     source: source,
-    version: "1.0.11",
+    version: "1.0.12",
     event: "💡 Suggestion : " + category,
     location: author + (email ? " <" + email + ">" : ""),
     file: (software ? "[" + software + "] " : "") + message,
@@ -1524,7 +1538,7 @@ function showFeedbackSuccess() {
 let pendingDownload = {
   platform: "macOS",
   file: "Recall.dmg",
-  url: "https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall.dmg",
+  url: "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg",
   location: "Section Téléchargement"
 };
 
@@ -1581,7 +1595,7 @@ function openDownloadModal(platform, downloadUrl, file, location) {
   pendingDownload = {
     platform: platform || "macOS",
     file: file || (platform === "Windows" ? "Recall-Windows.zip" : "Recall.dmg"),
-    url: downloadUrl || (platform === "Windows" ? "https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall-Windows-x64.zip" : "https://github.com/REVRmusic/recall/releases/download/v1.0.11/Recall.dmg"),
+    url: downloadUrl || (platform === "Windows" ? "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip" : "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg"),
     location: location || "Section Téléchargement"
   };
 

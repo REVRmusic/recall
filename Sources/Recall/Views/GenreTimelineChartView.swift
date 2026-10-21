@@ -427,7 +427,6 @@ public struct GenreTimelineChartView: View {
     public let sessionEndTime: Date?
     public let isLive: Bool
     
-    @State private var hoveredSegment: GenreTimelineSegment? = nil
     @State private var selectedStyleFilter: MusicStyleCategory? = nil
     
     public init(
@@ -616,69 +615,7 @@ public struct GenreTimelineChartView: View {
     
     private var timelineRibbonView: some View {
         VStack(spacing: 6) {
-            // Carte Tooltip dynamique au survol
-            if let h = hoveredSegment {
-                HStack(spacing: 8) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(h.style.color)
-                        Text(timeFormatter.string(from: h.startTime))
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                    }
-                    
-                    Text("•")
-                        .foregroundColor(.white.opacity(0.3))
-                        .font(.system(size: 9))
-                    
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(h.style.color)
-                            .frame(width: 6, height: 6)
-                        Text(h.style.rawValue)
-                            .font(.system(size: 9.5, weight: .heavy))
-                            .foregroundColor(h.style.color)
-                    }
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1.5)
-                    .background(h.style.color.opacity(0.18))
-                    .cornerRadius(4)
-                    
-                    Text(h.title)
-                        .font(.system(size: 10.5, weight: .bold))
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-                    
-                    if !h.artist.isEmpty {
-                        Text("(\(h.artist))")
-                            .font(.system(size: 9.5))
-                            .foregroundColor(.white.opacity(0.6))
-                            .lineLimit(1)
-                    }
-                    
-                    Spacer()
-                    
-                    if h.bpm > 0 {
-                        Text("\(Int(h.bpm.rounded())) BPM")
-                            .font(.system(size: 9.5, weight: .semibold, design: .rounded))
-                            .foregroundColor(.white.opacity(0.55))
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(red: 0.12, green: 0.14, blue: 0.18))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(h.style.color.opacity(0.4), lineWidth: 0.8)
-                        )
-                )
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
-            }
-            
-            // Le Ruban Temporel des Morceaux
+            // Le Ruban Temporel des Morceaux (accéléré GPU via drawingGroup)
             GeometryReader { geo in
                 let totalWidth = geo.size.width
                 let totalDur = timelineData.duration
@@ -689,29 +626,23 @@ public struct GenreTimelineChartView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color.black.opacity(0.40))
                     
-                    // Segments colorés des morceaux au temps réel
+                    // Segments colorés des morceaux
                     ForEach(timelineData.segments) { seg in
                         let isFiltered = selectedStyleFilter == nil || selectedStyleFilter == seg.style
-                        let isHovered = hoveredSegment?.id == seg.id
                         let startOffset = max(0.0, min(1.0, seg.startTime.timeIntervalSince(start) / totalDur))
                         let endOffset = max(startOffset, min(1.0, seg.endTime.timeIntervalSince(start) / totalDur))
                         let xPos = totalWidth * CGFloat(startOffset)
                         let rawWidth = totalWidth * CGFloat(endOffset - startOffset)
-                        let segWidth = max(3.5, rawWidth)
+                        let segWidth = max(3.0, rawWidth)
                         
                         Rectangle()
-                            .fill(seg.style.color.opacity(isFiltered ? (isHovered ? 1.0 : 0.90) : 0.15))
+                            .fill(seg.style.color.opacity(isFiltered ? 0.92 : 0.15))
                             .frame(width: segWidth, height: 32)
                             .overlay(
                                 Rectangle()
-                                    .stroke(isHovered ? Color.white : Color.black.opacity(0.3), lineWidth: isHovered ? 1.5 : 0.5)
+                                    .stroke(Color.black.opacity(0.30), lineWidth: 0.5)
                             )
                             .offset(x: min(totalWidth - segWidth, xPos))
-                            .onHover { hovering in
-                                withAnimation(.easeInOut(duration: 0.15)) {
-                                    hoveredSegment = hovering ? seg : (hoveredSegment?.id == seg.id ? nil : hoveredSegment)
-                                }
-                            }
                     }
                     
                     // Lignes verticales de graduation des heures à travers le ruban
@@ -720,13 +651,14 @@ public struct GenreTimelineChartView: View {
                         let xPos = totalWidth * CGFloat(tickOffset)
                         
                         Rectangle()
-                            .fill(Color.white.opacity(0.40))
+                            .fill(Color.white.opacity(0.45))
                             .frame(width: 1.5, height: 32)
                             .offset(x: xPos - 0.75)
                             .allowsHitTesting(false)
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 6))
+                .drawingGroup()
             }
             .frame(height: 32)
             

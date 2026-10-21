@@ -13,6 +13,7 @@ namespace Recall.Models
         /// Sessions Serato / Rekordbox plus courtes (tests, tri de bibliothèque) ignorées par les suggestions.
         /// </summary>
         public const int MinimumSessionDurationSeconds = 600;
+        public const int MinimumSessionTracksCount = 10;
 
         public string DjSoftwareMode { get; set; } = "auto"; // "auto", "serato", "rekordbox"
         public string TransitionDirection { get; set; } = "next"; // "next", "previous", "all"

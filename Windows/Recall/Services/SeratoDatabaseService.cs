@@ -251,6 +251,7 @@ namespace Recall.Services
                               WHERE played = 1
                               GROUP BY session_id
                               HAVING MAX(MAX(start_time, IFNULL(end_time, 0))) - MIN(start_time) >= {UserSettings.MinimumSessionDurationSeconds}
+                                 AND COUNT(DISTINCT LOWER(TRIM(COALESCE(NULLIF(name, ''), NULLIF(file_name, ''), '')))) >= {UserSettings.MinimumSessionTracksCount}
                           )
                         GROUP BY LOWER(target_e.name), LOWER(target_e.artist)
                         ORDER BY transition_count DESC
