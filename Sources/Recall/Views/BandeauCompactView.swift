@@ -362,7 +362,11 @@ public struct BandeauCompactView: View {
                             settings.isCompactMode = false
                             FloatingWindowController.shared.toggleCompactMode(false)
                         }
-                        monitor.requestComboConfirmation(trackA: d1, trackB: d2, source: "Deck 1 ⇄ Deck 2")
+                        let d1Time = d1.playedAt?.timeIntervalSince1970 ?? 0
+                        let d2Time = d2.playedAt?.timeIntervalSince1970 ?? 0
+                        let first = (d1Time > 0 && d2Time > 0 && d2Time < d1Time) ? d2 : d1
+                        let second = (first.id == d1.id) ? d2 : d1
+                        monitor.requestComboConfirmation(trackA: first, trackB: second, source: "Deck 1 ⇄ Deck 2")
                     }
                 } label: {
                     Image(systemName: isFav ? "heart.fill" : "heart")

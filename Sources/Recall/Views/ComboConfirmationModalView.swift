@@ -36,11 +36,11 @@ public struct ComboConfirmationModalView: View {
     private var directionCaption: String {
         switch linkDirection {
         case .forward:
-            return "Quand le morceau 1 passe, Recall propose le morceau 2."
+            return "Recall proposera « \(data.trackB.displayTitle) » après « \(data.trackA.displayTitle) »."
         case .reverse:
-            return "Quand le morceau 2 passe, Recall propose le morceau 1."
+            return "Recall proposera « \(data.trackA.displayTitle) » après « \(data.trackB.displayTitle) »."
         case .both:
-            return "Quand l'un des deux passe, Recall propose l'autre."
+            return "Recall proposera chaque morceau dès que l'autre est joué (dans les deux sens)."
         }
     }
     
