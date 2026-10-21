@@ -340,145 +340,125 @@
           <div class="iphone-bezel">
             <div class="iphone-dynamic-island"></div>
             <div class="iphone-screen">
-              <div class="iphone-status-bar">
-                <span>04:40</span>
-                <span class="iphone-status-icons">
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="0" y="6" width="2" height="4" rx="0.5"/><rect x="3" y="4" width="2" height="6" rx="0.5"/><rect x="6" y="2" width="2" height="8" rx="0.5"/><rect x="9" y="0" width="2" height="10" rx="0.5"/></svg>
-                  <svg width="14" height="10" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 8a10 10 0 0 1 14 0"/><path d="M4 11a6 6 0 0 1 8 0"/><circle cx="8" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>
-                  <svg width="22" height="10" viewBox="0 0 28 12" fill="currentColor"><rect x="0" y="1" width="22" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="3" width="14" height="6" rx="1"/><rect x="23" y="4" width="2" height="4" rx="0.5"/></svg>
-                </span>
-              </div>
-
-              <div class="iphone-app-header">
-                <div class="iphone-app-brand">
-                  <span class="iphone-app-logo"></span>
-                  <div>
-                    <div class="iphone-app-name">Recall</div>
-                    <div class="iphone-app-sub">Live Companion</div>
-                  </div>
+              <!-- Dessiné en 393 px (largeur réelle iPhone), puis réduit d'un bloc : rien ne se chevauche -->
+              <div class="iphone-canvas">
+                <div class="iphone-status-bar">
+                  <span>04:40</span>
+                  <span class="iphone-status-icons">
+                    <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="0.6"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="0.6"/><rect x="9" y="2" width="3" height="10" rx="0.6"/><rect x="13.5" y="0" width="3" height="12" rx="0.6"/></svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><path d="M8 2.2c2.2 0 4.2.9 5.6 2.3l-1.3 1.3A6 6 0 0 0 8 4.2a6 6 0 0 0-4.3 1.6L2.4 4.5A8 8 0 0 1 8 2.2Zm0 3.2c1.2 0 2.3.5 3.1 1.3L9.8 8A2.4 2.4 0 0 0 8 7.2c-.7 0-1.3.3-1.8.8L4.9 6.7A4.4 4.4 0 0 1 8 5.4ZM8 9.2a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z"/></svg>
+                    <span class="iphone-battery" aria-hidden="true"><span></span></span>
+                    <span class="iphone-battery-pct">62</span>
+                  </span>
                 </div>
-                <div class="iphone-header-actions">
-                  <div class="iphone-zoom" title="Zoom">
-                    <span>−</span><span>100%</span><span>+</span>
-                  </div>
-                  <div class="iphone-conn">
-                    <span class="iphone-conn-dot"></span>
-                    <span data-i18n="phone-mock-live">En direct</span>
-                  </div>
-                </div>
-              </div>
 
-              <div class="iphone-now">
-                <div class="iphone-now-top">
-                  <div class="iphone-now-label"><span class="iphone-pulse"></span> <span data-i18n="phone-mock-now">En cours</span></div>
-                  <div class="iphone-deck">Serato</div>
-                </div>
-                <div class="iphone-now-title">I Follow Rivers</div>
-                <div class="iphone-now-artist">Lykke Li</div>
-                <div class="iphone-now-meta">
-                  <span class="iphone-key" style="background:#F8B5CD">7A</span>
-                  <span class="iphone-pill">122 <small>BPM</small></span>
-                  <span class="iphone-pill">A Definir</span>
-                  <span class="iphone-pill">18 <small data-i18n="phone-mock-played">JOUÉS</small></span>
-                </div>
-              </div>
-
-              <div class="iphone-list-bar">
-                <span data-i18n="phone-mock-list">Suggestions</span>
-                <span class="iphone-count">50</span>
-              </div>
-
-              <div class="iphone-tracks">
-                <div class="iphone-track iphone-track-top">
-                  <span class="iphone-track-idx">1</span>
-                  <div class="iphone-track-info">
-                    <div class="iphone-track-title">Uptown funk</div>
-                    <div class="iphone-track-artist">Bruno Mars</div>
-                    <div class="iphone-badges">
-                      <span class="iphone-b iphone-b-direct">🔥 3×</span>
-                      <span class="iphone-b iphone-b-rel">=</span>
+                <header class="iphone-app-header">
+                  <div class="iphone-app-brand">
+                    <span class="iphone-app-logo"></span>
+                    <div>
+                      <div class="iphone-app-name">Recall</div>
+                      <div class="iphone-app-sub">Live Companion</div>
                     </div>
                   </div>
-                  <div class="iphone-track-right">
+                  <div class="iphone-header-actions">
+                    <div class="iphone-zoom" title="Zoom"><span>−</span><span>100%</span><span>+</span></div>
+                    <div class="iphone-conn"><span class="iphone-conn-dot"></span><span data-i18n="phone-mock-live">En direct</span></div>
+                  </div>
+                </header>
+
+                <section class="iphone-now">
+                  <div class="iphone-now-top">
+                    <div class="iphone-now-label"><span class="iphone-pulse"></span><span data-i18n="phone-mock-now">En cours</span></div>
+                    <div class="iphone-deck">Serato</div>
+                  </div>
+                  <div class="iphone-now-title">I Follow Rivers</div>
+                  <div class="iphone-now-artist">Lykke Li</div>
+                  <div class="iphone-now-meta">
                     <span class="iphone-key" style="background:#F8B5CD">7A</span>
-                    <div class="iphone-bpm">130<small>BPM</small><span class="iphone-bpm-diff up">+8</span></div>
+                    <span class="iphone-pill">122 <small>BPM</small></span>
+                    <span class="iphone-pill">A Definir</span>
+                    <span class="iphone-pill">18 <small data-i18n="phone-mock-played">JOUÉS</small></span>
                   </div>
+                </section>
+
+                <div class="iphone-list-bar">
+                  <span data-i18n="phone-mock-list">Suggestions</span>
+                  <span class="iphone-count">50</span>
                 </div>
 
-                <div class="iphone-track">
-                  <span class="iphone-track-idx">2</span>
-                  <div class="iphone-track-info">
-                    <div class="iphone-track-title">La Bamba</div>
-                    <div class="iphone-track-artist">Los Lobos</div>
-                    <div class="iphone-badges">
-                      <span class="iphone-b iphone-b-routine">🔁 Routine 2×</span>
-                      <span class="iphone-b iphone-b-rel">Rel</span>
+                <div class="iphone-tracks">
+                  <article class="iphone-track iphone-track-top">
+                    <span class="iphone-track-idx">1</span>
+                    <div class="iphone-track-info">
+                      <div class="iphone-track-title">Uptown funk</div>
+                      <div class="iphone-track-artist">Bruno Mars</div>
+                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 3×</span><span class="iphone-b iphone-b-rel">=</span></div>
                     </div>
-                  </div>
-                  <div class="iphone-track-right">
-                    <span class="iphone-key" style="background:#F580B4">7B</span>
-                    <div class="iphone-bpm">150<small>BPM</small><span class="iphone-bpm-diff up">+28</span></div>
-                  </div>
-                </div>
-
-                <div class="iphone-track">
-                  <span class="iphone-track-idx">3</span>
-                  <div class="iphone-track-info">
-                    <div class="iphone-track-title">One More Time</div>
-                    <div class="iphone-track-artist">Daft Punk</div>
-                    <div class="iphone-badges">
-                      <span class="iphone-b iphone-b-routine">🔁 Routine 2×</span>
+                    <div class="iphone-track-right">
+                      <span class="iphone-key" style="background:#F8B5CD">7A</span>
+                      <div class="iphone-bpm">130 <small>BPM</small> <span class="up">+8</span></div>
                     </div>
-                  </div>
-                  <div class="iphone-track-right">
-                    <span class="iphone-key" style="background:#CD8DFF">9B</span>
-                    <div class="iphone-bpm">122.9<small>BPM</small><span class="iphone-bpm-diff up">+0.9</span></div>
-                  </div>
-                </div>
-
-                <div class="iphone-track">
-                  <span class="iphone-track-idx">4</span>
-                  <div class="iphone-track-info">
-                    <div class="iphone-track-title">This Girl</div>
-                    <div class="iphone-track-artist">Kungs vs Cookin' on 3 Burners</div>
-                    <div class="iphone-badges">
-                      <span class="iphone-b iphone-b-direct">🔥 2×</span>
+                  </article>
+                  <article class="iphone-track">
+                    <span class="iphone-track-idx">2</span>
+                    <div class="iphone-track-info">
+                      <div class="iphone-track-title">La Bamba</div>
+                      <div class="iphone-track-artist">Los Lobos</div>
+                      <div class="iphone-badges"><span class="iphone-b iphone-b-routine">🔁 Routine 2×</span><span class="iphone-b iphone-b-rel">Rel</span></div>
                     </div>
-                  </div>
-                  <div class="iphone-track-right">
-                    <span class="iphone-key" style="background:#F9C7AD">5A</span>
-                    <div class="iphone-bpm">122<small>BPM</small></div>
-                  </div>
-                </div>
-
-                <div class="iphone-track">
-                  <span class="iphone-track-idx">5</span>
-                  <div class="iphone-track-info">
-                    <div class="iphone-track-title">Meet Me Halfway</div>
-                    <div class="iphone-track-artist">The Black Eyed Peas</div>
-                    <div class="iphone-badges">
-                      <span class="iphone-b iphone-b-direct">🔥 1×</span>
+                    <div class="iphone-track-right">
+                      <span class="iphone-key" style="background:#F580B4">7B</span>
+                      <div class="iphone-bpm">150 <small>BPM</small> <span class="up">+28</span></div>
                     </div>
-                  </div>
-                  <div class="iphone-track-right">
-                    <span class="iphone-key" style="background:#9BE7FB">11A</span>
-                    <div class="iphone-bpm">130<small>BPM</small><span class="iphone-bpm-diff up">+8</span></div>
-                  </div>
-                </div>
-
-                <div class="iphone-track">
-                  <span class="iphone-track-idx">6</span>
-                  <div class="iphone-track-info">
-                    <div class="iphone-track-title">We Found Love</div>
-                    <div class="iphone-track-artist">Rihanna</div>
-                    <div class="iphone-badges">
-                      <span class="iphone-b iphone-b-direct">🔥 1×</span>
+                  </article>
+                  <article class="iphone-track">
+                    <span class="iphone-track-idx">3</span>
+                    <div class="iphone-track-info">
+                      <div class="iphone-track-title">One More Time</div>
+                      <div class="iphone-track-artist">Daft Punk</div>
+                      <div class="iphone-badges"><span class="iphone-b iphone-b-routine">🔁 Routine 2×</span></div>
                     </div>
-                  </div>
-                  <div class="iphone-track-right">
-                    <span class="iphone-key" style="background:#8BF3B3">2A</span>
-                    <div class="iphone-bpm">128<small>BPM</small><span class="iphone-bpm-diff up">+6</span></div>
-                  </div>
+                    <div class="iphone-track-right">
+                      <span class="iphone-key" style="background:#CD8DFF">9B</span>
+                      <div class="iphone-bpm">122.9 <small>BPM</small> <span class="up">+0.9</span></div>
+                    </div>
+                  </article>
+                  <article class="iphone-track">
+                    <span class="iphone-track-idx">4</span>
+                    <div class="iphone-track-info">
+                      <div class="iphone-track-title">This Girl</div>
+                      <div class="iphone-track-artist">Kungs vs Cookin' on 3 Burners</div>
+                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 2×</span></div>
+                    </div>
+                    <div class="iphone-track-right">
+                      <span class="iphone-key" style="background:#F9C7AD">5A</span>
+                      <div class="iphone-bpm">122 <small>BPM</small></div>
+                    </div>
+                  </article>
+                  <article class="iphone-track">
+                    <span class="iphone-track-idx">5</span>
+                    <div class="iphone-track-info">
+                      <div class="iphone-track-title">Meet the Halfway</div>
+                      <div class="iphone-track-artist">The Black Eyed Peas</div>
+                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 1×</span></div>
+                    </div>
+                    <div class="iphone-track-right">
+                      <span class="iphone-key" style="background:#9BE7FB">11A</span>
+                      <div class="iphone-bpm">130 <small>BPM</small> <span class="up">+8</span></div>
+                    </div>
+                  </article>
+                  <article class="iphone-track">
+                    <span class="iphone-track-idx">6</span>
+                    <div class="iphone-track-info">
+                      <div class="iphone-track-title">We Found Love</div>
+                      <div class="iphone-track-artist">Rihanna</div>
+                      <div class="iphone-badges"><span class="iphone-b iphone-b-direct">🔥 1×</span></div>
+                    </div>
+                    <div class="iphone-track-right">
+                      <span class="iphone-key" style="background:#8BF3B3">2A</span>
+                      <div class="iphone-bpm">128 <small>BPM</small> <span class="up">+6</span></div>
+                    </div>
+                  </article>
                 </div>
               </div>
             </div>
