@@ -59,6 +59,21 @@ const translations = {
     "mockup-caption-rekordbox": "Compatibilité totale avec Pioneer Rekordbox en mode Performance : suggestions instantanées à chaque sélection de track.",
     "mockup-caption-settings": "Panneau de configuration avec estompage doux : ajustez la tolérance BPM, choisissez entre Camelot et Musicale, et activez le mode Always on Top.",
 
+    // Phone Companion Section
+    "phone-tag": "NOUVEAU · COMPAGNON TÉLÉPHONE",
+    "phone-title": "Vos suggestions de mix en direct sur votre smartphone.",
+    "phone-f1-title": "Connexion instantanée par QR Code",
+    "phone-f1-desc": "Scannez le QR affiché sur votre Mac — aucune installation d'app.",
+    "phone-f2-title": "100 % Hors-ligne en Wi-Fi ou Partage de Connexion",
+    "phone-f2-desc": "Restez local : club, festival, cave — zéro Internet requis.",
+    "phone-f3-title": "Flux temps réel (< 50 ms)",
+    "phone-f3-desc": "Le titre en cours et les suggestions suivent votre deck instantanément.",
+    "phone-f4-title": "Niveau de zoom tactile ajustable",
+    "phone-f4-desc": "Agrandissez l'UI depuis le booth selon la distance et la luminosité.",
+    "phone-badge-browsers": "iOS Safari & Android Chrome",
+    "phone-badge-pin": "Réseau Local Sécurisé (PIN)",
+    "phone-mock-list": "Suggestions d'enchaînements",
+
     // Problem Section
     "problem-tag": "Le Dilemme du DJ en Club",
     "problem-title": "Pourquoi vos meilleurs mixes tombent dans l'oubli&nbsp;?",
@@ -337,6 +352,21 @@ const translations = {
     "mockup-caption-serato-compact": "78px Ultra-Compact Dock mode: subtle monitoring docked at screen bottom, preserving 100% visibility for waveforms and decks.",
     "mockup-caption-rekordbox": "Full compatibility with Pioneer Rekordbox in Performance mode: instant harmonic suggestions on every track transition.",
     "mockup-caption-settings": "Clean settings sheet with soft dimming backdrop: customize BPM tolerance, harmonic key formats, and Always on Top mode.",
+
+    // Phone Companion Section
+    "phone-tag": "NEW · PHONE COMPANION",
+    "phone-title": "Your mix suggestions live on your smartphone.",
+    "phone-f1-title": "Instant QR Code connection",
+    "phone-f1-desc": "Scan the QR shown on your Mac — no app install needed.",
+    "phone-f2-title": "100% Offline over Wi-Fi or Hotspot",
+    "phone-f2-desc": "Stay local: club, festival, basement — zero Internet required.",
+    "phone-f3-title": "Real-time stream (< 50 ms)",
+    "phone-f3-desc": "Now-playing and suggestions follow your deck instantly.",
+    "phone-f4-title": "Adjustable touch zoom",
+    "phone-f4-desc": "Scale the UI from the booth for distance and lighting.",
+    "phone-badge-browsers": "iOS Safari & Android Chrome",
+    "phone-badge-pin": "Secure Local Network (PIN)",
+    "phone-mock-list": "Transition suggestions",
 
     // Problem Section
     "problem-tag": "The Club DJ Dilemma",
