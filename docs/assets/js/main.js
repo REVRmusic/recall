@@ -273,7 +273,6 @@ const translations = {
     "footer-github-link": "Dépôt GitHub",
     "footer-welcome-link": "Le mot de REVR",
     "footer-feedback-link": "Suggérer une amélioration",
-    "footer-admin-link": "Console Admin",
     "nav-feedback": "Idées & Retours",
 
     // Welcome Modal : Le mot de REVR
@@ -577,7 +576,6 @@ const translations = {
     "footer-github-link": "GitHub Repository",
     "footer-welcome-link": "A Word from REVR",
     "footer-feedback-link": "Suggest an Improvement",
-    "footer-admin-link": "Admin Console",
     "nav-feedback": "Ideas & Feedback",
 
     // Welcome Modal : A word from REVR
@@ -743,14 +741,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initFeedbackModal();
   initDownloadModal();
   initDownloadTracker();
-
-  // Raccourci secret Admin pour REVR : Cmd+Shift+A ou Ctrl+Shift+A
-  document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "A" || e.key === "a")) {
-      e.preventDefault();
-      window.location.href = "admin/";
-    }
-  });
 });
 
 // --- Language Switching ---
