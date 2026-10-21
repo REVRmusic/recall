@@ -72,7 +72,10 @@ const translations = {
     "phone-f4-desc": "Agrandissez l'UI depuis le booth selon la distance et la luminosité.",
     "phone-badge-browsers": "iOS Safari & Android Chrome",
     "phone-badge-pin": "Réseau Local Sécurisé (PIN)",
-    "phone-mock-list": "Suggestions d'enchaînements",
+    "phone-mock-list": "Suggestions",
+    "phone-mock-live": "En direct",
+    "phone-mock-now": "En cours",
+    "phone-mock-played": "JOUÉS",
 
     // Problem Section
     "problem-tag": "Le Dilemme du DJ en Club",
@@ -366,7 +369,10 @@ const translations = {
     "phone-f4-desc": "Scale the UI from the booth for distance and lighting.",
     "phone-badge-browsers": "iOS Safari & Android Chrome",
     "phone-badge-pin": "Secure Local Network (PIN)",
-    "phone-mock-list": "Transition suggestions",
+    "phone-mock-list": "Suggestions",
+    "phone-mock-live": "Live",
+    "phone-mock-now": "Now playing",
+    "phone-mock-played": "PLAYED",
 
     // Problem Section
     "problem-tag": "The Club DJ Dilemma",
