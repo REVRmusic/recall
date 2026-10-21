@@ -25,7 +25,7 @@ const translations = {
     
     // Hero
     "hero-pill-badge": "NOUVEAU",
-    "hero-pill-text": "Compagnon DJ Indépendant & 100 % Hors-Ligne",
+    "hero-pill-text": "Compagnon DJ indépendant",
     "hero-title-part1": "Ne perdez plus jamais le fil",
     "hero-title-part2": "de vos meilleurs mixes.",
     "hero-subtitle": "Le copilote intelligent qui fouille vos historiques Serato et Rekordbox pour vous suggérer instantanément vos transitions éprouvées, vos sélections préparées et vos enchaînements harmoniques Camelot en plein set.",
@@ -322,7 +322,7 @@ const translations = {
     
     // Hero
     "hero-pill-badge": "NEW",
-    "hero-pill-text": "Independent & 100% Offline DJ Companion",
+    "hero-pill-text": "Independent DJ companion",
     "hero-title-part1": "Never lose track",
     "hero-title-part2": "of your best mixes.",
     "hero-subtitle": "The smart DJ copilot that mines your Serato & Rekordbox history to instantly recommend proven routines, prepped selections, and Camelot harmonic transitions in live sets.",

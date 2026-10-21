@@ -76,10 +76,7 @@ body {
   max-width: 100%;
   overscroll-behavior-x: none;
   position: relative;
-  background-image: 
-    radial-gradient(circle at 15% 10%, rgba(0, 210, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 25%, rgba(236, 72, 153, 0.06) 0%, transparent 45%),
-    radial-gradient(circle at 50% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  background-image: radial-gradient(ellipse 70% 36% at 50% -8%, rgba(0, 210, 255, 0.07), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -518,9 +515,7 @@ img {
 }
 
 .hero-title-highlight {
-  background: linear-gradient(135deg, #00d2ff 0%, #38bdf8 45%, #ec4899 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #fff;
 }
 
 .hero-subtitle {
@@ -5276,6 +5271,166 @@ img {
     font-size: 0.78rem;
     padding: 6px 12px;
   }
+}
+
+/* ==========================================================================
+   Épure — page plus calme : un seul halo, cartes plates, moins de cris
+   Les mockups (fenêtre DJ + iPhone) ne sont pas touchés dans leur contenu.
+   ========================================================================== */
+.hero-pill {
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hero-pill-badge {
+  background: rgba(0, 210, 255, 0.14);
+  color: var(--cyan-primary);
+}
+
+.hero-actions {
+  margin-bottom: 28px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-nav-download,
+.download-btn {
+  box-shadow: none;
+  border-radius: 12px;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.download-btn:hover,
+.download-card:hover,
+.download-card.primary:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.section {
+  padding: 72px 0;
+}
+
+.section-header-center {
+  margin-bottom: 36px;
+}
+
+.section-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.section-title {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.section-subtitle {
+  font-size: 1.05rem;
+}
+
+.problem-grid,
+.bento-grid,
+.compat-grid {
+  gap: 14px;
+}
+
+.problem-card,
+.bento-card,
+.compat-card,
+.download-card {
+  border-radius: 16px;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.problem-card:hover,
+.bento-card:hover,
+.compat-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.problem-card,
+.bento-card {
+  padding: 26px;
+}
+
+.problem-icon-box,
+.problem-icon-box.red,
+.problem-icon-box.cyan,
+.problem-icon-box.magenta {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 14px;
+  font-size: 1.15rem;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  border-radius: 0;
+  justify-content: flex-start;
+}
+
+.bento-icon {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.bento-title,
+.problem-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.bento-highlight {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.download-section {
+  background: none;
+  padding: 72px 0;
+}
+
+.optimization-banner {
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border-subtle);
+}
+
+.optimization-banner::before {
+  display: none;
+}
+
+.mockup-viewport {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.mockup-viewport:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.phone-companion-section {
+  background: none;
+  padding: 64px 0 72px;
+}
+
+.comp-table .highlight-col {
+  background: transparent;
+}
+
+.faq-item {
+  background: rgba(255, 255, 255, 0.028);
+  box-shadow: none;
 }
 
 
