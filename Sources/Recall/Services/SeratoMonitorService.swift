@@ -455,18 +455,25 @@ public class SeratoMonitorService: ObservableObject {
                 maxResults: maxResults
             )
             
-            // Récupération des favoris manuels enregistrés pour ce morceau
-            let manualFavorites = await MainActor.run {
-                FavoriteCombosService.shared.getFavoriteTracks(for: ref)
+            // Favoris à proposer (selon le sens enregistré et le mode d'affichage) et partenaires pour garder le cœur allumé.
+            let (manualFavorites, linkedForHeart) = await MainActor.run {
+                let service = FavoriteCombosService.shared
+                return (
+                    service.getFavoriteTracks(for: ref, transitionMode: direction),
+                    service.getFavoriteTracks(for: ref, respectingDirection: false)
+                )
             }
+            
+            // Récupération des réglages de score et de visibilité personnalisés
+            let tuning = await MainActor.run { SuggestionTuningService.shared.snapshot() }
             
             // Marquage des morceaux déjà joués lors de la session en cours
             let sessionPlayedSet = await MainActor.run {
                 SessionHistoryService.shared.playedNormalizedTitles
             }
             
-            let favTitlesSet = Set(manualFavorites.map { FavoriteCombosService.normalize($0.displayTitle) })
-            let favFilesSet = Set(manualFavorites.filter { !$0.fileName.isEmpty }.map { FavoriteCombosService.normalize($0.fileName) })
+            let favTitlesSet = Set(linkedForHeart.map { FavoriteCombosService.normalize($0.displayTitle) })
+            let favFilesSet = Set(linkedForHeart.filter { !$0.fileName.isEmpty }.map { FavoriteCombosService.normalize($0.fileName) })
             
             func isFavTrack(_ trk: Track) -> Bool {
                 let normTitle = FavoriteCombosService.normalize(trk.displayTitle)
@@ -482,9 +489,11 @@ public class SeratoMonitorService: ObservableObject {
                 return false
             }
             
-            // 1. Liste PUREMENT historique : ordonnée strictement par transitionCount DESC comme dans Serato
-            // Si une transition fait partie des combos favoris, elle conserve son classement naturel et reçoit isFavorite = true
-            let pureHistoryList: [Track] = historyResults.map { trk in
+            // 1. Liste PUREMENT historique (filtrée des morceaux masqués manuellement pour ce morceau)
+            let pureHistoryList: [Track] = historyResults.compactMap { trk in
+                if tuning.isHidden(reference: ref, candidate: trk, mode: direction) {
+                    return nil
+                }
                 var updated = trk
                 if isFavTrack(trk) {
                     updated.isFavorite = true
@@ -495,12 +504,14 @@ public class SeratoMonitorService: ObservableObject {
                 return updated
             }
             
-            // 2. Liste PUREMENT des favoris pour ce morceau
-            // Contient exclusivement les combinaisons favorites mémorisées pour cette piste
+            // 2. Liste PUREMENT des favoris pour ce morceau (filtrée des morceaux masqués)
             var pureFavoritesList: [Track] = []
             var seenFavTitles = Set<String>()
             
             for fav in manualFavorites {
+                if tuning.isHidden(reference: ref, candidate: fav, mode: direction) {
+                    continue
+                }
                 let norm = FavoriteCombosService.normalize(fav.displayTitle)
                 guard !seenFavTitles.contains(norm) else { continue }
                 seenFavTitles.insert(norm)
@@ -525,9 +536,7 @@ public class SeratoMonitorService: ObservableObject {
             
             let finalFavorites = pureFavoritesList
             
-            // 3. Intégration et priorisation des combos favoris dans la liste classique :
-            // Les combos favoris sont intégrés et classés juste au-dessus des enchaînements
-            // réalisés une seule fois (1x) pour s'inscrire naturellement dans la routine du DJ.
+            // 3. Intégration et priorisation des combos favoris dans la liste classique
             var combinedClassic = pureHistoryList
             for fav in finalFavorites {
                 let norm = FavoriteCombosService.normalize(fav.displayTitle)
@@ -541,18 +550,27 @@ public class SeratoMonitorService: ObservableObject {
                 }
             }
             
+            // Application de l'état tuning (boosté, dé-priorisé, etc.) sur chaque morceau
+            for i in 0..<combinedClassic.count {
+                combinedClassic[i].tuningState = tuning.state(reference: ref, candidate: combinedClassic[i], mode: direction)
+            }
+            
             func rankingScore(for trk: Track) -> Double {
+                var base: Double
                 if trk.transitionCount >= 2 {
-                    return Double(trk.transitionCount) + (trk.isFavorite ? 0.05 : 0.0)
-                }
-                if trk.isFavorite {
+                    base = Double(trk.transitionCount) + (trk.isFavorite ? 0.05 : 0.0)
+                } else if trk.isFavorite {
                     // Les combos favoris (1x ou 0x) sont positionnés au-dessus des 1x (score 1.0)
-                    return trk.transitionCount == 1 ? 1.55 : 1.50
+                    base = trk.transitionCount == 1 ? 1.55 : 1.50
+                } else if trk.transitionCount == 1 {
+                    base = 1.0
+                } else {
+                    base = 0.0
                 }
-                if trk.transitionCount == 1 {
-                    return 1.0
-                }
-                return 0.0
+                
+                // Influer manuellement sur le score selon les réglages utilisateur (boost +100 ou dé-priorisation -100)
+                let delta = tuning.scoreDelta(reference: ref, candidate: trk, mode: direction)
+                return base + delta
             }
             
             combinedClassic.sort(by: { (t1: Track, t2: Track) -> Bool in
@@ -623,12 +641,14 @@ public class SeratoMonitorService: ObservableObject {
     // MARK: - Gestion de la confirmation de combo favori
     
     public func requestComboConfirmation(trackA: Track, trackB: Track, source: String? = nil) {
-        let isSaved = FavoriteCombosService.shared.isComboFavorite(track1: trackA, track2: trackB)
+        let service = FavoriteCombosService.shared
+        let isSaved = service.isComboFavorite(track1: trackA, track2: trackB)
         self.pendingComboConfirmation = ComboConfirmationData(
             trackA: trackA,
             trackB: trackB,
             isAlreadySaved: isSaved,
-            sourceDescription: source
+            sourceDescription: source,
+            savedDirection: service.displayedDirection(trackA: trackA, trackB: trackB)
         )
     }
     
@@ -636,13 +656,28 @@ public class SeratoMonitorService: ObservableObject {
         self.pendingComboConfirmation = nil
     }
     
-    public func confirmPendingCombo() {
+    /// Enregistre le combo dans le sens choisi, ou met à jour le sens s'il existe déjà.
+    public func confirmPendingCombo(direction: FavoriteLinkDirection) {
         guard let pending = pendingComboConfirmation else { return }
         if pending.isAlreadySaved {
-            FavoriteCombosService.shared.removeCombo(track1: pending.trackA, track2: pending.trackB)
+            FavoriteCombosService.shared.updateDisplayedDirection(
+                trackA: pending.trackA,
+                trackB: pending.trackB,
+                direction: direction
+            )
         } else {
-            FavoriteCombosService.shared.saveCombo(track1: pending.trackA, track2: pending.trackB)
+            FavoriteCombosService.shared.saveCombo(
+                track1: pending.trackA,
+                track2: pending.trackB,
+                direction: direction
+            )
         }
+        self.pendingComboConfirmation = nil
+    }
+    
+    public func removePendingCombo() {
+        guard let pending = pendingComboConfirmation else { return }
+        FavoriteCombosService.shared.removeCombo(track1: pending.trackA, track2: pending.trackB)
         self.pendingComboConfirmation = nil
     }
     
@@ -676,12 +711,21 @@ public struct ComboConfirmationData: Identifiable, Equatable {
     public let trackB: Track
     public let isAlreadySaved: Bool
     public let sourceDescription: String?
+    /// Sens déjà enregistré, exprimé dans l'ordre affiché (haut puis bas). Nil si le combo n'existe pas.
+    public let savedDirection: FavoriteLinkDirection?
     
-    public init(trackA: Track, trackB: Track, isAlreadySaved: Bool, sourceDescription: String? = nil) {
+    public init(
+        trackA: Track,
+        trackB: Track,
+        isAlreadySaved: Bool,
+        sourceDescription: String? = nil,
+        savedDirection: FavoriteLinkDirection? = nil
+    ) {
         self.trackA = trackA
         self.trackB = trackB
         self.isAlreadySaved = isAlreadySaved
         self.sourceDescription = sourceDescription
+        self.savedDirection = savedDirection
     }
     
     public static func == (lhs: ComboConfirmationData, rhs: ComboConfirmationData) -> Bool {

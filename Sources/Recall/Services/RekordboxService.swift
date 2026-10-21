@@ -308,12 +308,22 @@ public class RekordboxService: ObservableObject {
         }
         
         // --- 2. FAVORIS MÉMORISÉS DANS RECALL ---
-        let allFavorites = FavoriteCombosService.shared.getFavoriteTracks(for: currentTrack)
+        let allFavorites = FavoriteCombosService.shared.getFavoriteTracks(for: currentTrack, transitionMode: direction)
+        let tuning = SuggestionTuningService.shared
         for var fav in allFavorites {
+            if tuning.isHidden(reference: currentTrack, candidate: fav, mode: direction) {
+                continue
+            }
             fav.isFavorite = true
             fav.matchType = MatchType.manualFavorite
             fav.isPlayedInSession = SessionHistoryService.shared.isPlayed(track: fav)
+            fav.tuningState = tuning.state(reference: currentTrack, candidate: fav, mode: direction)
             favoriteSuggestions.append(fav)
+        }
+        
+        routineSuggestions.removeAll { tuning.isHidden(reference: currentTrack, candidate: $0, mode: direction) }
+        for i in 0..<routineSuggestions.count {
+            routineSuggestions[i].tuningState = tuning.state(reference: currentTrack, candidate: routineSuggestions[i], mode: direction)
         }
         
         // Si l'utilisateur demande exclusivement les favoris

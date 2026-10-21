@@ -40,6 +40,7 @@ public struct Track: Identifiable, Hashable {
     public var isFavorite: Bool
     public var isPlayedInSession: Bool
     public var direction: TransitionDirection
+    public var tuningState: SuggestionTuningState = .neutral
     
     public init(
         id: String = UUID().uuidString,
@@ -61,7 +62,8 @@ public struct Track: Identifiable, Hashable {
         bpmDiff: Double? = nil,
         isFavorite: Bool = false,
         isPlayedInSession: Bool = false,
-        direction: TransitionDirection = .next
+        direction: TransitionDirection = .next,
+        tuningState: SuggestionTuningState = .neutral
     ) {
         self.id = id
         self.assetId = assetId
@@ -84,6 +86,7 @@ public struct Track: Identifiable, Hashable {
         self.isFavorite = isFavorite
         self.isPlayedInSession = isPlayedInSession
         self.direction = direction
+        self.tuningState = tuningState
     }
     
     // MARK: - Analyse & Nettoyage Intelligents Artiste / Titre

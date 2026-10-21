@@ -165,6 +165,35 @@ public struct BandeauCompactView: View {
                             .fixedSize(horizontal: true, vertical: false)
                         }
                         
+                        // Badge Ajustement Manuel de Score (Boosté ou Réduit)
+                        if match.tuningState == .boosted {
+                            HStack(spacing: 1.5) {
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .font(.system(size: 6, weight: .bold))
+                                Text("BOOST")
+                                    .font(.system(size: 7, weight: .black, design: .rounded))
+                            }
+                            .foregroundColor(Color.accentGreen)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 0.5)
+                            .background(Color.accentGreen.opacity(0.18))
+                            .cornerRadius(2.5)
+                            .fixedSize(horizontal: true, vertical: false)
+                        } else if match.tuningState == .demoted {
+                            HStack(spacing: 1.5) {
+                                Image(systemName: "arrow.down.circle")
+                                    .font(.system(size: 6, weight: .bold))
+                                Text("RÉDUIT")
+                                    .font(.system(size: 7, weight: .black, design: .rounded))
+                            }
+                            .foregroundColor(Color.white.opacity(0.45))
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 0.5)
+                            .background(Color.white.opacity(0.06))
+                            .cornerRadius(2.5)
+                            .fixedSize(horizontal: true, vertical: false)
+                        }
+                        
                         // Badge Clé Camelot / Musicale
                         if let camelot = match.camelotKey {
                             Text(camelot.displayText(mode: settings.keyDisplayMode))
@@ -236,6 +265,89 @@ public struct BandeauCompactView: View {
                 }
                 let url = URL(fileURLWithPath: path)
                 return NSItemProvider(contentsOf: url) ?? NSItemProvider(object: url as NSURL)
+            }
+            .contextMenu {
+                if let match = topSuggestion, let current = monitor.currentTrack {
+                    let tuning = SuggestionTuningService.shared
+                    let mode = settings.transitionDirection
+                    let state = tuning.state(reference: current, candidate: match, mode: mode)
+                    
+                    Section {
+                        if state == .boosted {
+                            Button {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    tuning.reset(reference: current, candidate: match, mode: mode)
+                                }
+                            } label: {
+                                Label("Retirer le boost (Classement normal)", systemImage: "arrow.counterclockwise")
+                            }
+                        } else {
+                            Button {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    tuning.boost(reference: current, candidate: match, mode: mode)
+                                }
+                            } label: {
+                                Label("Pousser plus haut (Booster)", systemImage: "arrow.up.circle.fill")
+                            }
+                        }
+                        
+                        if state == .demoted {
+                            Button {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    tuning.reset(reference: current, candidate: match, mode: mode)
+                                }
+                            } label: {
+                                Label("Rétablir la fréquence normale", systemImage: "arrow.counterclockwise")
+                            }
+                        } else {
+                            Button {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    tuning.demote(reference: current, candidate: match, mode: mode)
+                                }
+                            } label: {
+                                Label("Moins proposer (Casser la routine)", systemImage: "arrow.down.circle")
+                            }
+                        }
+                        
+                        Button(role: .destructive) {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                tuning.hide(reference: current, candidate: match, mode: mode)
+                            }
+                        } label: {
+                            Label("Ne plus suggérer pour ce morceau", systemImage: "eye.slash.fill")
+                        }
+                        
+                        if state != .neutral {
+                            Divider()
+                            Button {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    tuning.reset(reference: current, candidate: match, mode: mode)
+                                }
+                            } label: {
+                                Label("Rétablir le classement par défaut", systemImage: "arrow.uturn.backward")
+                            }
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    Section {
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                monitor.requestComboConfirmation(
+                                    trackA: current,
+                                    trackB: match,
+                                    source: "Menu contextuel bandeau"
+                                )
+                            }
+                        } label: {
+                            Label(
+                                match.isFavorite ? "Gérer la combinaison favorite..." : "Ajouter aux combinaisons favorites...",
+                                systemImage: match.isFavorite ? "heart.slash" : "heart.fill"
+                            )
+                        }
+                    }
+                }
             }
             
             Spacer(minLength: 2)

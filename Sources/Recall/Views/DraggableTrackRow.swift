@@ -162,6 +162,47 @@ public struct DraggableTrackRow: View {
                     .help(transitionTooltip(for: track))
                 }
                 
+                // Badge Ajustement Manuel de Score (Boosté ou Réduit pour casser la routine)
+                if track.tuningState == .boosted {
+                    HStack(spacing: 2) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 6.5, weight: .bold))
+                        Text("BOOST")
+                            .font(.system(size: 7, weight: .black, design: .rounded))
+                            .lineLimit(1)
+                    }
+                    .foregroundColor(Color.accentGreen)
+                    .padding(.horizontal, 3.5)
+                    .padding(.vertical, 1.5)
+                    .background(Color.accentGreen.opacity(0.18))
+                    .cornerRadius(3)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 3)
+                            .stroke(Color.accentGreen.opacity(0.55), lineWidth: 0.8)
+                    )
+                    .fixedSize(horizontal: true, vertical: false)
+                    .help("Suggestion boostée manuellement pour ce morceau")
+                } else if track.tuningState == .demoted {
+                    HStack(spacing: 2) {
+                        Image(systemName: "arrow.down.circle")
+                            .font(.system(size: 6.5, weight: .bold))
+                        Text("RÉDUIT")
+                            .font(.system(size: 7, weight: .black, design: .rounded))
+                            .lineLimit(1)
+                    }
+                    .foregroundColor(Color.white.opacity(0.50))
+                    .padding(.horizontal, 3.5)
+                    .padding(.vertical, 1.5)
+                    .background(Color.white.opacity(0.06))
+                    .cornerRadius(3)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 3)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 0.8)
+                    )
+                    .fixedSize(horizontal: true, vertical: false)
+                    .help("Suggestion volontairement dé-priorisée pour casser la routine")
+                }
+                
                 // Badge Clé Harmonique Camelot (couleurs authentiques Serato selon réglages)
                 if let camelot = track.camelotKey {
                     VStack(spacing: 0) {
@@ -280,6 +321,90 @@ public struct DraggableTrackRow: View {
             }
             let url = URL(fileURLWithPath: path)
             return NSItemProvider(contentsOf: url) ?? NSItemProvider(object: url as NSURL)
+        }
+        // Menu contextuel sur clic droit pour influencer le score ou retirer la suggestion
+        .contextMenu {
+            if let current = monitor.currentTrack {
+                let tuning = SuggestionTuningService.shared
+                let mode = settings.transitionDirection
+                let state = tuning.state(reference: current, candidate: track, mode: mode)
+                
+                Section {
+                    if state == .boosted {
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                tuning.reset(reference: current, candidate: track, mode: mode)
+                            }
+                        } label: {
+                            Label("Retirer le boost (Classement normal)", systemImage: "arrow.counterclockwise")
+                        }
+                    } else {
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                tuning.boost(reference: current, candidate: track, mode: mode)
+                            }
+                        } label: {
+                            Label("Pousser plus haut (Booster)", systemImage: "arrow.up.circle.fill")
+                        }
+                    }
+                    
+                    if state == .demoted {
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                tuning.reset(reference: current, candidate: track, mode: mode)
+                            }
+                        } label: {
+                            Label("Rétablir la fréquence normale", systemImage: "arrow.counterclockwise")
+                        }
+                    } else {
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                tuning.demote(reference: current, candidate: track, mode: mode)
+                            }
+                        } label: {
+                            Label("Moins proposer (Casser la routine)", systemImage: "arrow.down.circle")
+                        }
+                    }
+                    
+                    Button(role: .destructive) {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                            tuning.hide(reference: current, candidate: track, mode: mode)
+                        }
+                    } label: {
+                        Label("Ne plus suggérer pour ce morceau", systemImage: "eye.slash.fill")
+                    }
+                    
+                    if state != .neutral {
+                        Divider()
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                tuning.reset(reference: current, candidate: track, mode: mode)
+                            }
+                        } label: {
+                            Label("Rétablir le classement par défaut", systemImage: "arrow.uturn.backward")
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                Section {
+                    Button {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                            monitor.requestComboConfirmation(
+                                trackA: current,
+                                trackB: track,
+                                source: "Menu contextuel"
+                            )
+                        }
+                    } label: {
+                        Label(
+                            track.isFavorite ? "Gérer la combinaison favorite..." : "Ajouter aux combinaisons favorites...",
+                            systemImage: track.isFavorite ? "heart.slash" : "heart.fill"
+                        )
+                    }
+                }
+            }
         }
     }
     

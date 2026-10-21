@@ -39,6 +39,7 @@ public struct SettingsSheetView: View {
     @EnvironmentObject var settings: UserSettings
     @EnvironmentObject var monitor: SeratoMonitorService
     @ObservedObject private var favService = FavoriteCombosService.shared
+    @ObservedObject private var tuningService = SuggestionTuningService.shared
     @ObservedObject private var sessionService = SessionHistoryService.shared
     @ObservedObject private var rbService = RekordboxService.shared
     @ObservedObject private var autoUpdate = AutoUpdateService.shared
@@ -1194,16 +1195,16 @@ public struct SettingsSheetView: View {
                                     .foregroundColor(Color(hex: "#FF5252"))
                                 
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(combo.track1.title)
+                                    Text(combo.leadingTrack.title)
                                         .font(.system(size: 10, weight: .semibold))
                                         .foregroundColor(.white)
                                         .lineLimit(1)
                                     
                                     HStack(spacing: 4) {
-                                        Image(systemName: "arrow.right")
+                                        Image(systemName: combo.linkSymbolName)
                                             .font(.system(size: 7))
                                             .foregroundColor(settings.accentColor)
-                                        Text(combo.track2.title)
+                                        Text(combo.followingTrack.title)
                                             .font(.system(size: 10, weight: .semibold))
                                             .foregroundColor(settings.accentColor)
                                             .lineLimit(1)
@@ -1230,6 +1231,108 @@ public struct SettingsSheetView: View {
                         
                         if favService.combos.count > 10 {
                             Text("+ \(favService.combos.count - 10) autres combinaisons...")
+                                .font(.system(size: 9.5))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                    }
+                }
+            }
+        }
+        
+        // CARTE 1 Bis : Ajustements des Suggestions & Morceaux Masqués
+        settingCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    sectionHeader(
+                        icon: "slider.horizontal.3",
+                        title: "Ajustements des Suggestions (\(tuningService.records.count))",
+                        iconColor: settings.accentColor
+                    )
+                    
+                    Spacer()
+                    
+                    if !tuningService.records.isEmpty {
+                        Button {
+                            tuningService.clearAll()
+                        } label: {
+                            Text("Tout réinitialiser")
+                                .font(.system(size: 9.5, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                
+                if tuningService.records.isEmpty {
+                    Text("Aucun ajustement manuel. Faites un clic droit sur une suggestion pour la booster, la dé-prioriser ou la masquer pour un morceau précis.")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.55))
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    VStack(spacing: 6) {
+                        ForEach(Array(tuningService.records.values).prefix(10)) { record in
+                            HStack(spacing: 8) {
+                                Group {
+                                    switch record.state {
+                                    case .boosted:
+                                        Image(systemName: "arrow.up.circle.fill")
+                                            .foregroundColor(Color.accentGreen)
+                                    case .demoted:
+                                        Image(systemName: "arrow.down.circle")
+                                            .foregroundColor(.white.opacity(0.6))
+                                    case .hidden:
+                                        Image(systemName: "eye.slash.fill")
+                                            .foregroundColor(Color(hex: "#FF5252"))
+                                    case .neutral:
+                                        EmptyView()
+                                    }
+                                }
+                                .font(.system(size: 10, weight: .bold))
+                                
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(record.fromTitle)
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .lineLimit(1)
+                                    
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "arrow.right")
+                                            .font(.system(size: 7))
+                                            .foregroundColor(settings.accentColor)
+                                        Text(record.toTitle)
+                                            .font(.system(size: 10, weight: .semibold))
+                                            .foregroundColor(settings.accentColor)
+                                            .lineLimit(1)
+                                        
+                                        Spacer()
+                                        
+                                        Text(record.state == .boosted ? "Boosté" : (record.state == .demoted ? "Réduit" : "Masqué"))
+                                            .font(.system(size: 8, weight: .bold))
+                                            .foregroundColor(
+                                                record.state == .boosted ? Color.accentGreen :
+                                                (record.state == .hidden ? Color(hex: "#FF5252") : .white.opacity(0.5))
+                                            )
+                                    }
+                                }
+                                
+                                Button {
+                                    tuningService.removeRecord(byId: record.id)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 9))
+                                        .foregroundColor(.white.opacity(0.40))
+                                        .padding(4)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(Color.black.opacity(0.25))
+                            .cornerRadius(6)
+                        }
+                        
+                        if tuningService.records.count > 10 {
+                            Text("+ \(tuningService.records.count - 10) autres réglages...")
                                 .font(.system(size: 9.5))
                                 .foregroundColor(.white.opacity(0.45))
                         }
