@@ -12,13 +12,16 @@ public struct TrackMetadataCleaner {
         "funky house", "soulful house", "jackin house", "g-house", "slap house", "piano house",
         "vocal house", "techno", "peak time", "melodic techno", "hard techno", "minimal",
         "minimal techno", "industrial techno", "acid techno", "detroit techno", "berlin techno",
-        "hip hop", "hip-hop", "rap", "trap", "drill", "uk drill", "ny drill", "boom bap",
-        "french rap", "rap francais", "rap us", "us rap", "r&b", "rnb", "soul", "neo soul",
+        "hip hop", "hip-hop", "hiphop", "rap", "trap", "drill", "uk drill", "ny drill", "boom bap",
+        "french rap", "rap francais", "rap fr", "rap us", "us rap", "urbain", "urbaine", "urban",
+        "r&b", "rnb", "soul", "neo soul",
         "funk", "disco", "nu disco", "nu-disco", "boogie", "pop", "dance", "electro pop",
         "synth pop", "indie", "indie pop", "indie dance", "rock", "hard rock", "alternative",
-        "metal", "punk", "acoustic", "afro", "afrobeats", "afrobeat", "amapiano", "coupe decale",
+        "metal", "punk", "acoustic", "afro", "afrobeats", "afrobeat", "afro-beat", "afro beat",
+        "afro beats", "afropop", "afro-pop", "afro pop", "amapiano", "coupe decale",
         "ndombolo", "highlife", "kizomba", "zouk", "kompa", "shatta", "bouyon",
-        "latin", "reggaeton", "dancehall", "reggae", "moombahton", "dembow", "bachata",
+        "latin", "latino", "reggaeton", "raggaeton", "regueton", "regeton", "ragaeton",
+        "dancehall", "dance hall", "reggae", "moombahton", "dembow", "bachata",
         "salsa", "merengue", "baile funk", "cumbia", "electronic", "electro", "edm", "trance",
         "psytrance", "dubstep", "drum & bass", "drum and bass", "dnb", "jungle", "uk garage",
         "ukg", "2-step", "bassline", "breakbeat", "breaks", "hardstyle", "hardcore", "ambient",
@@ -102,6 +105,13 @@ public struct TrackMetadataCleaner {
     
     private static let genreJunkSuffixRegex = try! NSRegularExpression(
         pattern: "(?i)\\s*[\\[\\(](clean|dirty|intro|outro|extended|edit|remix|bootleg|club\\s*mix|original|vip|radio).*?[\\]\\)]",
+        options: []
+    )
+
+    /// Orthographes de reggaeton : raggaeton, regueton, regetón, ragaeton, etc.
+    /// Ne matche pas « ragga » ni « reggae » seuls.
+    private static let reggaetonSpellingRegex = try! NSRegularExpression(
+        pattern: "r[ae][aeu]?g{1,2}[aeu]{0,2}t+on",
         options: []
     )
 
@@ -430,9 +440,11 @@ public struct TrackMetadataCleaner {
     
     // MARK: - Normalisation & Unification des Genres Musicaux (Styles Globaux)
     
-    /// Transforme un genre brut ou composite (ex: "Hip-Hop, Rap Fr", "House / Tech House", "Reggaeton")
+    /// Transforme un genre brut ou composite (ex: "Hip-Hop, Rap Fr", "House / Tech House", "Raggaeton")
     /// en un style musical global propre, homogène et unifié pour le DJ.
-    public static func canonicalGlobalGenre(_ raw: String) -> String {
+    /// `bpm` est optionnel : sans tempo, seuls les tags écrits sont lus. Avec un tempo,
+    /// Afro ou Dancehall entre 90 et 114 deviennent Shatta, et Shatta entre 135 et 190 devient Bouyon.
+    public static func canonicalGlobalGenre(_ raw: String, bpm: Double? = nil) -> String {
         var clean = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if clean.isEmpty { return "" }
         
@@ -469,26 +481,52 @@ public struct TrackMetadataCleaner {
         }
         
         // --- Détection des Familles de Styles Globaux ---
-        
-        // 1. Shatta & Bouyon (Culture Urbaine Caribéenne)
-        if lower.contains("shatta") {
-            return "Shatta"
+        let genreKey = normalizedGenreKey(clean)
+        let spaced = genreKey.spaced
+        let compact = genreKey.compact
+        let afroSignal = compact.contains("afro")
+        let afroBeatSignal = isAfroBeatSignal(compact)
+        let shattaSignal = compact.contains("shatta")
+        let bouyonSignal = compact.contains("bouyon")
+        let dancehallSignal = compact.contains("dancehall")
+        let hipHopSignal = isHipHopSignal(spaced: spaced, compact: compact)
+
+        // Rap, Hip-Hop, Urbain / Urban : priorité absolue, même si « Afro » est aussi écrit.
+        // Afro + trap, drill, boom bap, etc. reste du Hip-Hop : « Afro » n'est pas un genre fiable.
+        if hipHopSignal || (afroSignal && recallsHipHop(spaced: spaced, compact: compact)) {
+            return "Hip-Hop"
         }
-        if lower.contains("bouyon") {
+
+        // Bouyon écrit tel quel, ou Shatta joué entre 135 et 190 BPM.
+        if bouyonSignal || (shattaSignal && isBouyonTempo(bpm)) {
             return "Bouyon"
         }
+
+        if shattaSignal {
+            return "Shatta"
+        }
+
+        // Afrobeats et Afro-pop sont un vrai style, même entre 90 et 114 BPM.
+        if afroBeatSignal {
+            return "Afro-Beat"
+        }
+
+        // Le tag vague « Afro » ou Dancehall entre 90 et 114 BPM = Shatta.
+        if (afroSignal || dancehallSignal) && isShattaTempo(bpm) {
+            return "Shatta"
+        }
         
-        // 2. Latino & Reggaeton (analysé AVANT Reggae car "reggaeton" contient "reggae")
-        if lower.contains("latino") || lower.contains("latin") || lower.contains("reggaeton") ||
-           lower.contains("regeton") || lower.contains("dembow") || lower.contains("baile funk") ||
+        // Latino & Reggaeton (avant Reggae / Ragga : « reggaeton » contient « reggae » et « ragga »)
+        if spaced.contains("latin") || isReggaetonSpelling(compact) ||
+           lower.contains("dembow") || lower.contains("baile funk") ||
            lower.contains("moombahton") || lower.contains("bachata") || lower.contains("salsa") ||
            lower.contains("merengue") || lower.contains("cumbia") || lower.contains("perreo") ||
-           lower.contains("urbano") || lower.contains("trap latino") {
+           lower.contains("urbano") || lower.contains("urbana") || lower.contains("trap latino") {
             return "Latino"
         }
         
-        // 3. Dancehall, Reggae, Zouk & Kompa
-        if lower.contains("dancehall") || lower.contains("ragga") {
+        // Dancehall, Reggae, Zouk & Kompa
+        if dancehallSignal || lower.contains("ragga") {
             return "Dancehall"
         }
         if lower.contains("zouk") || lower.contains("kompa") || lower.contains("gouyad") {
@@ -568,7 +606,7 @@ public struct TrackMetadataCleaner {
                 .filter { !$0.isEmpty }
             
             for part in parts {
-                let canonicalPart = canonicalGlobalGenre(part)
+                let canonicalPart = canonicalGlobalGenre(part, bpm: bpm)
                 if !canonicalPart.isEmpty {
                     return canonicalPart
                 }
@@ -577,5 +615,71 @@ public struct TrackMetadataCleaner {
         
         // Fallback propre : Première lettre en majuscule
         return clean.capitalized
+    }
+
+    // MARK: - Lecture des tags de genre (casse, accents, tirets)
+
+    private static func normalizedGenreKey(_ value: String) -> (spaced: String, compact: String) {
+        let folded = value
+            .folding(options: .diacriticInsensitive, locale: Locale(identifier: "fr_FR"))
+            .lowercased()
+        let spaced = folded
+            .replacingOccurrences(of: "[^a-z0-9]+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (spaced, spaced.replacingOccurrences(of: " ", with: ""))
+    }
+
+    private static func containsGenrePhrase(_ spaced: String, _ phrase: String) -> Bool {
+        " \(spaced) ".contains(" \(phrase) ")
+    }
+
+    /// Rap, Rap FR / Rap US, Hip-Hop / Hiphop, Urbain / Urban.
+    /// « Urbano » (reggaeton) n'est pas « Urban ». « Trap » n'est pas le mot « Rap ».
+    private static func isHipHopSignal(spaced: String, compact: String) -> Bool {
+        if containsGenrePhrase(spaced, "hip hop") || compact.contains("hiphop") {
+            return true
+        }
+        let tokens = Set(spaced.split(separator: " ").map(String.init))
+        if tokens.contains("rap") || tokens.contains("rapfr") || tokens.contains("rapus") ||
+            tokens.contains("frrap") || tokens.contains("usrap") {
+            return true
+        }
+        if tokens.contains("urbain") || tokens.contains("urbaine") || tokens.contains("urbains") ||
+            tokens.contains("urban") {
+            return true
+        }
+        return false
+    }
+
+    /// Noms qui rappellent le Hip-Hop quand le tag « Afro » est aussi présent.
+    private static func recallsHipHop(spaced: String, compact: String) -> Bool {
+        if isHipHopSignal(spaced: spaced, compact: compact) { return true }
+        if containsGenrePhrase(spaced, "boom bap") || compact.contains("boombap") { return true }
+        if compact.contains("trap") || compact.contains("drill") || compact.contains("crunk") || compact.contains("phonk") {
+            return true
+        }
+        return false
+    }
+
+    /// Afrobeats, Afrobeat, Afro-Beat, Afro Beats, Afropop, Afro-Pop, Afro Pop.
+    private static func isAfroBeatSignal(_ compact: String) -> Bool {
+        compact.contains("afrobeat") || compact.contains("afropop")
+    }
+
+    private static func isReggaetonSpelling(_ compact: String) -> Bool {
+        let range = NSRange(location: 0, length: (compact as NSString).length)
+        return reggaetonSpellingRegex.firstMatch(in: compact, options: [], range: range) != nil
+    }
+
+    /// Tempo shatta, bornes incluses. BPM inconnu ou à 0 : on ne devine pas.
+    private static func isShattaTempo(_ bpm: Double?) -> Bool {
+        guard let bpm, bpm > 0 else { return false }
+        return bpm >= 90 && bpm <= 114
+    }
+
+    /// Tempo bouyon, bornes incluses.
+    private static func isBouyonTempo(_ bpm: Double?) -> Bool {
+        guard let bpm, bpm > 0 else { return false }
+        return bpm >= 135 && bpm <= 190
     }
 }

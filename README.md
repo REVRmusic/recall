@@ -64,19 +64,19 @@ Contrairement aux solutions génériques qui se basent sur des algorithmes opaqu
 
 ---
 
-## 📥 Téléchargement & Installation (v1.0.12)
+## 📥 Téléchargement & Installation (v1.0.13)
 
 | Plateforme | Fichier à télécharger | Recommandation |
 | :--- | :--- | :--- |
-| 🍏 **macOS (13.0+)** | [**Recall.dmg**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg) | ⭐️ **Recommandé Mac** — Image disque officielle prête à glisser dans Applications |
-| 🍏 **macOS (13.0+)** | [**Recall-macOS.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-macOS.zip) | Archive application autonome macOS |
-| 🪟 **Windows (10 / 11)** | [**Recall-Windows-x64.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip) | ⭐️ **Recommandé Windows** — Archive complète avec `Recall.exe` |
-| 🪟 **Windows (10 / 11)** | [**Recall.exe**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.exe) | Exécutable Windows autonome 64-bit |
+| 🍏 **macOS (13.0+)** | [**Recall.dmg**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.dmg) | ⭐️ **Recommandé Mac** — Image disque officielle prête à glisser dans Applications |
+| 🍏 **macOS (13.0+)** | [**Recall-macOS.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall-macOS.zip) | Archive application autonome macOS |
+| 🪟 **Windows (10 / 11)** | [**Recall-Windows-x64.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall-Windows-x64.zip) | ⭐️ **Recommandé Windows** — Archive complète avec `Recall.exe` |
+| 🪟 **Windows (10 / 11)** | [**Recall.exe**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.exe) | Exécutable Windows autonome 64-bit |
 
 ### 🍏 Pour macOS
 
 #### Option 1 : Téléchargement Direct (Recommandé)
-1. Téléchargez [**Recall.dmg**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg).
+1. Téléchargez [**Recall.dmg**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.dmg).
 3. Ouvrez le fichier `.dmg` et glissez **Recall** dans votre dossier **Applications**.
 4. Lancez **Serato DJ Pro**, puis ouvrez **Recall** : la détection est automatique et immédiate !
 
@@ -99,7 +99,7 @@ chmod +x build.sh && ./build.sh --dmg
 ### 🪟 Pour Windows (10 & 11)
 
 #### Option 1 : Téléchargement Direct (Recommandé)
-1. Téléchargez [**Recall-Windows-x64.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip) ou l'exécutable autonome [**Recall.exe**](https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.exe).
+1. Téléchargez [**Recall-Windows-x64.zip**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall-Windows-x64.zip) ou l'exécutable autonome [**Recall.exe**](https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.exe).
 2. Dézippez l'archive dans le dossier de votre choix (ex: `C:\Program Files\Recall` ou sur votre Bureau).
 3. Lancez **Serato DJ Pro** ou **Rekordbox**, puis double-cliquez sur **`Recall.exe`** : la détection est instantanée !
 

@@ -22,7 +22,7 @@ const translations = {
     "nav-download": "Télécharger",
     "nav-faq": "FAQ",
     "nav-legal": "Mentions Légales",
-    "nav-cta-download": "Télécharger v1.0.12",
+    "nav-cta-download": "Télécharger v1.0.13",
     
     // Hero
     "hero-pill-badge": "NOUVEAU",
@@ -184,7 +184,7 @@ const translations = {
     // Downloads
     "dl-tag": "Téléchargement Gratuit",
     "dl-title": "Installez Recall sur votre machine de mix",
-    "dl-subtitle": "Téléchargez la version officielle 1.0.12 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
+    "dl-subtitle": "Téléchargez la version officielle 1.0.13 pour macOS ou Windows. Aucun compte requis, installez et mixez.",
     "opt-banner-mac-badge": "🍏 Mac + Serato · Pleinement Optimisé",
     "opt-banner-win-badge": "Windows + Rekordbox · En Développement Actif",
     "opt-banner-desc": "<strong>Note importante de transparence :</strong> Recall est actuellement <strong>pleinement optimisé pour être utilisé sur Mac et avec le logiciel Serato</strong>. Je travaille activement pour rendre la version <strong>Windows / Rekordbox</strong> tout aussi complète et fluide que la version Mac / Serato. Vos retours et suggestions me sont précieux pour m'aider à y parvenir !",
@@ -325,7 +325,7 @@ const translations = {
     "nav-download": "Download",
     "nav-faq": "FAQ",
     "nav-legal": "Legal Notice",
-    "nav-cta-download": "Download v1.0.12",
+    "nav-cta-download": "Download v1.0.13",
     
     // Hero
     "hero-pill-badge": "NEW",
@@ -487,7 +487,7 @@ const translations = {
     // Downloads
     "dl-tag": "Free Download",
     "dl-title": "Get Recall for your DJ machine",
-    "dl-subtitle": "Download the official v1.0.12 release for macOS or Windows. No sign-up required, install and mix.",
+    "dl-subtitle": "Download the official v1.0.13 release for macOS or Windows. No sign-up required, install and mix.",
     "opt-banner-mac-badge": "🍏 Mac + Serato · Fully Optimized",
     "opt-banner-win-badge": "Windows + Rekordbox · In Active Development",
     "opt-banner-desc": "<strong>Important Transparency Note:</strong> Recall is currently <strong>fully optimized for use on Mac and with the Serato software</strong>. I am actively working to make the <strong>Windows / Rekordbox</strong> version just as complete and seamless as the Mac / Serato version. Your feedback and suggestions are invaluable in helping me achieve this!",
@@ -689,7 +689,7 @@ function updateSmartHeroButton(os, lang) {
   const currentDict = translations[lang] || translations.fr;
 
   if (isWin) {
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall-Windows-x64.zip";
     smartBtn.setAttribute("data-track-download", "Windows");
     smartBtn.setAttribute("data-track-file", "Recall-Windows.zip");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (Windows)");
@@ -710,7 +710,7 @@ function updateSmartHeroButton(os, lang) {
     }
   } else {
     // macOS default
-    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg";
+    smartBtn.href = "https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.dmg";
     smartBtn.setAttribute("data-track-download", "macOS");
     smartBtn.setAttribute("data-track-file", "Recall.dmg");
     smartBtn.setAttribute("data-track-location", "Hero Principal Auto-Detect (macOS)");
@@ -908,19 +908,19 @@ function initFAQ() {
 function getMockupTitles(lang) {
   if (lang === "en") {
     return {
-      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.12 (Floating Mode)",
-      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.12 (Sélec Scratchpad)",
-      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.12 (78px Compact Dock Mode)",
-      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.12 (Performance Mode)",
-      "mockup-settings": "Recall v1.0.12 — Settings Sheet & Soft Dimming"
+      "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.13 (Floating Mode)",
+      "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.13 (Sélec Scratchpad)",
+      "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.13 (78px Compact Dock Mode)",
+      "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.13 (Performance Mode)",
+      "mockup-settings": "Recall v1.0.13 — Settings Sheet & Soft Dimming"
     };
   }
   return {
-    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.12 (Mode Flottant)",
-    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.12 (Onglet Sélec & Scratchpad)",
-    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.12 (Mode Bandeau Compact 78 px)",
-    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.12 (Mode Performance)",
-    "mockup-settings": "Recall v1.0.12 — Panneau des Paramètres & Estompage"
+    "mockup-serato-floating": "Serato DJ Pro — Recall v1.0.13 (Mode Flottant)",
+    "mockup-serato-selec": "Serato DJ Pro — Recall v1.0.13 (Onglet Sélec & Scratchpad)",
+    "mockup-serato-compact": "Serato DJ Pro — Recall v1.0.13 (Mode Bandeau Compact 78 px)",
+    "mockup-rekordbox": "Pioneer Rekordbox — Recall v1.0.13 (Mode Performance)",
+    "mockup-settings": "Recall v1.0.13 — Panneau des Paramètres & Estompage"
   };
 }
 
@@ -1081,7 +1081,7 @@ function sendDownloadEvent(eventData) {
   const payload = {
     platform: eventData.platform || "macOS",
     file: file,
-    version: "1.0.12",
+    version: "1.0.13",
     event: eventLabel,
     location: eventData.location || "Section Téléchargement",
     site_lang: (typeof currentLang !== "undefined" ? currentLang : "fr").toUpperCase(),
@@ -1464,7 +1464,7 @@ function submitFeedbackForm(e) {
     email: email,
     software: software,
     source: source,
-    version: "1.0.12",
+    version: "1.0.13",
     event: "💡 Suggestion : " + category,
     location: author + (email ? " <" + email + ">" : ""),
     file: (software ? "[" + software + "] " : "") + message,
@@ -1528,7 +1528,7 @@ function showFeedbackSuccess() {
 let pendingDownload = {
   platform: "macOS",
   file: "Recall.dmg",
-  url: "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg",
+  url: "https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.dmg",
   location: "Section Téléchargement"
 };
 
@@ -1585,7 +1585,7 @@ function openDownloadModal(platform, downloadUrl, file, location) {
   pendingDownload = {
     platform: platform || "macOS",
     file: file || (platform === "Windows" ? "Recall-Windows.zip" : "Recall.dmg"),
-    url: downloadUrl || (platform === "Windows" ? "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall-Windows-x64.zip" : "https://github.com/REVRmusic/recall/releases/download/v1.0.12/Recall.dmg"),
+    url: downloadUrl || (platform === "Windows" ? "https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall-Windows-x64.zip" : "https://github.com/REVRmusic/recall/releases/download/v1.0.13/Recall.dmg"),
     location: location || "Section Téléchargement"
   };
 

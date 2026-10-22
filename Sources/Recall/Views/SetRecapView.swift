@@ -197,6 +197,7 @@ public struct SetRecapStats {
         var genreCounts: [String: Int] = [:]
         var genreLatestDate: [String: Date] = [:]
         for tr in tracks {
+            if tr.isLongFormMix { continue }
             let canonical = tr.displayGenre
             guard !canonical.isEmpty,
                   !TrackMetadataCleaner.isJunkOrPromoArtist(canonical) else { continue }

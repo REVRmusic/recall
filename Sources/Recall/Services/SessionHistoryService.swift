@@ -107,7 +107,14 @@ public struct SessionPlayedTrack: Identifiable, Hashable, Codable {
     }
     
     public var displayGenre: String {
-        return TrackMetadataCleaner.canonicalGlobalGenre(genre)
+        // Le tempo sert uniquement ici (fenêtre des stats) : Afro / Dancehall lents → Shatta,
+        // Shatta rapide → Bouyon. Ailleurs, le tag écrit est lu sans BPM.
+        return TrackMetadataCleaner.canonicalGlobalGenre(genre, bpm: bpm)
+    }
+
+    /// Mixtape, podcast ou mix pré-enregistré : strictement plus de 12 minutes.
+    public var isLongFormMix: Bool {
+        durationSeconds > 12 * 60
     }
     
     public var displayBpm: String {

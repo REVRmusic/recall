@@ -8,12 +8,15 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
     case electro = "Électro"
     case latino = "Latino"
     case shatta = "Shatta"
+    case bouyon = "Bouyon"
     case hipHop = "Hip-Hop"
     case afro = "Afro"
+    case afroBeat = "Afro-Beat"
     case dancehall = "Dancehall / Zouk"
     case rnb = "R&B / Funk"
     case pop = "Pop"
     case rock = "Rock"
+    case mix = "Mix"
     case other = "Autre"
     
     public var id: String { rawValue }
@@ -21,13 +24,16 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
     /// Code couleur officiel conforme aux exigences utilisateur :
     /// - Bleu pour l'électro / EDM / House / Techno
     /// - Jaune pour le latino / reggaeton
-    /// - Orange pour le shatta / bouyon
+    /// - Orange pour le shatta
+    /// - Vermillon pour le bouyon
     /// - Rouge pour le hip-hop / rap
     /// - Vert pour l'afro / amapiano
+    /// - Vert citron pour l'afro-beat (afrobeats, afro-pop)
     /// - Turquoise pour dancehall / reggae / zouk
     /// - Violet pour R&B / soul / funk
     /// - Rose pour pop / commercial
     /// - Magenta pour rock
+    /// - Indigo pour un mix long (mixtape, podcast, mix pré-enregistré)
     /// - Gris ardoise pour autre
     public var color: Color {
         switch self {
@@ -37,10 +43,14 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
             return Color(hex: "#FFD600") // Jaune doré solaire
         case .shatta:
             return Color(hex: "#FF7A00") // Orange tropical vibrant
+        case .bouyon:
+            return Color(hex: "#FF5A1F") // Vermillon, plus chaud que le shatta
         case .hipHop:
             return Color(hex: "#FF3B30") // Rouge percutant
         case .afro:
             return Color(hex: "#34C759") // Vert émeraude
+        case .afroBeat:
+            return Color(hex: "#C6F531") // Vert citron, distinct de l'afro vague
         case .dancehall:
             return Color(hex: "#30D1B2") // Turquoise caraïbe
         case .rnb:
@@ -49,6 +59,8 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
             return Color(hex: "#FF2D55") // Rose néon
         case .rock:
             return Color(hex: "#E056FD") // Magenta énergique
+        case .mix:
+            return Color(hex: "#5E5CE6") // Indigo, distinct des genres musicaux
         case .other:
             return Color(hex: "#8E8E93") // Gris ardoise neutre
         }
@@ -60,12 +72,15 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
         case .electro: return "bolt.horizontal.fill"
         case .latino: return "sun.max.fill"
         case .shatta: return "flame.fill"
+        case .bouyon: return "tornado"
         case .hipHop: return "mic.fill"
         case .afro: return "leaf.fill"
+        case .afroBeat: return "waveform"
         case .dancehall: return "tropicalstorm"
         case .rnb: return "heart.fill"
         case .pop: return "star.fill"
         case .rock: return "guitars.fill"
+        case .mix: return "recordingtape"
         case .other: return "music.note"
         }
     }
@@ -75,25 +90,40 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
         let clean = genre.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if clean.isEmpty { return .other }
         
-        // 1. Shatta & Bouyon (Orange)
-        if clean.contains("shatta") || clean.contains("bouyon") {
+        // 1. Bouyon puis Shatta
+        if clean.contains("bouyon") {
+            return .bouyon
+        }
+        if clean.contains("shatta") {
             return .shatta
         }
         
-        // 2. Latino & Reggaeton (Jaune)
-        if clean.contains("latino") || clean.contains("latin") || clean.contains("reggaeton") ||
-           clean.contains("regeton") || clean.contains("dembow") || clean.contains("baile") ||
-           clean.contains("bachata") || clean.contains("salsa") || clean.contains("merengue") ||
-           clean.contains("cumbia") || clean.contains("perreo") || clean.contains("urbano") ||
-           clean.contains("moombahton") {
+        // 2. Latino & Reggaeton (Jaune) — avant « ragga », car raggaeton contient « ragga »
+        let folded = clean.folding(options: .diacriticInsensitive, locale: Locale(identifier: "fr_FR"))
+        let compact = folded.replacingOccurrences(of: "[^a-z0-9]+", with: "", options: .regularExpression)
+        if folded.contains("latino") || folded.contains("latin") || folded.contains("reggaeton") ||
+           folded.contains("raggaeton") || folded.contains("regeton") || folded.contains("regueton") ||
+           folded.contains("ragaeton") || folded.contains("raggaton") || compact.contains("raggaeton") ||
+           folded.contains("dembow") || folded.contains("baile") ||
+           folded.contains("bachata") || folded.contains("salsa") || folded.contains("merengue") ||
+           folded.contains("cumbia") || folded.contains("perreo") || folded.contains("urbano") ||
+           folded.contains("urbana") ||
+           folded.contains("moombahton") {
             return .latino
         }
         
-        // 3. Hip-Hop & Rap (Rouge)
+        // 3. Hip-Hop & Rap (Rouge). « Urban » oui, « Urbano » non (déjà classé latino au-dessus).
+        let withoutUrbano = clean.replacingOccurrences(of: "urbano", with: " ").replacingOccurrences(of: "urbana", with: " ")
         if clean.contains("hip-hop") || clean.contains("hip hop") || clean.contains("hiphop") ||
            clean.contains("rap") || clean.contains("trap") || clean.contains("drill") ||
-           clean.contains("boom bap") || clean.contains("crunk") || clean.contains("phonk") {
+           clean.contains("boom bap") || clean.contains("crunk") || clean.contains("phonk") ||
+           clean.contains("urbain") || withoutUrbano.contains("urban") {
             return .hipHop
+        }
+        
+        // Dancehall avant « dance » : le mot dancehall contient « dance », sinon il partait en Électro.
+        if compact.contains("dancehall") {
+            return .dancehall
         }
         
         // 4. Électro / House / Techno / Bass / EDM (Bleu)
@@ -104,6 +134,11 @@ public enum MusicStyleCategory: String, CaseIterable, Identifiable, Codable {
            clean.contains("big room") || clean.contains("minimal") || clean.contains("bass") ||
            clean.contains("club") || clean.contains("dance") {
             return .electro
+        }
+        
+        // Afrobeats / Afro-pop, avant le tag vague « Afro » et avant « pop ».
+        if compact.contains("afrobeat") || compact.contains("afropop") {
+            return .afroBeat
         }
         
         // 5. Afro & Amapiano (Vert)
@@ -258,8 +293,11 @@ public struct GenreTimelineBuilder {
             }
             
             let dur = max(15.0, end.timeIntervalSince(start))
-            let canonicalGenre = tr.displayGenre
-            let style = MusicStyleCategory.from(genre: canonicalGenre.isEmpty ? tr.genre : canonicalGenre)
+            let isLongFormMix = tr.isLongFormMix
+            let canonicalGenre = isLongFormMix ? MusicStyleCategory.mix.rawValue : tr.displayGenre
+            let style = isLongFormMix
+                ? MusicStyleCategory.mix
+                : MusicStyleCategory.from(genre: canonicalGenre.isEmpty ? tr.genre : canonicalGenre)
             
             segments.append(GenreTimelineSegment(
                 id: "\(tr.id)_\(i)",

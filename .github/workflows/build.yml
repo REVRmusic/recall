@@ -105,7 +105,7 @@ jobs:
           release-assets/Recall-macOS.zip
           release-assets/Recall-Windows-x64.zip
           release-assets/Recall.exe
-        name: Recall ${{ github.ref_name }} — Auto-Update 1-Clic & Compagnon Téléphone Live
+        name: Recall ${{ github.ref_name }} — Classification des styles du set
         body_path: .github/release-notes.md
         draft: false
         prerelease: false
