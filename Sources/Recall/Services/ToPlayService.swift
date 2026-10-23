@@ -554,6 +554,10 @@ public class ToPlayService: ObservableObject {
     
     // MARK: - Types et Gestionnaires Universels de Glisser-Déposer (Serato & Rekordbox)
     
+    /// Types concrets seulement. Pas de texte générique, pas de « fichier promis ».
+    /// Serato annonce le type privé `NSFilePromiseID` sans jamais y mettre de donnée.
+    /// Si Recall s'inscrit à tout (y compris le texte) et lit le presse-papiers pendant
+    /// le survol, macOS réclame cette donnée et tue Serato.
     public static var universalDragTypes: [NSPasteboard.PasteboardType] {
         return [
             .fileURL,
@@ -563,21 +567,9 @@ public class ToPlayService: ObservableObject {
             NSPasteboard.PasteboardType("itun"),
             NSPasteboard.PasteboardType("com.apple.itunes.metadata"),
             NSPasteboard.PasteboardType("com.apple.itunes.pboard"),
-            .string,
-            NSPasteboard.PasteboardType("public.utf8-plain-text"),
             NSPasteboard.PasteboardType("public.tabular-text"),
-            NSPasteboard.PasteboardType("com.apple.traditional-mac-plain-text"),
-            NSPasteboard.PasteboardType("Apple URL pasteboard type"),
-            NSPasteboard.PasteboardType("CorePasteboardFlavorType 0x6675726C"),
-            NSPasteboard.PasteboardType("CorePasteboardFlavorType 0x54455854"),
             NSPasteboard.PasteboardType("com.pioneer.rekordbox.track")
         ]
-    }
-    
-    public static func canHandle(pasteboard: NSPasteboard) -> Bool {
-        guard let types = pasteboard.types, !types.isEmpty else { return false }
-        let supported = Set(universalDragTypes.map { $0.rawValue })
-        return types.contains { supported.contains($0.rawValue) }
     }
     
     /// Traite l'ensemble des éléments déposés depuis le presse-papier macOS (Serato, Rekordbox, Finder)
@@ -585,17 +577,8 @@ public class ToPlayService: ObservableObject {
     public func handleDroppedPasteboard(_ pasteboard: NSPasteboard, sender: NSDraggingInfo? = nil) -> Bool {
         var addedAny = false
         
-        // 1. Objets NSURL natifs (Serato DJ Pro / Finder / Music)
-        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty {
-            for url in urls where url.isFileURL {
-                if addTrack(fromURL: url) {
-                    addedAny = true
-                }
-            }
-            if addedAny { return true }
-        }
-        
-        // 2. Format historique NSFilenamesPboardType (Serato DJ Pro / Finder)
+        // Chemins déjà écrits par Serato ou le Finder.
+        // On ne lit pas les promesses de fichier : Serato les annonce sans donnée.
         if let files = pasteboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String], !files.isEmpty {
             for file in files {
                 let url = URL(fileURLWithPath: file)
@@ -630,37 +613,7 @@ public class ToPlayService: ObservableObject {
         }
         if addedAny { return true }
         
-        // 7. Parcours exhaustif de tous les pasteboardItems pour URLs, chemins ou XML
-        if let items = pasteboard.pasteboardItems {
-            for item in items {
-                for type in item.types {
-                    if let str = item.string(forType: type), !str.isEmpty {
-                        if str.hasPrefix("file://") {
-                            if let u = URL(string: str) {
-                                let local = URL(fileURLWithPath: u.path)
-                                if addTrack(fromURL: local) {
-                                    addedAny = true
-                                }
-                            }
-                        } else if str.hasPrefix("/") && FileManager.default.fileExists(atPath: str) {
-                            if addTrack(fromURL: URL(fileURLWithPath: str)) {
-                                addedAny = true
-                            }
-                        } else if parseDroppedText(str) {
-                            addedAny = true
-                        }
-                    }
-                    if let data = item.data(forType: type) {
-                        if parseItunData(data) {
-                            addedAny = true
-                        }
-                    }
-                }
-            }
-            if addedAny { return true }
-        }
-        
-        // 8. Texte brut ou texte tabulaire (Glisser-déposer de lignes depuis Rekordbox ou feuilles)
+        // Texte tabulaire (lignes Rekordbox). Types nommés uniquement.
         let textTypes: [NSPasteboard.PasteboardType] = [
             NSPasteboard.PasteboardType("public.tabular-text"),
             .string,
@@ -675,22 +628,6 @@ public class ToPlayService: ObservableObject {
                 }
             }
         }
-        if addedAny { return true }
-        
-        // 9. Balayage ultime sur tous les types présents
-        if let types = pasteboard.types {
-            for t in types {
-                if let s = pasteboard.string(forType: t), parseDroppedText(s) {
-                    addedAny = true
-                    break
-                }
-                if let d = pasteboard.data(forType: t), parseItunData(d) {
-                    addedAny = true
-                    break
-                }
-            }
-        }
-        
         return addedAny
     }
     
@@ -888,87 +825,129 @@ public class ToPlayService: ObservableObject {
     }
 }
 
-// MARK: - Composant Natif AppKit de Destination de Glisser-Déposer
+// MARK: - Dépôt vers la Sélec sans participer au drag de Serato
 
-/// Vue AppKit native dédiée à la réception absolue des glisser-déposer de morceaux depuis Serato DJ Pro & Pioneer DJ Rekordbox
+/// Serato annonce le type privé `NSFilePromiseID` sans donnée. Dès qu'une autre
+/// application s'inscrit comme cible du glisser, macOS réclame cette donnée et tue Serato.
+/// Recall ne s'inscrit donc jamais. Au lâcher de la souris sur sa fenêtre, il lit
+/// uniquement le chemin de fichier déjà écrit, jamais la liste des types.
+@MainActor
+public final class ExternalDropMonitor {
+    public static let shared = ExternalDropMonitor()
+    
+    private var monitors: [Any] = []
+    private var dragStartedInsideRecall = false
+    private var cachedURLs: [URL] = []
+    private var started = false
+    
+    private init() {}
+    
+    public func start() {
+        guard !started else { return }
+        started = true
+        
+        if let down = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown], handler: { event in
+            DispatchQueue.main.async {
+                ExternalDropMonitor.shared.dragStartedInsideRecall = true
+                ExternalDropMonitor.shared.cachedURLs = []
+            }
+            return event
+        }) {
+            monitors.append(down)
+        }
+        if let down = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown], handler: { _ in
+            DispatchQueue.main.async {
+                ExternalDropMonitor.shared.dragStartedInsideRecall = false
+                ExternalDropMonitor.shared.cachedURLs = []
+            }
+        }) {
+            monitors.append(down)
+        }
+        if let drag = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged], handler: { _ in
+            DispatchQueue.main.async {
+                ExternalDropMonitor.shared.trackHover()
+            }
+        }) {
+            monitors.append(drag)
+        }
+        if let up = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp], handler: { _ in
+            DispatchQueue.main.async {
+                ExternalDropMonitor.shared.finishDrag()
+            }
+        }) {
+            monitors.append(up)
+        }
+    }
+    
+    private func trackHover() {
+        guard !dragStartedInsideRecall else { return }
+        let inside = Self.recallWindowContainsMouse()
+        if inside {
+            if cachedURLs.isEmpty {
+                cachedURLs = Self.safeFileURLs(from: NSPasteboard(name: .drag))
+            }
+            guard !cachedURLs.isEmpty else { return }
+            DispatchQueue.main.async {
+                ToPlayService.shared.isDraggingFileOver = true
+            }
+        } else if ToPlayService.shared.isDraggingFileOver {
+            DispatchQueue.main.async {
+                ToPlayService.shared.isDraggingFileOver = false
+            }
+        }
+    }
+    
+    private func finishDrag() {
+        let inside = Self.recallWindowContainsMouse()
+        let startedInside = dragStartedInsideRecall
+        let urls = cachedURLs.isEmpty ? Self.safeFileURLs(from: NSPasteboard(name: .drag)) : cachedURLs
+        cachedURLs = []
+        dragStartedInsideRecall = false
+        DispatchQueue.main.async {
+            ToPlayService.shared.isDraggingFileOver = false
+            guard inside, !startedInside else { return }
+            for url in urls {
+                ToPlayService.shared.addTrack(fromURL: url)
+            }
+        }
+    }
+    
+    private static func recallWindowContainsMouse() -> Bool {
+        guard let window = FloatingWindowController.shared.window, window.isVisible else { return false }
+        return window.frame.contains(NSEvent.mouseLocation)
+    }
+    
+    /// Uniquement les chemins déjà présents. Jamais `types`, `pasteboardItems` ni les promesses.
+    static func safeFileURLs(from pasteboard: NSPasteboard) -> [URL] {
+        var results: [URL] = []
+        if let files = pasteboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String] {
+            for file in files where !file.isEmpty {
+                results.append(URL(fileURLWithPath: file))
+            }
+        }
+        if results.isEmpty,
+           let str = pasteboard.string(forType: NSPasteboard.PasteboardType("public.file-url")),
+           let url = URL(string: str),
+           url.isFileURL {
+            results.append(url)
+        }
+        return results
+    }
+}
+
+/// Vue conservée pour ne pas changer la mise en page. Elle ne s'inscrit plus au drag.
 public final class RecallDropTargetNSView: NSView {
     public var onDropURLs: (([URL]) -> Void)?
     public var onDraggingChanged: ((Bool) -> Void)?
     
     public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        setupDragTypes()
+        unregisterDraggedTypes()
     }
     
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupDragTypes()
-    }
-    
-    private func setupDragTypes() {
-        registerForDraggedTypes(ToPlayService.universalDragTypes)
-    }
-    
-    public override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
-            return []
-        }
-        onDraggingChanged?(true)
-        return .copy
-    }
-    
-    public override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
-            return []
-        }
-        return .copy
-    }
-    
-    public override func draggingExited(_ sender: NSDraggingInfo?) {
-        onDraggingChanged?(false)
-    }
-    
-    public override func draggingEnded(_ sender: NSDraggingInfo) {
-        onDraggingChanged?(false)
-    }
-    
-    public override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        onDraggingChanged?(false)
-        let handled = ToPlayService.shared.handleDroppedPasteboard(sender.draggingPasteboard, sender: sender)
-        if !handled {
-            let urls = extractURLs(from: sender.draggingPasteboard)
-            if !urls.isEmpty {
-                onDropURLs?(urls)
-                return true
-            }
-        }
-        return handled
-    }
-    
-    private func extractURLs(from pasteboard: NSPasteboard) -> [URL] {
-        var results: [URL] = []
-        
-        // 1. Objets NSURL natifs
-        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty {
-            for url in urls where url.isFileURL {
-                results.append(url)
-            }
-        }
-        
-        // 2. Format historique NSFilenamesPboardType de Serato
-        if results.isEmpty,
-           let filePaths = pasteboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String] {
-            for path in filePaths {
-                results.append(URL(fileURLWithPath: path))
-            }
-        }
-        
-        // 3. Chaîne d'URL brute
-        if results.isEmpty, let urlStr = pasteboard.string(forType: .fileURL), let url = URL(string: urlStr) {
-            results.append(url)
-        }
-        
-        return results
+        unregisterDraggedTypes()
     }
 }
 

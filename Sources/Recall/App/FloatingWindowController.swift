@@ -3,7 +3,7 @@ import AppKit
 import SwiftUI
 
 /// Panneau flottant Recall spécialisé désactivant tout comportement système indésirable lors d'un double-clic
-public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
+public final class RecallFloatingPanel: NSPanel {
     public override func zoom(_ sender: Any?) {
         // Bloque le zoom et recentrage automatique de macOS
     }
@@ -60,47 +60,6 @@ public final class RecallFloatingPanel: NSPanel, NSDraggingDestination {
             }
         }
         super.sendEvent(event)
-    }
-    
-    // MARK: - Réception Globale du Glisser-Déposer Serato / Rekordbox / Finder
-    
-    public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
-            return []
-        }
-        DispatchQueue.main.async {
-            ToPlayService.shared.isDraggingFileOver = true
-        }
-        return .copy
-    }
-    
-    public func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
-            return []
-        }
-        return .copy
-    }
-    
-    public func draggingExited(_ sender: NSDraggingInfo?) {
-        DispatchQueue.main.async {
-            ToPlayService.shared.isDraggingFileOver = false
-        }
-    }
-    
-    public func draggingEnded(_ sender: NSDraggingInfo) {
-        DispatchQueue.main.async {
-            ToPlayService.shared.isDraggingFileOver = false
-        }
-    }
-    
-    public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        DispatchQueue.main.async {
-            ToPlayService.shared.isDraggingFileOver = false
-        }
-        guard ToPlayService.canHandle(pasteboard: sender.draggingPasteboard) else {
-            return false
-        }
-        return ToPlayService.shared.handleDroppedPasteboard(sender.draggingPasteboard, sender: sender)
     }
 }
 
@@ -183,7 +142,10 @@ public class FloatingWindowController: NSWindowController, NSWindowDelegate {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
-        panel.registerForDraggedTypes(ToPlayService.universalDragTypes)
+        // Ne jamais s'inscrire comme cible de drag. Serato plante dès qu'une autre
+        // fenêtre accepte son glisser (donnée privée NSFilePromiseID absente).
+        panel.unregisterDraggedTypes()
+        ExternalDropMonitor.shared.start()
         
         // Supprime complètement les boutons ronds standard de macOS pour libérer le coin supérieur gauche pour le logo Recall
         panel.standardWindowButton(.closeButton)?.isHidden = true
